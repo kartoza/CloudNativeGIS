@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kartoza</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <title>{% block head_title %}{% endblock %}</title>
+    <link href="https://unpkg.com/maplibre-gl@2.1.9/dist/maplibre-gl.css"
+          rel="stylesheet"/>
+    {% block extra_head %}
+    {% endblock %}
+</head>
+
+<script>
+  window.csrfToken = "{{ csrf_token }}";
+  window.sentryDsn = "{{ SENTRY_DSN }}";
+</script>
+<body>
+{% block content %}
+{% endblock %}
+</body>
+</html>

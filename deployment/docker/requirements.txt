@@ -1,0 +1,39 @@
+Django==4.2.7
+
+# Web APIs for Django
+djangorestframework==3.14.0
+
+# Geographic add-ons for Django Rest Framework
+djangorestframework-gis==1.0
+
+# Python HTTP library
+requests==2.28.2
+
+# The uWSGI server
+uwsgi==2.0.23
+
+# Use webpack to generate your static bundles without django's staticfiles or opaque wrappers.
+django-webpack-loader==1.8.1
+
+# Python client for Sentry (https://sentry.io)
+sentry-sdk==1.18.0
+
+# Implementation of per object permissions for Django.
+django-guardian==2.4.0
+
+# django-cleanup app automatically deletes files for FileField, ImageField and subclasses
+django-cleanup==7.0.0
+
+# Celery result backends for Django.
+django-celery-results==2.5.0
+
+# psycopg2 - Python-PostgreSQL Database Adapter
+# psycopg2-binary==2.9.3
+
+# This extension enables you to store the periodic task schedule in the database.
+django-celery-beat==2.5.0
+
+# Python client for Redis database and key-value store
+redis==4.3.4
+
+psycopg2-binary==2.9.9

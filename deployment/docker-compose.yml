@@ -1,0 +1,72 @@
+version: '3.9'
+
+volumes:
+  static-data:
+  media-data:
+  conf-data:
+  database:
+  nginx-cache:
+  backups-data:
+  data-volume:
+
+x-common-django:
+  &default-common-django
+  image: kartoza/${COMPOSE_PROJECT_NAME:-django_project}:${DJANGO_TAG:-1.0.0}
+  env_file:
+    - .env
+  volumes:
+    - static-data:/home/web/static
+    - media-data:/home/web/media
+  restart: on-failure
+
+services:
+  redis:
+    image: bitnami/redis:7.0.2
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis_password}
+
+  db:
+    image: kartoza/postgis:14-3.3
+    volumes:
+      - data-volume:/opt/postgres/data
+    environment:
+      - DATADIR=/opt/postgres/data
+      - ALLOW_IP_RANGE=0.0.0.0/0
+      - POSTGRES_DBNAME=${DATABASE_NAME:-django}
+      - POSTGRES_USER=${DATABASE_USERNAME:-docker}
+      - POSTGRES_PASS=${DATABASE_PASSWORD:-docker}
+
+  django:
+    <<: *default-common-django
+    command: 'uwsgi --ini /uwsgi.conf'
+    links:
+      - db
+      - worker
+
+  worker:
+    <<: *default-common-django
+    entrypoint: [ ]
+    command: 'celery -A core worker -l info'
+    links:
+      - db
+      - redis
+      - celery_beat
+
+  celery_beat:
+    <<: *default-common-django
+    entrypoint: [ ]
+    command: 'celery -A core beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler'
+    links:
+      - db
+      - redis
+
+  nginx:
+    image: nginx
+    hostname: nginx
+    volumes:
+      - conf-data:/etc/nginx/conf.d:ro
+      - static-data:/home/web/static
+      - media-data:/home/web/media
+      - nginx-cache:/home/web/nginx_cache
+    links:
+      - django

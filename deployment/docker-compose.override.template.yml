@@ -1,0 +1,84 @@
+version: '3.9'
+services:
+  db:
+    volumes:
+      - ./volumes/database:/opt/postgres/data
+      - ./volumes/backups:/backups
+    ports:
+      - "${DATABASE_PORT:-6432}:5432"
+
+  django:
+    build:
+      context: ../
+      dockerfile: deployment/docker/Dockerfile
+      target: prod
+    volumes:
+      - ../django_project:/home/web/django_project
+      - ./volumes/static:/home/web/static
+      - ./volumes/media:/home/web/media
+
+  worker:
+    build:
+      context: ../
+      dockerfile: deployment/docker/Dockerfile
+    volumes:
+      - ../django_project:/home/web/django_project
+      - ./volumes/static:/home/web/static
+      - ./volumes/media:/home/web/media
+
+  celery_beat:
+    build:
+      context: ../
+      dockerfile: deployment/docker/Dockerfile
+    volumes:
+      - ../django_project:/home/web/django_project
+      - ./volumes/static:/home/web/static
+      - ./volumes/media:/home/web/media
+
+  nginx:
+    volumes:
+      - ./nginx/sites-enabled:/etc/nginx/conf.d:ro
+      - ./volumes/static:/home/web/static
+      - ./volumes/media:/home/web/media
+    ports:
+      - "${HTTP_PORT:-8888}:80"
+    links:
+      - django
+
+  dev:
+    build:
+      context: ../
+      dockerfile: deployment/docker/Dockerfile
+      target: dev
+    image: kartoza/${COMPOSE_PROJECT_NAME:-django_project}_dev
+    volumes:
+      - ../django_project:/tmp/pycharm_project_258/django_project/
+      - ../django_project:/home/web/django_project
+      - ./volumes/static:/home/web/static
+      - ./volumes/media:/home/web/media
+    environment:
+      # editable in .env
+      - DATABASE_NAME=${DATABASE_NAME:-django}
+      - DATABASE_USERNAME=${DATABASE_USERNAME:-docker}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-docker}
+      - DATABASE_HOST=${DATABASE_HOST:-db}
+      - DJANGO_SETTINGS_MODULE=core.settings.dev
+
+      # Email where alters should be sent. This will be used by let's encrypt and as the django admin email.
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=redis_password
+      - SECRET_KEY=SECRET_KEY
+    ports:
+      # for django test server
+      - "5000:8080"
+      # for ssh
+      - "5001:22"
+    links:
+      - db
+      - redis
+      - celery_beat
+    entrypoint: [ ]
