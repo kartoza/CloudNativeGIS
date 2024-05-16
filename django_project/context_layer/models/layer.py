@@ -8,7 +8,7 @@ import zipfile
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.urls import reverse
 
@@ -46,6 +46,8 @@ class Layer(AbstractTerm, AbstractResource):
     @property
     def files(self):
         """Return list of files in this layer."""
+        if not os.path.exists(self.folder):
+            return []
         return [
             f for f in os.listdir(self.folder) if
             os.path.isfile(os.path.join(self.folder, f))
@@ -123,7 +125,7 @@ class Layer(AbstractTerm, AbstractResource):
             if file.endswith('.shp'):
                 shapefile_to_postgis(
                     self.filepath(file), table_name=self.table_name,
-                    schema=self.schema_name
+                    schema_name=self.schema_name
                 )
 
 
