@@ -3,11 +3,6 @@ services:
   db:
     volumes:
       - ./volumes/database:/opt/postgres/data
-      - ./volumes/backups:/backups
-
-  dbbackups:
-    volumes:
-      - ./volumes/backups:/backups
 
   worker:
     image: kartoza/${COMPOSE_PROJECT_NAME:-django_project}_dev

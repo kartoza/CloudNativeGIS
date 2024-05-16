@@ -6,7 +6,6 @@ volumes:
   conf-data:
   database:
   nginx-cache:
-  backups-data:
   data-volume:
 
 x-common-django:

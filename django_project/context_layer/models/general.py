@@ -1,0 +1,46 @@
+# coding=utf-8
+
+from django.contrib.auth import get_user_model
+from django.db import models
+from django.utils import timezone
+
+User = get_user_model()
+
+
+class AbstractTerm(models.Model):
+    """Abstract model for Term."""
+
+    name = models.CharField(
+        max_length=512,
+        help_text='The name of data.'
+    )
+    description = models.TextField(
+        null=True, blank=True
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta:  # noqa: D106
+        abstract = True
+
+
+class AbstractResource(models.Model):
+    """Abstract model with Resource."""
+
+    created_by = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        editable=False
+    )
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        editable=False
+    )
+    source = models.CharField(
+        max_length=512,
+        null=True, blank=True,
+        help_text='Source of resource.'
+    )
+
+    class Meta:  # noqa: D106
+        abstract = True
