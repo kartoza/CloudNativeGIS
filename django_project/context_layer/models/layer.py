@@ -1,3 +1,4 @@
+# coding=utf-8
 """Context Layer Management."""
 
 import os
@@ -9,9 +10,10 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.urls import reverse
 
 from context_layer.models.general import AbstractTerm, AbstractResource
-from context_layer.utils.connection import delete_table
+from context_layer.utils.connection import delete_table, field_names
 from context_layer.utils.geopandas import shapefile_to_postgis
 
 FOLDER_ROOT = os.path.join(settings.MEDIA_ROOT, 'layer_files')
@@ -55,9 +57,38 @@ class Layer(AbstractTerm, AbstractResource):
         return f'layer_{self.unique_id}'.replace('-', '_')
 
     @property
+    def query_table_name(self):
+        """Return table name of this layer."""
+        return f'{self.schema_name}.{self.table_name}'
+
+    @property
     def schema_name(self):
         """Return schema name of this layer."""
-        return f'public_gis'
+        return 'public_gis'
+
+    @property
+    def field_names(self):
+        """Return schema name of this layer."""
+        return field_names(self.schema_name, self.table_name)
+
+    @property
+    def tile_url(self):
+        """Return tile url of layer."""
+        return reverse(
+            'layer-tile-api',
+            kwargs={
+                'identifier': self.unique_id,
+                'x': '0',
+                'y': '1',
+                'z': '2',
+            }
+        ).replace(
+            '/0/', '/{x}/'
+        ).replace(
+            '/1/', '/{y}/'
+        ).replace(
+            '/2/', '/{z}/'
+        )
 
     # ----------------------------------------------------
     # -------------------- FUNCTIONS ---------------------
@@ -78,7 +109,6 @@ class Layer(AbstractTerm, AbstractResource):
 
     def import_data(self):
         """Import data to database."""
-
         # Need to extract first
         for file in self.files:
             if file.endswith('.zip'):

@@ -1,3 +1,4 @@
+# coding=utf-8
 """Context Layer Management."""
 
 from django import forms
@@ -8,6 +9,7 @@ from context_layer.models import Layer
 
 class MultipleFileInput(forms.ClearableFileInput):
     """Multiple file input."""
+
     allow_multiple_selected = True
 
 
@@ -15,10 +17,12 @@ class MultipleFileField(forms.FileField):
     """Multiple file field."""
 
     def __init__(self, *args, **kwargs):
+        """Initialize the field."""
         kwargs.setdefault("widget", MultipleFileInput())
         super().__init__(*args, **kwargs)
 
     def clean(self, data, initial=None):
+        """Clean data."""
         single_file_clean = super().clean
         if isinstance(data, (list, tuple)):
             result = [single_file_clean(d, initial) for d in data]
@@ -42,6 +46,7 @@ class LayerForm(forms.ModelForm):
         for file in self.files.getlist('files'):
             FileSystemStorage(location=instance.folder).save(file.name, file)
 
+        self.instance.import_data()
         return instance
 
     class Meta:  # noqa: D106

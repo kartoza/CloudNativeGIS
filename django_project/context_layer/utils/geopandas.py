@@ -1,3 +1,4 @@
+# coding=utf-8
 """Context Layer Management."""
 
 import geopandas as gpd
