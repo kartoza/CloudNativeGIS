@@ -8,12 +8,12 @@ import zipfile
 
 from django.conf import settings
 from django.db import models
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 
 from context_layer.models.general import AbstractTerm, AbstractResource
-from context_layer.utils.connection import delete_table, field_names
+from context_layer.utils.connection import delete_table, fields
 from context_layer.utils.geopandas import shapefile_to_postgis
 
 FOLDER_ROOT = os.path.join(settings.MEDIA_ROOT, 'layer_files')
@@ -27,6 +27,10 @@ class Layer(AbstractTerm, AbstractResource):
         unique=True,
         default=uuid.uuid4,
         editable=False
+    )
+    fields = models.JSONField(
+        default=list,
+        blank=True, null=True
     )
 
     def __str__(self):
@@ -67,11 +71,6 @@ class Layer(AbstractTerm, AbstractResource):
     def schema_name(self):
         """Return schema name of this layer."""
         return 'public_gis'
-
-    @property
-    def field_names(self):
-        """Return schema name of this layer."""
-        return field_names(self.schema_name, self.table_name)
 
     @property
     def tile_url(self):
@@ -127,6 +126,10 @@ class Layer(AbstractTerm, AbstractResource):
                     self.filepath(file), table_name=self.table_name,
                     schema_name=self.schema_name
                 )
+                self.fields = fields(
+                    self.schema_name, self.table_name
+                )
+                self.save()
 
 
 @receiver(post_delete, sender=Layer)

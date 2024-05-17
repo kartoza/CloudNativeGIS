@@ -5,13 +5,13 @@ from django.db import connection
 
 
 def querying_vector_tile(
-        table_name: str, field_names: list, z: int, x: int, y: int
+        table_name: str, fields: list, z: int, x: int, y: int
 ):
     """Return vector tile from table name."""
     sql = f"""
         WITH mvtgeom AS
         (
-            SELECT {','.join([f'"{f}"' for f in field_names])} ,
+            SELECT {','.join([f'"{f}"' for f in fields])} ,
                 ST_AsMVTGeom(
                     ST_Transform(geometry, 3857),
                     ST_TileEnvelope({z}, {x}, {y}),

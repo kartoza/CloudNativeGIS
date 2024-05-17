@@ -21,7 +21,7 @@ class LayerAdmin(admin.ModelAdmin):
     form = LayerForm
     list_display = (
         'unique_id', 'name', 'created_by', 'created_at', 'tile_url',
-        'field_names'
+        'fields'
     )
 
     def get_queryset(self, request):

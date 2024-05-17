@@ -113,7 +113,7 @@ if (isServe) {
     )
 } else if (isDev) {
     conf['output'] = {
-        path: path.resolve(__dirname, "./bundles/frontend"),
+        path: path.resolve(__dirname, "./bundles"),
         filename: filename + '.js'
     }
     conf['devServer'] = {

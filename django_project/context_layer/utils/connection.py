@@ -20,7 +20,7 @@ def delete_table(schema_name, table_name):
         )
 
 
-def field_names(schema_name, table_name):
+def fields(schema_name, table_name):
     """Return field names of table."""
     names = []
     with connection.cursor() as cursor:
