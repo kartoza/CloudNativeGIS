@@ -37,6 +37,8 @@ class LayerAdmin(admin.ModelAdmin):
 
     def tile_url(self, obj: Layer):
         """Return tile_url."""
+        if not obj.tile_url:
+            return None
         return self.request.build_absolute_uri('/')[:-1] + obj.tile_url
 
 

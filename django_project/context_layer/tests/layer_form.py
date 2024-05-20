@@ -1,4 +1,5 @@
 # coding=utf-8
+"""Context Layer Management."""
 
 import os
 
@@ -19,6 +20,7 @@ class LayerFormTest(TestCase):
         self.user = create_user()
 
     def test_forms(self):
+        """Test forms."""
         filepath = ABS_PATH(
             'context_layer', 'tests', '_fixtures', 'capital_cities.zip'
         )

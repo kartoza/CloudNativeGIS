@@ -1,4 +1,5 @@
 # coding=utf-8
+"""Context Layer Management."""
 
 
 import urllib.parse
@@ -8,7 +9,7 @@ from django.test.testcases import TestCase
 from django.urls import reverse
 
 from context_layer.models.layer import Layer
-from context_layer.tests.api.base import BaseTest
+from context_layer.tests.base import BaseTest
 from context_layer.tests.model_factories import create_user
 
 User = get_user_model()

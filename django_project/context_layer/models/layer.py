@@ -7,7 +7,7 @@ import uuid
 import zipfile
 
 from django.conf import settings
-from django.db import models
+from django.db import models, connection
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.urls import reverse
@@ -31,6 +31,10 @@ class Layer(AbstractTerm, AbstractResource):
     fields = models.JSONField(
         default=list,
         blank=True, null=True
+    )
+    is_ready = models.BooleanField(
+        default=False,
+        help_text='Indicates if the layer has been ready.'
     )
 
     def __str__(self):
@@ -70,11 +74,18 @@ class Layer(AbstractTerm, AbstractResource):
     @property
     def schema_name(self):
         """Return schema name of this layer."""
-        return 'public_gis'
+        try:
+            tenant = connection.get_tenant()
+            return f'{tenant.schema_name}_gis'
+        except AttributeError:
+            return 'public_gis'
 
     @property
     def tile_url(self):
         """Return tile url of layer."""
+        if not self.is_ready:
+            return None
+
         return reverse(
             'layer-tile-api',
             kwargs={
@@ -111,6 +122,9 @@ class Layer(AbstractTerm, AbstractResource):
     def import_data(self):
         """Import data to database."""
         # Need to extract first
+        self.is_ready = False
+        self.save()
+
         for file in self.files:
             if file.endswith('.zip'):
                 with zipfile.ZipFile(self.filepath(file), 'r') as ref:
@@ -129,6 +143,7 @@ class Layer(AbstractTerm, AbstractResource):
                 self.fields = fields(
                     self.schema_name, self.table_name
                 )
+                self.is_ready = True
                 self.save()
 
 
