@@ -25,7 +25,7 @@ SHARED_APPS = (
     # Project specified
     'core',
     'frontend',
-    'context_layer'
+    'context_layer_management'
 )
 
 TENANT_APPS = (
@@ -37,7 +37,7 @@ TENANT_APPS = (
 
     # Project specified
     'frontend',
-    'context_layer'
+    'context_layer_management'
 )
 
 INSTALLED_APPS = list(SHARED_APPS) + [

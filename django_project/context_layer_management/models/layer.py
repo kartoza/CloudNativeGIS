@@ -12,9 +12,9 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 
-from context_layer.models.general import AbstractTerm, AbstractResource
-from context_layer.utils.connection import delete_table, fields
-from context_layer.utils.geopandas import shapefile_to_postgis
+from context_layer_management.models.general import AbstractTerm, AbstractResource
+from context_layer_management.utils.connection import delete_table, fields
+from context_layer_management.utils.geopandas import shapefile_to_postgis
 
 FOLDER_ROOT = os.path.join(settings.MEDIA_ROOT, 'layer_files')
 FOLDER_URL = os.path.join(settings.MEDIA_URL, 'layer_files')

@@ -5,8 +5,8 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 
-from context_layer.models.layer import Layer
-from context_layer.utils.vector_tile import querying_vector_tile
+from context_layer_management.models.layer import Layer
+from context_layer_management.utils.vector_tile import querying_vector_tile
 
 
 class VectorTileLayer(APIView):

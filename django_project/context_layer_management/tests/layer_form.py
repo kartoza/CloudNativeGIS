@@ -6,10 +6,10 @@ import os
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test.testcases import TestCase
 
-from context_layer.forms import LayerForm
-from context_layer.models import Layer
-from context_layer.tests.model_factories import create_user
-from context_layer.utils.main import ABS_PATH
+from context_layer_management.forms import LayerForm
+from context_layer_management.models import Layer
+from context_layer_management.tests.model_factories import create_user
+from context_layer_management.utils.main import ABS_PATH
 
 
 class LayerFormTest(TestCase):
@@ -22,7 +22,7 @@ class LayerFormTest(TestCase):
     def test_forms(self):
         """Test forms."""
         filepath = ABS_PATH(
-            'context_layer', 'tests', '_fixtures', 'capital_cities.zip'
+            'context_layer_management', 'tests', '_fixtures', 'capital_cities.zip'
         )
         _file = open(filepath, 'rb')
         form_data = {'name': 'Test Layer'}

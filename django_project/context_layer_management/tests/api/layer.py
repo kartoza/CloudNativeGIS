@@ -8,9 +8,9 @@ from django.contrib.auth import get_user_model
 from django.test.testcases import TestCase
 from django.urls import reverse
 
-from context_layer.models.layer import Layer
-from context_layer.tests.base import BaseTest
-from context_layer.tests.model_factories import create_user
+from context_layer_management.models.layer import Layer
+from context_layer_management.tests.base import BaseTest
+from context_layer_management.tests.model_factories import create_user
 
 User = get_user_model()
 

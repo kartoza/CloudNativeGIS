@@ -1,10 +1,10 @@
 # coding=utf-8
 """Context Layer Management."""
 
-from context_layer.api.base import BaseApi
-from context_layer.forms.layer import LayerForm
-from context_layer.models.layer import Layer
-from context_layer.serializer.layer import LayerSerializer
+from context_layer_management.api.base import BaseApi
+from context_layer_management.forms.layer import LayerForm
+from context_layer_management.models.layer import Layer
+from context_layer_management.serializer.layer import LayerSerializer
 
 
 class LayerViewSet(BaseApi):

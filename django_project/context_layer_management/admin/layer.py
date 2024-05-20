@@ -3,8 +3,8 @@
 
 from django.contrib import admin
 
-from context_layer.forms.layer import LayerForm
-from context_layer.models.layer import Layer
+from context_layer_management.forms.layer import LayerForm
+from context_layer_management.models.layer import Layer
 
 
 @admin.action(description='Import data')

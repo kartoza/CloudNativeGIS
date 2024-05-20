@@ -4,8 +4,8 @@
 from django import forms
 from django.core.files.storage import FileSystemStorage
 
-from context_layer.forms.file import MultipleFileField
-from context_layer.models import Layer
+from context_layer_management.forms.file import MultipleFileField
+from context_layer_management.models import Layer
 
 
 class LayerForm(forms.ModelForm):

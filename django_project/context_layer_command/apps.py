@@ -13,5 +13,5 @@ from django.utils.translation import gettext_lazy as _
 class ContextLayerConfig(AppConfig):
     """Context Layer Config App."""
 
-    name = 'context_layer'
+    name = 'context_layer_management'
     verbose_name = _('Context Layer')

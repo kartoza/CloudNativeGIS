@@ -5,7 +5,7 @@ import geopandas as gpd
 from django.db import connection
 from sqlalchemy import create_engine
 
-from context_layer.utils.connection import create_schema, delete_table
+from context_layer_management.utils.connection import create_schema, delete_table
 
 
 def shapefile_to_postgis(filepath, table_name, schema_name):

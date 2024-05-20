@@ -3,7 +3,7 @@
 
 from .prod import *  # noqa
 
-TEST_RUNNER = 'context_layer.tests.runner.PostgresSchemaTestRunner'
+TEST_RUNNER = 'context_layer_management.tests.runner.PostgresSchemaTestRunner'
 DEBUG = True
 
 # Disable caching while in development

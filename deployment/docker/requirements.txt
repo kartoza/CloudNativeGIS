@@ -38,7 +38,7 @@ redis==4.3.4
 
 # Library to handle geospatial functions
 GeoAlchemy2==0.15.1
-geopandas==0.14.4
+geopandas==0.13.2
 
 # Hanlde tenants
 django-tenants==3.6.1

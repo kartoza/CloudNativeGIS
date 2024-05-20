@@ -4,7 +4,7 @@
 
 from rest_framework import serializers
 
-from context_layer.models.layer import Layer
+from context_layer_management.models.layer import Layer
 
 
 class LayerSerializer(serializers.ModelSerializer):
