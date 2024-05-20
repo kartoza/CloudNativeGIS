@@ -6,6 +6,7 @@ from django.core.exceptions import (
     FieldError, ValidationError, SuspiciousOperation
 )
 from django.forms.models import model_to_dict
+from django.http import HttpResponseForbidden
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import mixins, GenericViewSet
@@ -104,6 +105,8 @@ class BaseApi(
         data = request.data.copy()
 
         instance = self.get_object()
+        if instance.created_by != request.user:
+            return HttpResponseForbidden()
 
         # If it is partial, just save the data from POST
         if partial:
@@ -137,5 +140,7 @@ class BaseApi(
     def destroy(self, request, id=None):
         """Destroy an object."""
         instance = self.get_object()
+        if instance.created_by != request.user:
+            return HttpResponseForbidden()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)

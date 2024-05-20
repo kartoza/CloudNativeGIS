@@ -20,6 +20,7 @@ class LayerTest(BaseTest, TestCase):
     def setUp(self):
         """To setup test."""
         self.user = create_user(password=self.password)
+        self.user_1 = create_user(password=self.password)
         self.layer_1 = Layer.objects.create(
             name='Test Layer 1',
             created_by=self.user,
@@ -89,6 +90,13 @@ class LayerTest(BaseTest, TestCase):
         url = reverse(
             'layer-view-set-detail', kwargs={'id': self.layer_1.id}
         )
+        self.assertRequestPutView(url, 403, data={})
+        self.assertRequestPutView(
+            url, 403,
+            user=self.user_1,
+            data={},
+            content_type=self.JSON_CONTENT
+        )
         response = self.assertRequestPutView(
             url, 200,
             user=self.user,
@@ -111,4 +119,7 @@ class LayerTest(BaseTest, TestCase):
         url = reverse(
             'layer-view-set-detail', kwargs={'id': _id}
         )
-        self.assertRequestDeleteView(url, 204)
+        self.assertRequestDeleteView(url, 403)
+        self.assertRequestDeleteView(url, 403, user=self.user_1)
+        self.assertRequestDeleteView(url, 204, user=self.user)
+        self.assertFalse(Layer.objects.filter(id=_id).first())
