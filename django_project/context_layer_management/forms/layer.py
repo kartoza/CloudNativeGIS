@@ -11,7 +11,7 @@ from context_layer_management.models import Layer
 class LayerForm(forms.ModelForm):
     """Layer form."""
 
-    files = MultipleFileField()
+    files = MultipleFileField(required=False)
 
     def save(self, commit=True):
         """Save the data."""

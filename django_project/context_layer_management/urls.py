@@ -8,13 +8,15 @@ from context_layer_management.api.layer import LayerViewSet
 from context_layer_management.api.vector_tile import (VectorTileLayer)
 
 router = DefaultRouter()
-router.register(r'layer', LayerViewSet, basename='layer-view-set')
+router.register(
+    r'layer', LayerViewSet, basename='context-layer-management-view-set'
+)
 
 urlpatterns = [
     path(
         '<str:identifier>/tile/<int:z>/<int:x>/<int:y>/',
         VectorTileLayer.as_view(),
-        name='layer-tile-api'
+        name='context-layer-management-tile-api'
     ),
     path('api/', include(router.urls)),
 ]

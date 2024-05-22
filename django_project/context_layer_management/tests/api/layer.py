@@ -1,14 +1,13 @@
 # coding=utf-8
 """Context Layer Management."""
 
-
 import urllib.parse
 
 from django.contrib.auth import get_user_model
 from django.test.testcases import TestCase
 from django.urls import reverse
 
-from context_layer_management.models.layer import Layer
+from context_layer_management.models.layer import Layer, LayerType
 from context_layer_management.tests.base import BaseTest
 from context_layer_management.tests.model_factories import create_user
 
@@ -35,7 +34,7 @@ class LayerTest(BaseTest, TestCase):
 
     def test_list_api(self):
         """Test List API."""
-        url = reverse('layer-view-set-list')
+        url = reverse('context-layer-management-view-set-list')
         response = self.assertRequestGetView(url, 200, user=self.user)
         self.assertEqual(len(response.json()['results']), 2)
 
@@ -46,18 +45,19 @@ class LayerTest(BaseTest, TestCase):
                 'name__contains': 'Layer 2'
             }
         )
-        url = reverse('layer-view-set-list') + '?' + params
+        url = reverse('context-layer-management-view-set-list') + '?' + params
         response = self.assertRequestGetView(url, 200, user=self.user)
         self.assertEqual(len(response.json()['results']), 1)
 
     def test_create_api(self):
         """Test POST API."""
-        url = reverse('layer-view-set-list')
+        url = reverse('context-layer-management-view-set-list')
         response = self.assertRequestPostView(
             url, 201,
             user=self.user,
             data={
-                "name": 'Test new layer'
+                "name": 'Test new layer',
+                'type': LayerType.VECTOR_TILE
             },
             content_type=self.JSON_CONTENT
         ).json()
@@ -69,11 +69,12 @@ class LayerTest(BaseTest, TestCase):
 
     def test_detail_api(self):
         """Test GET detail api."""
-        url = reverse('layer-view-set-list', args=[0])
+        url = reverse('context-layer-management-view-set-list', args=[0])
         self.assertRequestGetView(url, 404)
 
         url = reverse(
-            'layer-view-set-detail', kwargs={'id': self.layer_1.id}
+            'context-layer-management-view-set-detail',
+            kwargs={'id': self.layer_1.id}
         )
         response = self.assertRequestGetView(url, 200, user=self.user).json()
 
@@ -85,11 +86,12 @@ class LayerTest(BaseTest, TestCase):
 
     def test_update_api(self):
         """Test PUT API."""
-        url = reverse('layer-view-set-list', args=[0])
+        url = reverse('context-layer-management-view-set-list', args=[0])
         self.assertRequestPutView(url, 404, data={})
 
         url = reverse(
-            'layer-view-set-detail', kwargs={'id': self.layer_1.id}
+            'context-layer-management-view-set-detail',
+            kwargs={'id': self.layer_1.id}
         )
         self.assertRequestPutView(url, 403, data={})
         self.assertRequestPutView(
@@ -102,7 +104,8 @@ class LayerTest(BaseTest, TestCase):
             url, 200,
             user=self.user,
             data={
-                "name": 'Test Layer 1 Updated'
+                "name": 'Test Layer 1 Updated',
+                'type': LayerType.VECTOR_TILE
             },
             content_type=self.JSON_CONTENT
         ).json()
@@ -115,10 +118,10 @@ class LayerTest(BaseTest, TestCase):
     def test_delete_api(self):
         """Test DELETE API."""
         _id = self.layer_1.id
-        url = reverse('layer-view-set-detail', args=[0])
+        url = reverse('context-layer-management-view-set-detail', args=[0])
         self.assertRequestDeleteView(url, 404)
         url = reverse(
-            'layer-view-set-detail', kwargs={'id': _id}
+            'context-layer-management-view-set-detail', kwargs={'id': _id}
         )
         self.assertRequestDeleteView(url, 403)
         self.assertRequestDeleteView(url, 403, user=self.user_1)

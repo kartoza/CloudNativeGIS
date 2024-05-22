@@ -12,12 +12,21 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 
-from context_layer_management.models.general import AbstractTerm, AbstractResource
+from context_layer_management.models.general import (
+    AbstractTerm, AbstractResource
+)
 from context_layer_management.utils.connection import delete_table, fields
 from context_layer_management.utils.geopandas import shapefile_to_postgis
 
 FOLDER_ROOT = os.path.join(settings.MEDIA_ROOT, 'layer_files')
 FOLDER_URL = os.path.join(settings.MEDIA_URL, 'layer_files')
+
+
+class LayerType(object):
+    """A quick couple of variable and Layer type."""
+
+    VECTOR_TILE = 'Vector Tile'
+    RASTER_TILE = 'Raster Tile'
 
 
 class Layer(AbstractTerm, AbstractResource):
@@ -35,6 +44,14 @@ class Layer(AbstractTerm, AbstractResource):
     is_ready = models.BooleanField(
         default=False,
         help_text='Indicates if the layer has been ready.'
+    )
+    type = models.CharField(
+        max_length=256,
+        default=LayerType.VECTOR_TILE,
+        choices=(
+            (LayerType.VECTOR_TILE, LayerType.VECTOR_TILE),
+            (LayerType.RASTER_TILE, LayerType.RASTER_TILE),
+        )
     )
 
     def __str__(self):
@@ -87,7 +104,7 @@ class Layer(AbstractTerm, AbstractResource):
             return None
 
         return reverse(
-            'layer-tile-api',
+            'context-layer-management-tile-api',
             kwargs={
                 'identifier': self.unique_id,
                 'x': '0',

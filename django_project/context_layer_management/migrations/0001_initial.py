@@ -28,6 +28,7 @@ class Migration(migrations.Migration):
                 ('fields', models.JSONField(blank=True, default=list, null=True)),
                 ('is_ready', models.BooleanField(default=False, help_text='Indicates if the layer has been ready.')),
                 ('created_by', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('type', models.CharField(choices=[('Vector Tile', 'Vector Tile'), ('Raster Tile', 'Raster Tile')], default='Vector Tile', max_length=256)),
             ],
             options={
                 'abstract': False,
