@@ -2,71 +2,20 @@
 
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.test.client import MULTIPART_CONTENT
-from django_tenants.test.cases import (
-    TenantTestCase as DjangoTenantTestCase,
-    get_tenant_model,
-    get_tenant_domain_model
-)
-from django_tenants.test.client import TenantClient
+from django.test.client import Client, MULTIPART_CONTENT
 
 User = get_user_model()
 
 
-class TenantTestCase(DjangoTenantTestCase):
-    """Tenant test case."""
-
-    @classmethod
-    def setUpClass(cls):
-        """Initiate tenant and domain for test."""
-        try:
-            cls.tenant = get_tenant_model().objects.get(
-                schema_name=cls.get_test_schema_name()
-            )
-        except get_tenant_model().DoesNotExist:
-            cls.sync_shared()
-            cls.add_allowed_test_domain()
-            cls.tenant = get_tenant_model()(
-                schema_name=cls.get_test_schema_name()
-            )
-            cls.setup_tenant(cls.tenant)
-            cls.tenant.save(verbosity=cls.get_verbosity())
-
-        # Set up domain
-        tenant_domain = cls.get_test_tenant_domain()
-        try:
-            cls.domain = get_tenant_domain_model().objects.get(
-                tenant=cls.tenant, domain=tenant_domain
-            )
-        except get_tenant_domain_model().DoesNotExist:
-            cls.domain = get_tenant_domain_model()(
-                tenant=cls.tenant, domain=tenant_domain
-            )
-            cls.setup_domain(cls.domain)
-            cls.domain.save()
-
-        connection.set_tenant(cls.tenant)
-
-    @classmethod
-    def tearDownClass(cls):
-        """Tear down function."""
-        connection.set_schema_to_public()
-
-
-class BaseTest(TenantTestCase):
+class BaseTest:
     """Base of test."""
 
     JSON_CONTENT = 'application/json'
     password = 'password'
 
-    @property
-    def tenant_client(self):
-        """Return client of test."""
-        return TenantClient(self.tenant)
-
     def assertRequestGetView(self, url, code, user=None):
         """Assert request GET view with code."""
-        client = self.tenant_client
+        client = Client()
         if user:
             client.login(username=user.username, password=self.password)
         response = client.get(url)
@@ -77,7 +26,7 @@ class BaseTest(TenantTestCase):
             self, url, code, data, user=None, content_type=MULTIPART_CONTENT
     ):
         """Assert request POST view with code."""
-        client = self.tenant_client
+        client = Client()
         if user:
             client.login(username=user.username, password=self.password)
         response = client.post(url, data=data, content_type=content_type)
@@ -88,7 +37,7 @@ class BaseTest(TenantTestCase):
             self, url, code, data, user=None, content_type=MULTIPART_CONTENT
     ):
         """Assert request POST view with code."""
-        client = self.tenant_client
+        client = Client()
         if user:
             client.login(username=user.username, password=self.password)
         response = client.put(url, data=data, content_type=content_type)
@@ -99,7 +48,7 @@ class BaseTest(TenantTestCase):
             self, url, code, data, user=None, content_type=MULTIPART_CONTENT
     ):
         """Assert request POST view with code."""
-        client = self.tenant_client
+        client = Client()
         if user:
             client.login(username=user.username, password=self.password)
         response = client.patch(url, data=data, content_type=content_type)
@@ -111,7 +60,7 @@ class BaseTest(TenantTestCase):
             content_type="application/json"
     ):
         """Assert request DELETE view with code."""
-        client = self.tenant_client
+        client = Client()
         if user:
             client.login(username=user.username, password=self.password)
         response = client.delete(url, data=data, content_type=content_type)

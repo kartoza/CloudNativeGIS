@@ -9,13 +9,12 @@ import os
 import time
 
 import django
-
-django.setup()
-
+from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.db import connection
 from django.db.utils import OperationalError
-from tenants.models import Client
+
+django.setup()
 
 # Getting the secrets
 admin_username = os.getenv('ADMIN_USERNAME')
@@ -53,9 +52,20 @@ call_command('migrate', '--noinput')
 
 print("-----------------------------------------------------")
 print("3. Creating/updating superuser")
-for client in Client.objects.all():
-    print(f'Creating/updating superuser for {client.name}')
-    client.create_superuser()
+try:
+    superuser = get_user_model().objects.get(username=admin_username)
+    superuser.set_password(admin_password)
+    superuser.is_active = True
+    superuser.email = admin_email
+    superuser.save()
+    print('superuser successfully updated')
+except get_user_model().DoesNotExist:
+    superuser = get_user_model().objects.create_superuser(
+        admin_username,
+        admin_email,
+        admin_password
+    )
+    print('superuser successfully created')
 
 #########################################################
 # 4. Loading fixtures

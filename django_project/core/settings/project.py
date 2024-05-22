@@ -6,7 +6,6 @@ Context Layer Management.
 """
 import os  # noqa
 
-from .app import *  # noqa
 from .contrib import *  # noqa
 from .utils import absolute_path
 
@@ -14,7 +13,7 @@ ALLOWED_HOSTS = ['*']
 ADMINS = ()
 DATABASES = {
     'default': {
-        'ENGINE': 'django_tenants.postgresql_backend',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': os.environ['DATABASE_NAME'],
         'USER': os.environ['DATABASE_USERNAME'],
         'PASSWORD': os.environ['DATABASE_PASSWORD'],
@@ -23,13 +22,16 @@ DATABASES = {
         'TEST_NAME': 'unittests',
     }
 }
-ORIGINAL_BACKEND = "django.contrib.gis.db.backends.postgis"
-DATABASE_ROUTERS = (
-    'django_tenants.routers.TenantSyncRouter',
-)
 
 # Set debug to false for production
 DEBUG = TEMPLATE_DEBUG = False
+
+# Extra installed apps
+INSTALLED_APPS = INSTALLED_APPS + (
+    'core',
+    'frontend',
+    'context_layer_management'
+)
 
 TEMPLATES[0]['DIRS'] += [
     absolute_path('frontend', 'templates'),

@@ -7,6 +7,17 @@ Context Layer Management.
 from .base import *  # noqa
 from .utils import absolute_path
 
+# Extra installed apps
+INSTALLED_APPS = INSTALLED_APPS + (
+    'rest_framework',
+    'rest_framework_gis',
+    'webpack_loader',
+    'guardian',
+    'django_cleanup.apps.CleanupConfig',
+    'django_celery_beat',
+    'django_celery_results',
+)
+
 WEBPACK_LOADER = {
     'DEFAULT': {
         'BUNDLE_DIR_NAME': 'frontend/',  # must end with slash
@@ -36,7 +47,3 @@ TEMPLATES[0]['OPTIONS']['context_processors'] += [
 ]
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
-
-# Multi tenant
-TENANT_MODEL = "tenants.Client"
-TENANT_DOMAIN_MODEL = "tenants.Domain"
