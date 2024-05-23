@@ -43,10 +43,10 @@ class LayerFormTest(TestCase):
         self.assertTrue(layer is not None)
         self.assertEqual(layer.created_by.pk, self.user.id)
 
-        self.assertEqual(layer.fields, [])
+        self.assertEqual(layer.field_names, [])
         layer.import_data()
         self.assertEqual(
-            layer.fields, ['CITY_TYPE', 'CITY_NAME', 'COUNTRY']
+            layer.field_names, ['CITY_NAME', 'CITY_TYPE', 'COUNTRY']
         )
 
         layer.delete()
