@@ -64,7 +64,7 @@ class Layer(AbstractTerm, AbstractResource):
         )
     )
     styles = models.ManyToManyField(
-        LayerStyle, null=True, blank=True,
+        LayerStyle, blank=True,
         help_text='Style list for the layer.'
     )
     default_style = models.ForeignKey(

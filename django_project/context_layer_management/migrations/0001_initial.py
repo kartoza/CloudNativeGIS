@@ -65,6 +65,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='layer',
             name='styles',
-            field=models.ManyToManyField(blank=True, help_text='Style list for the layer.', null=True, to='context_layer_management.layerstyle'),
+            field=models.ManyToManyField(blank=True, help_text='Style list for the layer.', to='context_layer_management.LayerStyle'),
         ),
     ]
