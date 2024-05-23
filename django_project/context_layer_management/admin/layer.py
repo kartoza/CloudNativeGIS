@@ -4,7 +4,14 @@
 from django.contrib import admin
 
 from context_layer_management.forms.layer import LayerForm
-from context_layer_management.models.layer import Layer
+from context_layer_management.models.layer import Layer, LayerField
+
+
+class LayerFieldInline(admin.TabularInline):
+    """LayerField inline."""
+
+    model = LayerField
+    extra = 0
 
 
 @admin.action(description='Import data')
@@ -21,8 +28,9 @@ class LayerAdmin(admin.ModelAdmin):
     form = LayerForm
     list_display = (
         'unique_id', 'name', 'created_by', 'created_at', 'tile_url',
-        'fields'
+        'field_names'
     )
+    inlines = [LayerFieldInline]
 
     def get_queryset(self, request):
         """Return queryset for current request."""
@@ -40,6 +48,10 @@ class LayerAdmin(admin.ModelAdmin):
         if not obj.tile_url:
             return None
         return self.request.build_absolute_uri('/')[:-1] + obj.tile_url
+
+    def field_names(self, obj: Layer):
+        """Return fields."""
+        return obj.field_names
 
 
 admin.site.register(Layer, LayerAdmin)

@@ -18,8 +18,13 @@ from context_layer_management.models.general import (
 from context_layer_management.utils.connection import delete_table, fields
 from context_layer_management.utils.geopandas import shapefile_to_postgis
 
-FOLDER_ROOT = os.path.join(settings.MEDIA_ROOT, 'layer_files')
-FOLDER_URL = os.path.join(settings.MEDIA_URL, 'layer_files')
+FOLDER_FILES = 'context_layer_management_files'
+FOLDER_ROOT = os.path.join(
+    settings.MEDIA_ROOT, FOLDER_FILES
+)
+FOLDER_URL = os.path.join(
+    settings.MEDIA_URL, FOLDER_FILES
+)
 
 
 class LayerType(object):
@@ -36,10 +41,6 @@ class Layer(AbstractTerm, AbstractResource):
         unique=True,
         default=uuid.uuid4,
         editable=False
-    )
-    fields = models.JSONField(
-        default=list,
-        blank=True, null=True
     )
     is_ready = models.BooleanField(
         default=False,
@@ -119,6 +120,15 @@ class Layer(AbstractTerm, AbstractResource):
             '/2/', '/{z}/'
         )
 
+    @property
+    def field_names(self):
+        """Return list of field names in this layer."""
+        return list(
+            self.layerfield_set.all().values_list(
+                'name', flat=True
+            ).order_by('name')
+        )
+
     # ----------------------------------------------------
     # -------------------- FUNCTIONS ---------------------
     # ----------------------------------------------------
@@ -157,11 +167,29 @@ class Layer(AbstractTerm, AbstractResource):
                     self.filepath(file), table_name=self.table_name,
                     schema_name=self.schema_name
                 )
-                self.fields = fields(
-                    self.schema_name, self.table_name
-                )
+                self.layerfield_set.all().delete()
+                for field in fields(
+                        self.schema_name, self.table_name
+                ):
+                    LayerField.objects.create(
+                        layer=self,
+                        name=field.name,
+                        type=field.type,
+                    )
+
                 self.is_ready = True
                 self.save()
+
+
+class LayerField(models.Model):
+    """Field of layer."""
+
+    layer = models.ForeignKey(
+        Layer,
+        on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=256)
+    type = models.CharField(max_length=256)
 
 
 @receiver(post_delete, sender=Layer)

@@ -25,7 +25,6 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('source', models.CharField(blank=True, help_text='Source of resource.', max_length=512, null=True)),
                 ('unique_id', models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
-                ('fields', models.JSONField(blank=True, default=list, null=True)),
                 ('is_ready', models.BooleanField(default=False, help_text='Indicates if the layer has been ready.')),
                 ('created_by', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
                 ('type', models.CharField(choices=[('Vector Tile', 'Vector Tile'), ('Raster Tile', 'Raster Tile')], default='Vector Tile', max_length=256)),
@@ -33,5 +32,14 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
+        ),
+        migrations.CreateModel(
+            name='LayerField',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=256)),
+                ('type', models.CharField(max_length=256)),
+                ('layer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='context_layer_management.layer')),
+            ],
         ),
     ]

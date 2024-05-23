@@ -39,4 +39,4 @@ class LayerForm(forms.ModelForm):
 
     class Meta:  # noqa: D106
         model = Layer
-        exclude = ('unique_id', 'is_ready')
+        exclude = ('unique_id', 'is_ready', 'type')
