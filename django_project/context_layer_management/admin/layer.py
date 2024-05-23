@@ -4,7 +4,7 @@
 from django.contrib import admin
 
 from context_layer_management.forms.layer import LayerForm
-from context_layer_management.models.layer import Layer, LayerField
+from context_layer_management.models.layer import Layer, LayerField, LayerStyle
 
 
 class LayerFieldInline(admin.TabularInline):
@@ -12,6 +12,10 @@ class LayerFieldInline(admin.TabularInline):
 
     model = LayerField
     extra = 0
+
+    def has_add_permission(self, request, obj):
+        """Disable add permission."""
+        return False
 
 
 @admin.action(description='Import data')
@@ -31,6 +35,7 @@ class LayerAdmin(admin.ModelAdmin):
         'field_names'
     )
     inlines = [LayerFieldInline]
+    filter_horizontal = ['styles']
 
     def get_queryset(self, request):
         """Return queryset for current request."""
@@ -54,4 +59,13 @@ class LayerAdmin(admin.ModelAdmin):
         return obj.field_names
 
 
+class LayerStyleAdmin(admin.ModelAdmin):
+    """Layer Style admin."""
+
+    list_display = (
+        'name', 'created_by', 'created_at'
+    )
+
+
 admin.site.register(Layer, LayerAdmin)
+admin.site.register(LayerStyle, LayerStyleAdmin)

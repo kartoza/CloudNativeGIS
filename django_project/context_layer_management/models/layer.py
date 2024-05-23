@@ -34,6 +34,15 @@ class LayerType(object):
     RASTER_TILE = 'Raster Tile'
 
 
+class LayerStyle(AbstractTerm, AbstractResource):
+    """Model contains layer information."""
+    style = models.JSONField(
+        help_text=(
+            'Contains mapbox style information.'
+        )
+    )
+
+
 class Layer(AbstractTerm, AbstractResource):
     """Model contains layer information."""
 
@@ -53,6 +62,15 @@ class Layer(AbstractTerm, AbstractResource):
             (LayerType.VECTOR_TILE, LayerType.VECTOR_TILE),
             (LayerType.RASTER_TILE, LayerType.RASTER_TILE),
         )
+    )
+    styles = models.ManyToManyField(
+        LayerStyle, null=True, blank=True,
+        help_text='Style list for the layer.'
+    )
+    default_style = models.ForeignKey(
+        LayerStyle, null=True, blank=True, on_delete=models.SET_NULL,
+        help_text='Default layer style',
+        related_name='default_style'
     )
 
     def __str__(self):
@@ -171,11 +189,12 @@ class Layer(AbstractTerm, AbstractResource):
                 for field in fields(
                         self.schema_name, self.table_name
                 ):
-                    LayerField.objects.create(
-                        layer=self,
-                        name=field.name,
-                        type=field.type,
-                    )
+                    if field.name != 'geometry':
+                        LayerField.objects.create(
+                            layer=self,
+                            name=field.name,
+                            type=field.type,
+                        )
 
                 self.is_ready = True
                 self.save()

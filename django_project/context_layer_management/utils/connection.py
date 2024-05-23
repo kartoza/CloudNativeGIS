@@ -39,6 +39,5 @@ def fields(schema_name, table_name):
         )
         rows = cursor.fetchall()
         for row in rows:
-            if row[0] != 'geometry':
-                _fields.append(Field(row[0], row[1]))
+            _fields.append(Field(row[0], row[1]))
     return _fields
