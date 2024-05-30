@@ -12,15 +12,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import mixins, GenericViewSet
 
 
-class BaseApi(
+class BaseReadApi(
     mixins.ListModelMixin,
-    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
     GenericViewSet
 ):
-    """Base API for Resource."""
-
+    """Base Read API View."""
     form_class = None
     lookup_field = 'id'
 
@@ -82,6 +79,15 @@ class BaseApi(
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+
+class BaseApi(
+    BaseReadApi,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    GenericViewSet
+):
+    """Base API for Resource."""
 
     def create(self, request, *args, **kwargs):
         """Update an object."""

@@ -5,7 +5,8 @@ import os
 import uuid
 
 from django.conf import settings
-from django.db import models, connection
+from django.contrib.auth import get_user_model
+from django.db import connection, models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.urls import reverse
@@ -23,6 +24,8 @@ FOLDER_URL = os.path.join(
     settings.MEDIA_URL, FOLDER_FILES
 )
 
+User = get_user_model()
+
 
 class LayerType(object):
     """A quick couple of variable and Layer type."""
@@ -33,6 +36,11 @@ class LayerType(object):
 
 class LayerStyle(AbstractTerm, AbstractResource):
     """Model contains layer information."""
+
+    created_by = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        editable=False, null=True, blank=True
+    )
 
     style = models.JSONField(
         help_text=(

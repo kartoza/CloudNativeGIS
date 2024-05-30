@@ -11,7 +11,10 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from context_layer_management.models.general import AbstractResource
-from context_layer_management.models.layer import Layer, LayerField
+from context_layer_management.models.layer import Layer, LayerField, LayerStyle
+from context_layer_management.models.style_defaults import (
+    LINE, POINT, POLYGON
+)
 from context_layer_management.tasks import import_data
 from context_layer_management.utils.connection import fields
 from context_layer_management.utils.geopandas import shapefile_to_postgis
@@ -156,6 +159,23 @@ class LayerUpload(AbstractResource):
 
                     layer.is_ready = True
                     layer.metadata = metadata
+
+                    # Update default style
+                    geometry_type = metadata['GEOMETRY TYPE'].lower()
+                    if not layer.default_style_id:
+                        default_style = POINT
+                        if 'line' in geometry_type:
+                            default_style = LINE
+                        elif 'polygon' in geometry_type:
+                            default_style = POLYGON
+                        style, _ = LayerStyle.objects.get_or_create(
+                            name=f'Default {geometry_type}',
+                            defaults={
+                                'style': default_style
+                            }
+                        )
+                        layer.default_style = style
+                        layer.styles.add(style)
                     layer.save()
         except Exception as e:
             # Save fields to layer
@@ -170,7 +190,7 @@ class LayerUpload(AbstractResource):
                 note='',
                 progress=100
             )
-        self.delete_folder()
+            self.delete_folder()
 
 
 @receiver(post_delete, sender=LayerUpload)
