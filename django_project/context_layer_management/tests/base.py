@@ -1,7 +1,7 @@
 # coding=utf-8
+"""Context Layer Management."""
 
 from django.contrib.auth import get_user_model
-from django.db import connection
 from django.test.client import Client, MULTIPART_CONTENT
 
 User = get_user_model()

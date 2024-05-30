@@ -3,8 +3,10 @@
 
 from django.contrib import admin
 
-from context_layer_management.forms.layer import LayerForm
+from context_layer_management.forms.layer import LayerForm, LayerUploadForm
 from context_layer_management.models.layer import Layer, LayerField, LayerStyle
+from context_layer_management.models.layer_upload import LayerUpload
+from context_layer_management.tasks import import_data
 
 
 class LayerFieldInline(admin.TabularInline):
@@ -19,34 +21,32 @@ class LayerFieldInline(admin.TabularInline):
 
 
 @admin.action(description='Import data')
-def import_data(modeladmin, request, queryset):
+def start_upload_data(modeladmin, request, queryset):
     """Import data of layer."""
     for layer in queryset:
-        layer.import_data()
+        import_data.delay(layer.pk)
 
 
 class LayerAdmin(admin.ModelAdmin):
     """Layer admin."""
 
-    actions = [import_data, ]
-    form = LayerForm
     list_display = (
-        'unique_id', 'name', 'created_by', 'created_at', 'tile_url',
-        'field_names'
+        'unique_id', 'name', 'created_by', 'created_at', 'tile_url', 'metadata'
     )
+    form = LayerForm
     inlines = [LayerFieldInline]
     filter_horizontal = ['styles']
-
-    def get_queryset(self, request):
-        """Return queryset for current request."""
-        self.request = request
-        return super().get_queryset(request)
 
     def get_form(self, request, *args, **kwargs):
         """Return form."""
         form = super(LayerAdmin, self).get_form(request, *args, **kwargs)
         form.user = request.user
         return form
+
+    def get_queryset(self, request):
+        """Return queryset for current request."""
+        self.request = request
+        return super().get_queryset(request)
 
     def tile_url(self, obj: Layer):
         """Return tile_url."""
@@ -59,6 +59,22 @@ class LayerAdmin(admin.ModelAdmin):
         return obj.field_names
 
 
+class LayerUploadAdmin(admin.ModelAdmin):
+    """Layer admin."""
+
+    list_display = (
+        'layer', 'created_by', 'created_at', 'folder', 'status', 'note'
+    )
+    actions = [start_upload_data]
+    form = LayerUploadForm
+
+    def get_form(self, request, *args, **kwargs):
+        """Return form."""
+        form = super(LayerUploadAdmin, self).get_form(request, *args, **kwargs)
+        form.user = request.user
+        return form
+
+
 class LayerStyleAdmin(admin.ModelAdmin):
     """Layer Style admin."""
 
@@ -69,3 +85,4 @@ class LayerStyleAdmin(admin.ModelAdmin):
 
 admin.site.register(Layer, LayerAdmin)
 admin.site.register(LayerStyle, LayerStyleAdmin)
+admin.site.register(LayerUpload, LayerUploadAdmin)

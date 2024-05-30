@@ -5,13 +5,11 @@ from django import forms
 from django.core.files.storage import FileSystemStorage
 
 from context_layer_management.forms.file import MultipleFileField
-from context_layer_management.models import Layer
+from context_layer_management.models import Layer, LayerUpload
 
 
 class LayerForm(forms.ModelForm):
     """Layer form."""
-
-    files = MultipleFileField(required=False)
 
     def save(self, commit=True):
         """Save the data."""
@@ -21,7 +19,23 @@ class LayerForm(forms.ModelForm):
             pass
         if not self.instance.created_by_id:
             self.instance.created_by_id = self.user.pk
-        instance = super(LayerForm, self).save(commit=commit)
+        return super(LayerForm, self).save(commit=commit)
+
+    class Meta:  # noqa: D106
+        model = Layer
+        exclude = ('unique_id', 'is_ready', 'type')
+
+
+class LayerUploadForm(forms.ModelForm):
+    """Layer upload form."""
+
+    files = MultipleFileField(required=False)
+
+    def save(self, commit=True):
+        """Save the data."""
+        if not self.instance.created_by_id:
+            self.instance.created_by_id = self.user.pk
+        instance = super(LayerUploadForm, self).save(commit=commit)
 
         # Save files
         try:
@@ -38,5 +52,5 @@ class LayerForm(forms.ModelForm):
         return instance
 
     class Meta:  # noqa: D106
-        model = Layer
-        exclude = ('unique_id', 'is_ready', 'type')
+        model = LayerUpload
+        exclude = ('progress', 'status', 'note', 'folder')

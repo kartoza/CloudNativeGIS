@@ -2,12 +2,14 @@
 """Context Layer Management."""
 
 from django.db import connection
+from django.db.utils import ProgrammingError
 
 
 class Field:
     """Class contains fields."""
 
     def __init__(self, field_name, field_type):
+        """Field constructor."""
         self.name = field_name
         self.type = field_type
 
@@ -41,3 +43,20 @@ def fields(schema_name, table_name):
         for row in rows:
             _fields.append(Field(row[0], row[1]))
     return _fields
+
+
+def count_features(schema_name, table_name):
+    """Return count of features of table."""
+    count = 0
+    with connection.cursor() as cursor:
+        try:
+            cursor.execute(
+                f"SELECT count(*) FROM {schema_name}.{table_name}"
+            )
+            rows = cursor.fetchall()
+            for row in rows:
+                count = row[0]
+        except ProgrammingError as e:
+            if 'does not exist' in str(e):
+                count = None
+    return count

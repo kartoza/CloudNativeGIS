@@ -2,9 +2,7 @@
 """Context Layer Management."""
 
 import os
-import shutil
 import uuid
-import zipfile
 
 from django.conf import settings
 from django.db import models, connection
@@ -15,8 +13,7 @@ from django.urls import reverse
 from context_layer_management.models.general import (
     AbstractTerm, AbstractResource
 )
-from context_layer_management.utils.connection import delete_table, fields
-from context_layer_management.utils.geopandas import shapefile_to_postgis
+from context_layer_management.utils.connection import delete_table
 
 FOLDER_FILES = 'context_layer_management_files'
 FOLDER_ROOT = os.path.join(
@@ -36,6 +33,7 @@ class LayerType(object):
 
 class LayerStyle(AbstractTerm, AbstractResource):
     """Model contains layer information."""
+
     style = models.JSONField(
         help_text=(
             'Contains mapbox style information.'
@@ -53,7 +51,7 @@ class Layer(AbstractTerm, AbstractResource):
     )
     is_ready = models.BooleanField(
         default=False,
-        help_text='Indicates if the layer has been ready.'
+        help_text='Indicates if the layer is ready.'
     )
     type = models.CharField(
         max_length=256,
@@ -63,39 +61,23 @@ class Layer(AbstractTerm, AbstractResource):
             (LayerType.RASTER_TILE, LayerType.RASTER_TILE),
         )
     )
-    styles = models.ManyToManyField(
-        LayerStyle, blank=True,
-        help_text='Style list for the layer.'
+    metadata = models.JSONField(
+        null=True, blank=True
     )
+
     default_style = models.ForeignKey(
         LayerStyle, null=True, blank=True, on_delete=models.SET_NULL,
         help_text='Default layer style',
         related_name='default_style'
     )
+    styles = models.ManyToManyField(
+        LayerStyle, blank=True,
+        help_text='Style list for the layer.'
+    )
 
     def __str__(self):
         """Return str."""
         return f'{self.name}'
-
-    @property
-    def folder(self) -> str:
-        """Return folder path of this layer."""
-        return os.path.join(FOLDER_ROOT, str(self.unique_id))
-
-    @property
-    def url(self) -> str:
-        """Return url root of this layer."""
-        return os.path.join(FOLDER_URL, str(self.unique_id))
-
-    @property
-    def files(self):
-        """Return list of files in this layer."""
-        if not os.path.exists(self.folder):
-            return []
-        return [
-            f for f in os.listdir(self.folder) if
-            os.path.isfile(os.path.join(self.folder, f))
-        ]
 
     @property
     def table_name(self):
@@ -147,58 +129,6 @@ class Layer(AbstractTerm, AbstractResource):
             ).order_by('name')
         )
 
-    # ----------------------------------------------------
-    # -------------------- FUNCTIONS ---------------------
-    # ----------------------------------------------------
-    def filepath(self, filename):
-        """Return file path."""
-        return os.path.join(self.folder, filename)
-
-    def delete_folder(self):
-        """Delete folder of the instance."""
-        if os.path.exists(self.folder):
-            shutil.rmtree(self.folder)
-
-    def emptying_folder(self):
-        """Delete content of the folder."""
-        self.delete_folder()
-        os.makedirs(self.folder)
-
-    def import_data(self):
-        """Import data to database."""
-        # Need to extract first
-        self.is_ready = False
-        self.save()
-
-        for file in self.files:
-            if file.endswith('.zip'):
-                with zipfile.ZipFile(self.filepath(file), 'r') as ref:
-                    ref.extractall(self.folder)
-                    ref.close()
-
-        # TODO:
-        #  Handle when using tenant
-        # Save the data
-        for file in self.files:
-            if file.endswith('.shp'):
-                shapefile_to_postgis(
-                    self.filepath(file), table_name=self.table_name,
-                    schema_name=self.schema_name
-                )
-                self.layerfield_set.all().delete()
-                for field in fields(
-                        self.schema_name, self.table_name
-                ):
-                    if field.name != 'geometry':
-                        LayerField.objects.create(
-                            layer=self,
-                            name=field.name,
-                            type=field.type,
-                        )
-
-                self.is_ready = True
-                self.save()
-
 
 class LayerField(models.Model):
     """Field of layer."""
@@ -213,6 +143,5 @@ class LayerField(models.Model):
 
 @receiver(post_delete, sender=Layer)
 def layer_on_delete(sender, instance: Layer, using, **kwargs):
-    """Delete folder when the layer deleted."""
-    instance.delete_folder()
+    """Delete table when the layer deleted."""
     delete_table(instance.schema_name, instance.table_name)

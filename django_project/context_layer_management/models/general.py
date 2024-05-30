@@ -36,11 +36,6 @@ class AbstractResource(models.Model):
         default=timezone.now,
         editable=False
     )
-    source = models.CharField(
-        max_length=512,
-        null=True, blank=True,
-        help_text='Source of resource.'
-    )
 
     class Meta:  # noqa: D106
         abstract = True
