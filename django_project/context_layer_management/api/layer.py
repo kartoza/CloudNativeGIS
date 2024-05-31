@@ -7,10 +7,11 @@ from rest_framework.response import Response
 
 from context_layer_management.api.base import BaseApi, BaseReadApi
 from context_layer_management.forms.layer import LayerForm
-from context_layer_management.forms.style import LayerStyleForm
-from context_layer_management.models.layer import Layer, LayerStyle
+from context_layer_management.forms.style import StyleForm
+from context_layer_management.models.layer import Layer
+from context_layer_management.models.style import Style
 from context_layer_management.serializer.layer import LayerSerializer
-from context_layer_management.serializer.style import StyleOfLayerSerializer
+from context_layer_management.serializer.style import LayerStyleSerializer
 
 
 class LayerViewSet(BaseApi):
@@ -30,11 +31,11 @@ class LayerViewSet(BaseApi):
         }
 
 
-class StyleOfLayerViewSet(BaseReadApi):
+class LayerStyleViewSet(BaseReadApi):
     """API layer style."""
 
-    form_class = LayerStyleForm
-    serializer_class = StyleOfLayerSerializer
+    form_class = StyleForm
+    serializer_class = LayerStyleSerializer
 
     def _get_layer(self) -> Layer:  # noqa: D102
         layer_id = self.kwargs.get('layer_id')
@@ -62,7 +63,7 @@ class StyleOfLayerViewSet(BaseReadApi):
         """Return queryset of API."""
         layer = self._get_layer()
         ids = layer.styles.values_list('id', flat=True)
-        return LayerStyle.objects.filter(id__in=ids)
+        return Style.objects.filter(id__in=ids)
 
     def list(self, request, *args, **kwargs):
         """Return just default style."""

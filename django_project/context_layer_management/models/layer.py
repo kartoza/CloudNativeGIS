@@ -14,6 +14,7 @@ from django.urls import reverse
 from context_layer_management.models.general import (
     AbstractTerm, AbstractResource
 )
+from context_layer_management.models.style import Style
 from context_layer_management.utils.connection import delete_table
 
 FOLDER_FILES = 'context_layer_management_files'
@@ -32,21 +33,6 @@ class LayerType(object):
 
     VECTOR_TILE = 'Vector Tile'
     RASTER_TILE = 'Raster Tile'
-
-
-class LayerStyle(AbstractTerm, AbstractResource):
-    """Model contains layer information."""
-
-    created_by = models.ForeignKey(
-        User, on_delete=models.CASCADE,
-        editable=False, null=True, blank=True
-    )
-
-    style = models.JSONField(
-        help_text=(
-            'Contains mapbox style information.'
-        )
-    )
 
 
 class Layer(AbstractTerm, AbstractResource):
@@ -74,12 +60,12 @@ class Layer(AbstractTerm, AbstractResource):
     )
 
     default_style = models.ForeignKey(
-        LayerStyle, null=True, blank=True, on_delete=models.SET_NULL,
+        Style, null=True, blank=True, on_delete=models.SET_NULL,
         help_text='Default layer style',
         related_name='default_style'
     )
     styles = models.ManyToManyField(
-        LayerStyle, blank=True,
+        Style, blank=True,
         help_text='Style list for the layer.'
     )
 
@@ -136,6 +122,13 @@ class Layer(AbstractTerm, AbstractResource):
                 'name', flat=True
             ).order_by('name')
         )
+
+    def absolute_tile_url(self, request):
+        """Return absolute tile url"""
+        if self.tile_url and request:
+            return request.build_absolute_uri('/')[:-1] + self.tile_url
+        else:
+            return None
 
 
 class LayerField(models.Model):

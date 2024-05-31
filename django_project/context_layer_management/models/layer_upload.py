@@ -11,9 +11,9 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from context_layer_management.models.general import AbstractResource
-from context_layer_management.models.layer import Layer, LayerField, LayerStyle
-from context_layer_management.models.style_defaults import (
-    LINE, POINT, POLYGON
+from context_layer_management.models.layer import Layer, LayerField
+from context_layer_management.models.style import (
+    Style, LINE, POINT, POLYGON
 )
 from context_layer_management.tasks import import_data
 from context_layer_management.utils.connection import fields
@@ -168,7 +168,7 @@ class LayerUpload(AbstractResource):
                             default_style = LINE
                         elif 'polygon' in geometry_type:
                             default_style = POLYGON
-                        style, _ = LayerStyle.objects.get_or_create(
+                        style, _ = Style.objects.get_or_create(
                             name=f'Default {geometry_type}',
                             defaults={
                                 'style': default_style

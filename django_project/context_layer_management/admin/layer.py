@@ -4,8 +4,7 @@
 from django.contrib import admin
 
 from context_layer_management.forms.layer import LayerForm, LayerUploadForm
-from context_layer_management.forms.style import LayerStyleForm
-from context_layer_management.models.layer import Layer, LayerField, LayerStyle
+from context_layer_management.models.layer import Layer, LayerField
 from context_layer_management.models.layer_upload import LayerUpload
 from context_layer_management.tasks import import_data
 
@@ -51,9 +50,7 @@ class LayerAdmin(admin.ModelAdmin):
 
     def tile_url(self, obj: Layer):
         """Return tile_url."""
-        if not obj.tile_url:
-            return None
-        return self.request.build_absolute_uri('/')[:-1] + obj.tile_url
+        return obj.absolute_tile_url(self.request)
 
     def field_names(self, obj: Layer):
         """Return fields."""
@@ -77,21 +74,5 @@ class LayerUploadAdmin(admin.ModelAdmin):
         return form
 
 
-class LayerStyleAdmin(admin.ModelAdmin):
-    """Layer Style admin."""
-
-    form = LayerStyleForm
-    list_display = (
-        'name', 'created_by', 'created_at'
-    )
-
-    def get_form(self, request, *args, **kwargs):
-        """Return form."""
-        form = super(LayerStyleAdmin, self).get_form(request, *args, **kwargs)
-        form.user = request.user
-        return form
-
-
 admin.site.register(Layer, LayerAdmin)
-admin.site.register(LayerStyle, LayerStyleAdmin)
 admin.site.register(LayerUpload, LayerUploadAdmin)

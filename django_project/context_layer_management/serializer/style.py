@@ -5,13 +5,13 @@ import json
 
 from rest_framework import serializers
 
-from context_layer_management.models.layer import LayerStyle
+from context_layer_management.models.style import Style
 
 
-class StyleOfLayerSerializer(serializers.ModelSerializer):
+class LayerStyleSerializer(serializers.ModelSerializer):
     """Serializer for layer."""
 
-    def get_style(self, obj: LayerStyle):
+    def get_style(self, obj: Style):
         """Return style."""
         style = obj.style
         layer = self.context.get('layer', None)
@@ -21,9 +21,7 @@ class StyleOfLayerSerializer(serializers.ModelSerializer):
             if 'sources' not in style:
                 style['sources'] = {}
             style['sources'][str(layer.unique_id)] = {
-                "tiles": [
-                    request.build_absolute_uri('/')[:-1] + layer.tile_url
-                ],
+                "tiles": [layer.absolute_tile_url(request)],
                 "type": "vector"
             }
             style = json.dumps(style).replace(
@@ -37,10 +35,10 @@ class StyleOfLayerSerializer(serializers.ModelSerializer):
         return style
 
     def to_representation(self, instance):
-        data = super(StyleOfLayerSerializer, self).to_representation(instance)
+        data = super(LayerStyleSerializer, self).to_representation(instance)
         data.update(self.get_style(obj=instance))
         return data
 
     class Meta:  # noqa: D106
-        model = LayerStyle
+        model = Style
         fields = []

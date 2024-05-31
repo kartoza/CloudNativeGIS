@@ -6,7 +6,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 
 from context_layer_management.api.layer import (
-    LayerViewSet, StyleOfLayerViewSet
+    LayerViewSet, LayerStyleViewSet
 )
 from context_layer_management.api.vector_tile import (VectorTileLayer)
 
@@ -18,7 +18,7 @@ layer_router = NestedSimpleRouter(
     router, r'layer', lookup='layer'
 )
 layer_router.register(
-    'style', StyleOfLayerViewSet,
+    'style', LayerStyleViewSet,
     basename='context-layer-management-style-view-set'
 )
 
