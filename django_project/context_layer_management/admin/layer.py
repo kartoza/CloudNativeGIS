@@ -2,11 +2,15 @@
 """Context Layer Management."""
 
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 
 from context_layer_management.forms.layer import LayerForm, LayerUploadForm
 from context_layer_management.models.layer import Layer, LayerField
 from context_layer_management.models.layer_upload import LayerUpload
 from context_layer_management.tasks import import_data
+from context_layer_management.utils.layer import layer_style_url
+
+EDITOR_URL = 'http://127.0.0.1:8888/'
 
 
 class LayerFieldInline(admin.TabularInline):
@@ -31,7 +35,7 @@ class LayerAdmin(admin.ModelAdmin):
     """Layer admin."""
 
     list_display = (
-        'unique_id', 'name', 'created_by', 'created_at', 'tile_url', 'metadata'
+        'unique_id', 'name', 'created_by', 'created_at', 'tile_url', 'editor'
     )
     form = LayerForm
     inlines = [LayerFieldInline]
@@ -55,6 +59,16 @@ class LayerAdmin(admin.ModelAdmin):
     def field_names(self, obj: Layer):
         """Return fields."""
         return obj.field_names
+
+    def editor(self, obj: Layer):
+        """Return fields."""
+        return mark_safe(
+            f"<a target='__blank__' href='{EDITOR_URL}?"
+            f"styleUrl={layer_style_url(obj, obj.default_style, self.request)}"
+            f"'>Editor</a>"
+        )
+
+    editor.allow_tags = True
 
 
 class LayerUploadAdmin(admin.ModelAdmin):
