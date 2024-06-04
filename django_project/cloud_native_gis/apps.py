@@ -14,4 +14,4 @@ class ContextLayerConfig(AppConfig):
     """Context Layer Config App."""
 
     name = 'cloud_native_gis'
-    verbose_name = _('Context Layer')
+    verbose_name = _('Cloud Native Layer')

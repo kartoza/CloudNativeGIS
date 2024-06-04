@@ -51,7 +51,6 @@ services:
       target: dev
     image: kartoza/${COMPOSE_PROJECT_NAME:-django_project}_dev
     volumes:
-      - ../django_project:/tmp/pycharm_project_258/django_project/
       - ../django_project:/home/web/django_project
       - ./volumes/static:/home/web/static
       - ./volumes/media:/home/web/media
