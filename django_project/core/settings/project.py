@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-Context Layer Management.
+Cloud Native GIS.
 
 .. note:: Project level settings.
 """
@@ -30,7 +30,7 @@ DEBUG = TEMPLATE_DEBUG = False
 INSTALLED_APPS = INSTALLED_APPS + (
     'core',
     'frontend',
-    'context_layer_management'
+    'cloud_native_gis'
 )
 
 TEMPLATES[0]['DIRS'] += [

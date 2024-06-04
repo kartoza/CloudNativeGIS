@@ -1,4 +1,4 @@
-# Context Layer Management.
+# Cloud Native GIS.
 name: Tests
 
 on:
@@ -33,7 +33,7 @@ jobs:
     name: 'Django App'
     runs-on: ubuntu-latest
     env:
-      APP_IMAGE: kartoza/context_layer_management
+      APP_IMAGE: kartoza/cloud_native_gis
     steps:
       - uses: actions/checkout@v2
       - name: Set up QEMU

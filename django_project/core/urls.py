@@ -1,4 +1,4 @@
-"""Context Layer Management."""
+"""Cloud Native GIS."""
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -7,7 +7,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('', include('frontend.urls')),
-    path('', include('context_layer_management.urls')),
+    path('', include('cloud_native_gis.urls')),
     path('admin/', admin.site.urls),
 ]
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Context Layer Management.
+Cloud Native GIS.
 
 .. note:: Utilities for project.
 """

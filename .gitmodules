@@ -1,4 +1,4 @@
-[submodule "django_project/context_layer_management/maputnik"]
-	path = django_project/context_layer_management/maputnik
+[submodule "django_project/cloud_native_gis/maputnik"]
+	path = django_project/cloud_native_gis/maputnik
 	url = git@github.com:kartoza/maputnik.git
-	branch = context-layer-management
+	branch = cloud-native-gis

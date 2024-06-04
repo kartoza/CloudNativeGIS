@@ -7,17 +7,17 @@ from setuptools import setup, find_packages
 __version__ = io.open('django_project/version.txt', encoding='utf-8').read()
 
 setup(
-    name='context-layer-management',
+    name='Cloud Native GIS',
     version=__version__,
     author='Irwan Fathurrahman',
     author_email='irwan@kartoza.com',
     packages=find_packages(
         where='django_project',
-        include=['context_layer_management*'],
+        include=['cloud_native_gis*'],
     ),
     package_dir={'': 'django_project'},
     scripts=[],
-    url='https://github.com/kartoza/context-layer-management',
+    url='https://github.com/kartoza/CloudNativeGIS',
     license='MIT',
     description=(
         'Django application to manage context layer.'

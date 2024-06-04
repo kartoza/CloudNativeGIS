@@ -1,9 +1,9 @@
 # coding=utf-8
-"""Context Layer Management."""
+"""Cloud Native GIS."""
 
 from .prod import *  # noqa
 
-TEST_RUNNER = 'context_layer_management.tests.runner.PostgresSchemaTestRunner'
+TEST_RUNNER = 'cloud_native_gis.tests.runner.PostgresSchemaTestRunner'
 DEBUG = True
 
 # Disable caching while in development

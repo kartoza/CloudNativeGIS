@@ -69,7 +69,7 @@ serve-maputnik:
 	@echo "------------------------------------------------------------------"
 	@echo "Execute webpack serve command"
 	@echo "------------------------------------------------------------------"
-	@cd django_project/context_layer_management/maputnik; npm install --verbose; npm run start;
+	@cd django_project/cloud_native_gis/maputnik; npm install --verbose; npm run start;
 
 down:
 	@echo

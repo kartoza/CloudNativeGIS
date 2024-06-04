@@ -1,1 +1,1 @@
-"""Context Layer Management."""
+"""Cloud Native GIS."""
