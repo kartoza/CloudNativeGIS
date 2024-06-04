@@ -54,7 +54,7 @@ STATICFILES_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
     absolute_path('core', 'static'),
     absolute_path('frontend', 'bundles'),
-    absolute_path('context_layer_management'),
+    absolute_path('context_layer_management', 'maputnik', 'dist'),
 )
 
 # Every cache key will get prefixed with this value - here we set it to
