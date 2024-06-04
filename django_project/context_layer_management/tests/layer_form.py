@@ -7,7 +7,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test.testcases import TestCase
 
 from context_layer_management.forms import LayerForm, LayerUploadForm
-from context_layer_management.models import Layer, LayerType, LayerUpload
+from context_layer_management.models import (
+    Layer, LayerType, LayerUpload, Style
+)
 from context_layer_management.tests.model_factories import create_user
 from context_layer_management.utils.connection import count_features
 from context_layer_management.utils.main import ABS_PATH
@@ -69,6 +71,11 @@ class LayerFormTest(TestCase):
             count_features(layer.schema_name, layer.table_name),
             layer.metadata['FEATURE COUNT']
         )
+
+        self.assertEqual(
+            layer.default_style.name, Style.default_style_name('POINT')
+        )
+        self.assertTrue(layer.default_style.is_default_style)
 
         # DELETE LAYER
         # Check table is deleted

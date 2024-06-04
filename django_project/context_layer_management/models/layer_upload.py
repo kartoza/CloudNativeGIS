@@ -169,7 +169,7 @@ class LayerUpload(AbstractResource):
                         elif 'polygon' in geometry_type:
                             default_style = POLYGON
                         style, _ = Style.objects.get_or_create(
-                            name=f'Default {geometry_type}',
+                            name=Style.default_style_name(geometry_type),
                             defaults={
                                 'style': default_style
                             }
