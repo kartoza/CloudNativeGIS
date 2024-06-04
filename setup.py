@@ -35,6 +35,7 @@ setup(
         'Django >= 3.2.16',
         'djangorestframework >= 3.14.0',
         'djangorestframework-gis >= 1.0',
+        'django-cors-headers==4.3.1',
         'GeoAlchemy2 >= 0.15.1',
         'geopandas >= 0.13.2'
     ],

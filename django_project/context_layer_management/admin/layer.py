@@ -9,12 +9,7 @@ from context_layer_management.forms.layer import LayerForm, LayerUploadForm
 from context_layer_management.models.layer import Layer, LayerField
 from context_layer_management.models.layer_upload import LayerUpload
 from context_layer_management.tasks import import_data
-from context_layer_management.utils.layer import layer_style_url
-
-try:
-    MAPUTNIK_URL = settings.MAPUTNIK_URL
-except AttributeError:
-    MAPUTNIK_URL = '/maputnik'
+from context_layer_management.utils.layer import layer_style_url, MAPUTNIK_URL
 
 
 class LayerFieldInline(admin.TabularInline):

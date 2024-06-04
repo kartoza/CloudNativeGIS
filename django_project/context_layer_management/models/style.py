@@ -30,14 +30,19 @@ class Style(AbstractTerm, AbstractResource):
         """Return default style name based on geometry type."""
         return f'Default {geometry_type.lower()}'
 
-    @property
-    def is_default_style(self):
-        """Return default style."""
-        return self.name in [
+    @staticmethod
+    def default_names():
+        """Return default names."""
+        return [
             Style.default_style_name('point'),
             Style.default_style_name('linestring'),
             Style.default_style_name('polygon'),
         ]
+
+    @property
+    def is_default_style(self):
+        """Return default style."""
+        return self.name in Style.default_names()
 
 
 POINT = {

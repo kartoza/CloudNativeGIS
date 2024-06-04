@@ -41,4 +41,4 @@ class LayerStyleSerializer(serializers.ModelSerializer):
 
     class Meta:  # noqa: D106
         model = Style
-        fields = ['id']
+        fields = ['id', 'name']

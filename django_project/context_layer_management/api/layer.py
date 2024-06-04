@@ -12,6 +12,7 @@ from context_layer_management.models.layer import Layer
 from context_layer_management.models.style import Style
 from context_layer_management.serializer.layer import LayerSerializer
 from context_layer_management.serializer.style import LayerStyleSerializer
+from context_layer_management.utils.layer import layer_style_url, MAPUTNIK_URL
 
 
 class LayerViewSet(BaseApi):
@@ -73,3 +74,50 @@ class LayerStyleViewSet(BaseReadApi):
             return Response(serializer.data)
         else:
             raise Http404
+
+    def update(self, request, *args, **kwargs):
+        """Update style."""
+        _id = int(self.kwargs.get('id'))
+        layer = self._get_layer()
+        is_default = request.data['isDefault']
+
+        style = None
+        if layer.default_style and layer.default_style.pk == _id:
+            style = layer.default_style
+            is_default = True
+        if not style:
+            try:
+                style = layer.styles.get(id=_id)
+            except Style.DoesNotExist:
+                pass
+        if not style:
+            raise Http404
+
+        # Clean style requests
+        style_request = {
+            'layers': []
+        }
+        for style_layer in request.data['style']['layers']:
+            if style_layer['type'] != 'raster':
+                style_layer['id'] = '<uuid>'
+                style_layer['source'] = '<uuid>'
+                style_request['layers'].append(style_layer)
+
+        # Save the style
+        if style.is_default_style:
+            style.id = None
+        style.name = request.data['name']
+        if style.name in Style.default_names():
+            style.name = f'{style.name} ({layer.unique_id})'
+        style.style = style_request
+        style.save()
+
+        if is_default:
+            layer.default_style = style
+            layer.save()
+        layer.styles.add(style)
+
+        return Response(
+            f'{MAPUTNIK_URL}?styleUrl='
+            f'{layer_style_url(layer, style, self.request)}'
+        )

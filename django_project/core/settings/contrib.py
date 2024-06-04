@@ -11,6 +11,7 @@ from .utils import absolute_path
 INSTALLED_APPS = INSTALLED_APPS + (
     'rest_framework',
     'rest_framework_gis',
+    'corsheaders',
     'webpack_loader',
     'guardian',
     'django_cleanup.apps.CleanupConfig',
