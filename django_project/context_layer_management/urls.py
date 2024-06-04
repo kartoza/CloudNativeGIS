@@ -2,6 +2,7 @@
 """Context Layer Management."""
 
 from django.urls import include, path
+from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 
@@ -30,4 +31,8 @@ urlpatterns = [
     ),
     path('api/', include(router.urls)),
     path('api/', include(layer_router.urls)),
+    path(
+        'maputnik/',
+        TemplateView.as_view(template_name='maputnik/dist/index.html')
+    )
 ]

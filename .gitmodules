@@ -1,0 +1,4 @@
+[submodule "django_project/context_layer_management/maputnik"]
+	path = django_project/context_layer_management/maputnik
+	url = git@github.com:kartoza/maputnik.git
+	branch = context-layer-management

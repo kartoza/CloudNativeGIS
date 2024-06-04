@@ -7,8 +7,8 @@ from django.urls import path, include
 
 urlpatterns = [
     path('', include('frontend.urls')),
+    path('', include('context_layer_management.urls')),
     path('admin/', admin.site.urls),
-    path('context-layer/', include('context_layer_management.urls')),
 ]
 
 if settings.DEBUG:

@@ -1,6 +1,7 @@
 # coding=utf-8
 """Context Layer Management."""
 
+from django.conf import settings
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
@@ -10,7 +11,10 @@ from context_layer_management.models.layer_upload import LayerUpload
 from context_layer_management.tasks import import_data
 from context_layer_management.utils.layer import layer_style_url
 
-EDITOR_URL = 'http://127.0.0.1:8888/'
+try:
+    MAPUTNIK_URL = settings.MAPUTNIK_URL
+except AttributeError:
+    MAPUTNIK_URL = '/maputnik'
 
 
 class LayerFieldInline(admin.TabularInline):
@@ -63,7 +67,7 @@ class LayerAdmin(admin.ModelAdmin):
     def editor(self, obj: Layer):
         """Return fields."""
         return mark_safe(
-            f"<a target='__blank__' href='{EDITOR_URL}?"
+            f"<a target='__blank__' href='{MAPUTNIK_URL}?"
             f"styleUrl={layer_style_url(obj, obj.default_style, self.request)}"
             f"'>Editor</a>"
         )

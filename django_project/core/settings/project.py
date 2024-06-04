@@ -36,3 +36,5 @@ INSTALLED_APPS = INSTALLED_APPS + (
 TEMPLATES[0]['DIRS'] += [
     absolute_path('frontend', 'templates'),
 ]
+
+MAPUTNIK_URL = os.environ.get('MAPUTNIK_URL', '/maputnik')

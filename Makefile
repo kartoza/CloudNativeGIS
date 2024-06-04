@@ -64,6 +64,13 @@ serve:
 	@echo "------------------------------------------------------------------"
 	@cd django_project/frontend; npm install --verbose; npm run serve;
 
+serve-maputnik:
+	@echo
+	@echo "------------------------------------------------------------------"
+	@echo "Execute webpack serve command"
+	@echo "------------------------------------------------------------------"
+	@cd django_project/context_layer_management/maputnik; npm install --verbose; npm run start;
+
 down:
 	@echo
 	@echo "------------------------------------------------------------------"
