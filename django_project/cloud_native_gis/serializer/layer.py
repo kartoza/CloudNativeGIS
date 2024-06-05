@@ -4,6 +4,7 @@
 from rest_framework import serializers
 
 from cloud_native_gis.models.layer import Layer
+from cloud_native_gis.models.style import Style
 from cloud_native_gis.utils.layer import layer_style_url
 
 
@@ -14,6 +15,16 @@ class LayerSerializer(serializers.ModelSerializer):
     created_by = serializers.SerializerMethodField()
     default_style = serializers.SerializerMethodField()
     styles = serializers.SerializerMethodField()
+
+    def style_serializer(self, layer: Layer, style: Style):
+        """Serialize a style for a layer."""
+        return {
+            'id': style.id,
+            'name': style.name,
+            'style_url': layer_style_url(
+                layer, style, self.context.get('request', None)
+            )
+        }
 
     def get_tile_url(self, obj: Layer):
         """Return tile_url."""
@@ -27,22 +38,15 @@ class LayerSerializer(serializers.ModelSerializer):
     def get_default_style(self, obj: Layer):
         """Return default style url."""
         if obj.default_style:
-            return layer_style_url(
-                obj, obj.default_style, self.context.get('request', None)
-            )
+            return self.style_serializer(obj, obj.default_style)
         else:
             return None
 
     def get_styles(self, obj: Layer):
         """Return styles layer."""
         return [
-            {
-                'id': style.id,
-                'name': style.name,
-                'style': layer_style_url(
-                    obj, style, self.context.get('request', None)
-                )
-            } for style in obj.styles.all()
+            self.style_serializer(obj, style)
+            for style in obj.styles.all().order_by('name')
         ]
 
     class Meta:  # noqa: D106

@@ -1,7 +1,6 @@
 # coding=utf-8
 """Cloud Native GIS."""
 
-from django.conf import settings
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
@@ -9,7 +8,7 @@ from cloud_native_gis.forms.layer import LayerForm, LayerUploadForm
 from cloud_native_gis.models.layer import Layer, LayerField
 from cloud_native_gis.models.layer_upload import LayerUpload
 from cloud_native_gis.tasks import import_data
-from cloud_native_gis.utils.layer import layer_style_url, MAPUTNIK_URL
+from cloud_native_gis.utils.layer import layer_api_url, MAPUTNIK_URL
 
 
 class LayerFieldInline(admin.TabularInline):
@@ -63,7 +62,7 @@ class LayerAdmin(admin.ModelAdmin):
         """Return fields."""
         return mark_safe(
             f"<a target='__blank__' href='{MAPUTNIK_URL}?"
-            f"styleUrl={layer_style_url(obj, obj.default_style, self.request)}"
+            f"api-url={layer_api_url(obj, self.request)}"
             f"'>Editor</a>"
         )
 

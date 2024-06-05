@@ -130,6 +130,12 @@ class Layer(AbstractTerm, AbstractResource):
         else:
             return None
 
+    def update_default_style(self, style: Style):
+        """Update default style."""
+        self.default_style = style
+        self.styles.add(style)
+        self.save()
+
 
 class LayerField(models.Model):
     """Field of layer."""

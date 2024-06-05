@@ -174,8 +174,7 @@ class LayerUpload(AbstractResource):
                                 'style': default_style
                             }
                         )
-                        layer.default_style = style
-                        layer.styles.add(style)
+                        layer.update_default_style(style)
                     layer.save()
         except Exception as e:
             # Save fields to layer

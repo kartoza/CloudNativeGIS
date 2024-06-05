@@ -80,11 +80,11 @@ class LayerStyleViewSet(BaseReadApi):
         _id = int(self.kwargs.get('id'))
         layer = self._get_layer()
         is_default = request.data['isDefault']
+        save_as = request.data['saveAs']
 
         style = None
         if layer.default_style and layer.default_style.pk == _id:
             style = layer.default_style
-            is_default = True
         if not style:
             try:
                 style = layer.styles.get(id=_id)
@@ -106,15 +106,21 @@ class LayerStyleViewSet(BaseReadApi):
         # Save the style
         if style.is_default_style:
             style.id = None
+        if save_as:
+            style.id = None
+
         style.name = request.data['name']
         if style.name in Style.default_names():
             style.name = f'{style.name} ({layer.unique_id})'
         style.style = style_request
         style.save()
 
+        # Save this as default style
         if is_default:
             layer.default_style = style
             layer.save()
+
+        # Add style to styles
         layer.styles.add(style)
 
         return Response(
