@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from cloud_native_gis.models.layer import Layer
 from cloud_native_gis.models.style import Style
+from cloud_native_gis.serializer.general import LicenseSerializer
 from cloud_native_gis.utils.layer import layer_style_url
 
 
@@ -15,6 +16,7 @@ class LayerSerializer(serializers.ModelSerializer):
     created_by = serializers.SerializerMethodField()
     default_style = serializers.SerializerMethodField()
     styles = serializers.SerializerMethodField()
+    license = serializers.SerializerMethodField()
 
     def style_serializer(self, layer: Layer, style: Style):
         """Serialize a style for a layer."""
@@ -48,6 +50,12 @@ class LayerSerializer(serializers.ModelSerializer):
             self.style_serializer(obj, style)
             for style in obj.styles.all().order_by('name')
         ]
+
+    def get_license(self, obj: Layer):
+        """Return license."""
+        if not obj.license:
+            return None
+        return LicenseSerializer(obj.license).data
 
     class Meta:  # noqa: D106
         model = Layer

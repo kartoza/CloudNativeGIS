@@ -39,3 +39,8 @@ class AbstractResource(models.Model):
 
     class Meta:  # noqa: D106
         abstract = True
+
+
+class License(AbstractTerm):
+    """License model."""
+    pass

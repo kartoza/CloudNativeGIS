@@ -11,9 +11,8 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 
-from cloud_native_gis.models.general import (
-    AbstractTerm, AbstractResource
-)
+from cloud_native_gis.models.general import AbstractTerm, AbstractResource, \
+    License
 from cloud_native_gis.models.style import Style
 from cloud_native_gis.utils.connection import delete_table
 
@@ -43,11 +42,7 @@ class Layer(AbstractTerm, AbstractResource):
         default=uuid.uuid4,
         editable=False
     )
-    is_ready = models.BooleanField(
-        default=False,
-        help_text='Indicates if the layer is ready.'
-    )
-    type = models.CharField(
+    layer_type = models.CharField(
         max_length=256,
         default=LayerType.VECTOR_TILE,
         choices=(
@@ -55,10 +50,31 @@ class Layer(AbstractTerm, AbstractResource):
             (LayerType.RASTER_TILE, LayerType.RASTER_TILE),
         )
     )
+
+    is_ready = models.BooleanField(
+        default=False,
+        help_text='Indicates if the layer is ready.'
+    )
+
+    # METADATA
+    license = models.ForeignKey(
+        License,
+        null=True, blank=True,
+        on_delete=models.SET_NULL
+    )
+    abstract = models.TextField(
+        null=True, blank=True
+    )
+
+    attribution = models.CharField(
+        max_length=512,
+        null=True, blank=True
+    )
     metadata = models.JSONField(
         null=True, blank=True
     )
 
+    # STYLES
     default_style = models.ForeignKey(
         Style, null=True, blank=True, on_delete=models.SET_NULL,
         help_text='Default layer style',
