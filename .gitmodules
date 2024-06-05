@@ -1,4 +1,4 @@
-[submodule "django_project/cloud_native_gis/maputnik"]
-	path = django_project/cloud_native_gis/maputnik
+[submodule "maputnik"]
+	path = maputnik
 	url = git@github.com:kartoza/maputnik.git
 	branch = cloud-native-gis

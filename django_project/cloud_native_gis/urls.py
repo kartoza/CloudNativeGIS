@@ -33,6 +33,6 @@ urlpatterns = [
     path('api/', include(layer_router.urls)),
     path(
         'maputnik/',
-        TemplateView.as_view(template_name='maputnik/dist/index.html')
+        TemplateView.as_view(template_name='maputnik/index.html')
     )
 ]
