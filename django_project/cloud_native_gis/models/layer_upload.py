@@ -11,7 +11,7 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from cloud_native_gis.models.general import AbstractResource
-from cloud_native_gis.models.layer import Layer, LayerField
+from cloud_native_gis.models.layer import Layer, LayerAttributes
 from cloud_native_gis.models.style import (
     Style, LINE, POINT, POLYGON
 )
@@ -145,16 +145,19 @@ class LayerUpload(AbstractResource):
                         note='Save metadata to database',
                         progress=70
                     )
-                    self.layer.layerfield_set.all().delete()
-                    for field in fields(
-                            layer.schema_name,
-                            layer.table_name
+                    self.layer.layerattributes_set.all().delete()
+                    for idx, field in enumerate(
+                            fields(
+                                layer.schema_name,
+                                layer.table_name
+                            )
                     ):
                         if field.name != 'geometry':
-                            LayerField.objects.create(
+                            LayerAttributes.objects.create(
                                 layer=layer,
-                                name=field.name,
-                                type=field.type,
+                                attribute_name=field.name,
+                                attribute_type=field.type,
+                                attribute_order=idx
                             )
 
                     layer.is_ready = True

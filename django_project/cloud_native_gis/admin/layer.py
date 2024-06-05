@@ -5,16 +5,16 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from cloud_native_gis.forms.layer import LayerForm, LayerUploadForm
-from cloud_native_gis.models.layer import Layer, LayerField
+from cloud_native_gis.models.layer import Layer, LayerAttributes
 from cloud_native_gis.models.layer_upload import LayerUpload
 from cloud_native_gis.tasks import import_data
 from cloud_native_gis.utils.layer import layer_api_url, MAPUTNIK_URL
 
 
-class LayerFieldInline(admin.TabularInline):
-    """LayerField inline."""
+class LayerAttributeInline(admin.TabularInline):
+    """LayerAttribute inline."""
 
-    model = LayerField
+    model = LayerAttributes
     extra = 0
 
     def has_add_permission(self, request, obj):
@@ -36,7 +36,7 @@ class LayerAdmin(admin.ModelAdmin):
         'unique_id', 'name', 'created_by', 'created_at', 'tile_url', 'editor'
     )
     form = LayerForm
-    inlines = [LayerFieldInline]
+    inlines = [LayerAttributeInline]
     filter_horizontal = ['styles']
 
     def get_form(self, request, *args, **kwargs):

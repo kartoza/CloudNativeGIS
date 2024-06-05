@@ -115,12 +115,12 @@ class Layer(AbstractTerm, AbstractResource):
         )
 
     @property
-    def field_names(self):
+    def attribute_names(self):
         """Return list of field names in this layer."""
         return list(
-            self.layerfield_set.all().values_list(
-                'name', flat=True
-            ).order_by('name')
+            self.layerattributes_set.all().values_list(
+                'attribute_name', flat=True
+            ).order_by('attribute_name')
         )
 
     def absolute_tile_url(self, request):
@@ -137,15 +137,22 @@ class Layer(AbstractTerm, AbstractResource):
         self.save()
 
 
-class LayerField(models.Model):
+class LayerAttributes(models.Model):
     """Field of layer."""
 
     layer = models.ForeignKey(
         Layer,
         on_delete=models.CASCADE
     )
-    name = models.CharField(max_length=256)
-    type = models.CharField(max_length=256)
+    attribute_name = models.CharField(max_length=256)
+    attribute_type = models.CharField(max_length=256)
+    attribute_label = models.CharField(
+        max_length=256, null=True, blank=True
+    )
+    attribute_description = models.TextField(
+        null=True, blank=True
+    )
+    attribute_order = models.IntegerField(default=0)
 
 
 @receiver(post_delete, sender=Layer)

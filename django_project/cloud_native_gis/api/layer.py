@@ -1,6 +1,8 @@
 # coding=utf-8
 """Cloud Native GIS."""
 
+import copy
+
 from django.http import Http404
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -94,12 +96,15 @@ class LayerStyleViewSet(BaseReadApi):
             raise Http404
 
         # Clean style requests
-        style_request = {
-            'layers': []
-        }
-        for style_layer in request.data['style']['layers']:
+        style_request = copy.deepcopy(request.data['style'])
+        style_request['layers'] = []
+        try:
+            del style_request['sources']
+        except KeyError:
+            pass
+        for index, style_layer in enumerate(request.data['style']['layers']):
             if style_layer['type'] != 'raster':
-                style_layer['id'] = '<uuid>'
+                style_layer['id'] = f'<uuid>-{index}'
                 style_layer['source'] = '<uuid>'
                 style_request['layers'].append(style_layer)
 

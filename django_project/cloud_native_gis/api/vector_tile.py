@@ -16,7 +16,8 @@ class VectorTileLayer(APIView):
         """Return BasemapLayer list."""
         layer = get_object_or_404(Layer, unique_id=identifier)
         tiles = querying_vector_tile(
-            layer.query_table_name, field_names=layer.field_names,
+            layer.query_table_name,
+            field_names=layer.attribute_names,
             z=z, x=x, y=y
         )
 

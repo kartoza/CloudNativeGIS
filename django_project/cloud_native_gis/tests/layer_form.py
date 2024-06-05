@@ -33,7 +33,7 @@ class LayerFormTest(TestCase):
         layer = Layer.objects.filter(name='Test Layer').first()
         self.assertTrue(layer is not None)
         self.assertEqual(layer.created_by.pk, self.user.id)
-        self.assertEqual(layer.field_names, [])
+        self.assertEqual(layer.attribute_names, [])
 
         # Run the upload form
         filepath = ABS_PATH(
@@ -64,7 +64,7 @@ class LayerFormTest(TestCase):
 
         # Check fields
         self.assertEqual(
-            layer.field_names, ['CITY_NAME', 'CITY_TYPE', 'COUNTRY']
+            layer.attribute_names, ['CITY_NAME', 'CITY_TYPE', 'COUNTRY']
         )
         # Check count features
         self.assertEqual(
