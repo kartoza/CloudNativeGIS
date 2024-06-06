@@ -1,3 +1,3 @@
 # coding=utf-8
-from .api import *
-from .layer_form import *
+from cloud_native_gis.tests.api import *
+from cloud_native_gis.tests.layer_form import *

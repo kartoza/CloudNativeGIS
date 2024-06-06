@@ -1,3 +1,4 @@
 # coding=utf-8
+"""Cloud Native GIS."""
 
-from .user import *  # noqa
+from cloud_native_gis.tests.model_factories.user import *  # noqa
