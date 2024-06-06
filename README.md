@@ -1,1 +1,1 @@
-# Kartoza Context Layer Management
+# Kartoza Cloud Native GIS

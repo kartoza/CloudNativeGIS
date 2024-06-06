@@ -1,4 +1,4 @@
-"""Context Layer Management."""
+"""Cloud Native GIS."""
 
 import json
 from urllib.parse import urlparse

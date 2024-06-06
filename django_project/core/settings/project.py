@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-Context Layer Management.
+Cloud Native GIS.
 
 .. note:: Project level settings.
 """
@@ -29,9 +29,12 @@ DEBUG = TEMPLATE_DEBUG = False
 # Extra installed apps
 INSTALLED_APPS = INSTALLED_APPS + (
     'core',
-    'frontend',
+    'cloud_native_gis',
+    'frontend'
 )
 
 TEMPLATES[0]['DIRS'] += [
     absolute_path('frontend', 'templates'),
 ]
+
+MAPUTNIK_URL = os.environ.get('MAPUTNIK_URL', '/maputnik')

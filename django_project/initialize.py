@@ -1,4 +1,4 @@
-"""Context Layer Management."""
+"""Cloud Native GIS."""
 
 #########################################################
 # Setting up the  context

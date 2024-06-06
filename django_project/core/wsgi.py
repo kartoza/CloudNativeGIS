@@ -1,5 +1,5 @@
 """
-Context Layer Management.
+Cloud Native GIS.
 
 .. note::WSGI config for core project.
 

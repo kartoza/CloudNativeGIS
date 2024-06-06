@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-Context Layer Management.
+Cloud Native GIS.
 
 .. note:: Settings for development mode.
 """
@@ -64,3 +64,8 @@ WEBPACK_LOADER['DEFAULT']['CACHE'] = DEBUG
 WEBPACK_LOADER['DEFAULT']['STATS_FILE'] = absolute_path(
     'frontend', 'webpack-stats.dev.json'
 )
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http:\/\/localhost:*([0-9]+)?$",
+    r"^http:\/\/127.0.0.1:*([0-9]+)?$",
+]

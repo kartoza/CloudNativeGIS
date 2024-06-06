@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-Context Layer Management.
+Cloud Native GIS.
 
 .. note:: Settings for 3rd party.
 """
@@ -11,12 +11,14 @@ from .utils import absolute_path
 INSTALLED_APPS = INSTALLED_APPS + (
     'rest_framework',
     'rest_framework_gis',
+    'corsheaders',
     'webpack_loader',
     'guardian',
     'django_cleanup.apps.CleanupConfig',
     'django_celery_beat',
     'django_celery_results',
 )
+
 WEBPACK_LOADER = {
     'DEFAULT': {
         'BUNDLE_DIR_NAME': 'frontend/',  # must end with slash
@@ -28,18 +30,10 @@ WEBPACK_LOADER = {
     }
 }
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+    'DEFAULT_PAGINATION_CLASS': (
+        'rest_framework.pagination.LimitOffsetPagination'
     ),
-    'DEFAULT_VERSIONING_CLASS': (
-        'rest_framework.versioning.NamespaceVersioning'
-    ),
+    'PAGE_SIZE': 100
 }
 
 AUTHENTICATION_BACKENDS = (

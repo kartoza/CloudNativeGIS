@@ -54,18 +54,21 @@ STATICFILES_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
     absolute_path('core', 'static'),
     absolute_path('frontend', 'bundles'),
+    absolute_path('cloud_native_gis', 'maputnik'),
 )
 
 # Every cache key will get prefixed with this value - here we set it to
 # the name of the directory the project is in to try and use something
 # project specific.
 CACHE_MIDDLEWARE_KEY_PREFIX = os.getenv(
-    'COMPOSE_PROJECT_NAME', 'kartoza_django_project')
+    'COMPOSE_PROJECT_NAME', 'kartoza_django_project'
+)
 
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -84,6 +87,7 @@ TEMPLATES = [
         'DIRS': [
             # Put Templates
             absolute_path('core', 'templates'),
+            absolute_path('cloud_native_gis'),
         ],
         'OPTIONS': {
             'loaders': [

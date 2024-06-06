@@ -64,6 +64,28 @@ serve:
 	@echo "------------------------------------------------------------------"
 	@cd django_project/frontend; npm install --verbose; npm run serve;
 
+serve-maputnik:
+	@echo
+	@echo "------------------------------------------------------------------"
+	@echo "Execute webpack serve command"
+	@echo "------------------------------------------------------------------"
+	@cd maputnik; npm install --verbose; npm run start;
+
+run-build-maputnik:
+	@echo
+	@echo "------------------------------------------------------------------"
+	@echo "Build maptunik"
+	@echo "------------------------------------------------------------------"
+	@cd maputnik; npm install --verbose; npm run build-django;
+
+build-maputnik: run-build-maputnik
+	@echo
+	@echo "------------------------------------------------------------------"
+	@echo "Change html to django"
+	@echo "------------------------------------------------------------------"
+	@cd ../../;
+	@python3 maputnik_html_to_django.py
+
 down:
 	@echo
 	@echo "------------------------------------------------------------------"
