@@ -140,7 +140,7 @@ class Layer(AbstractTerm, AbstractResource):
         )
 
     def absolute_tile_url(self, request):
-        """Return absolute tile url"""
+        """Return absolute tile url."""
         if self.tile_url and request:
             return request.build_absolute_uri('/')[:-1] + self.tile_url
         else:

@@ -35,6 +35,7 @@ class LayerStyleSerializer(serializers.ModelSerializer):
         return style
 
     def to_representation(self, instance):
+        """Return representation of layer."""
         data = super(LayerStyleSerializer, self).to_representation(instance)
         data.update(self.get_style(obj=instance))
         return data

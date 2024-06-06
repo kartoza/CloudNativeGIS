@@ -18,6 +18,7 @@ class BaseReadApi(
     GenericViewSet
 ):
     """Base Read API View."""
+
     form_class = None
     lookup_field = 'id'
 

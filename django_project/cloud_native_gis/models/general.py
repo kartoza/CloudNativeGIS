@@ -43,4 +43,5 @@ class AbstractResource(models.Model):
 
 class License(AbstractTerm):
     """License model."""
+
     pass
