@@ -11,8 +11,9 @@ from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.urls import reverse
 
-from cloud_native_gis.models.general import AbstractTerm, AbstractResource, \
-    License
+from cloud_native_gis.models.general import (
+    AbstractTerm, AbstractResource, License
+)
 from cloud_native_gis.models.style import Style
 from cloud_native_gis.utils.connection import delete_table
 

@@ -29,8 +29,8 @@ DEBUG = TEMPLATE_DEBUG = False
 # Extra installed apps
 INSTALLED_APPS = INSTALLED_APPS + (
     'core',
-    'frontend',
-    'cloud_native_gis'
+    'cloud_native_gis',
+    'frontend'
 )
 
 TEMPLATES[0]['DIRS'] += [
