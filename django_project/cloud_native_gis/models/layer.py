@@ -116,7 +116,7 @@ class Layer(AbstractTerm, AbstractResource):
             return None
 
         return reverse(
-            'cloud-native-gis-tile-api',
+            'cloud-native-gis-vector-tile',
             kwargs={
                 'identifier': self.unique_id,
                 'x': '0',

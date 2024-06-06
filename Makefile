@@ -71,18 +71,12 @@ serve-maputnik:
 	@echo "------------------------------------------------------------------"
 	@cd maputnik; npm install --verbose; npm run start;
 
-run-build-maputnik:
-	@echo
-	@echo "------------------------------------------------------------------"
-	@echo "Build maptunik"
-	@echo "------------------------------------------------------------------"
-	@cd maputnik; npm install --verbose; npm run build-django;
-
-build-maputnik: run-build-maputnik
+build-maputnik:
 	@echo
 	@echo "------------------------------------------------------------------"
 	@echo "Change html to django"
 	@echo "------------------------------------------------------------------"
+	@cd maputnik; npm install --verbose; npm run build-django;
 	@cd ../../;
 	@python3 maputnik_html_to_django.py
 

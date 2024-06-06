@@ -8,7 +8,7 @@ from cloud_native_gis.forms.layer import LayerForm, LayerUploadForm
 from cloud_native_gis.models.layer import Layer, LayerAttributes
 from cloud_native_gis.models.layer_upload import LayerUpload
 from cloud_native_gis.tasks import import_data
-from cloud_native_gis.utils.layer import layer_api_url, MAPUTNIK_URL
+from cloud_native_gis.utils.layer import layer_api_url, maputnik_url
 
 
 class LayerAttributeInline(admin.TabularInline):
@@ -61,7 +61,7 @@ class LayerAdmin(admin.ModelAdmin):
     def editor(self, obj: Layer):
         """Return fields."""
         return mark_safe(
-            f"<a target='__blank__' href='{MAPUTNIK_URL}?"
+            f"<a target='__blank__' href='{maputnik_url()}?"
             f"api-url={layer_api_url(obj, self.request)}"
             f"'>Editor</a>"
         )

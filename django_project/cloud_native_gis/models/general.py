@@ -30,7 +30,9 @@ class AbstractResource(models.Model):
 
     created_by = models.ForeignKey(
         User, on_delete=models.CASCADE,
-        editable=False
+        editable=False,
+        related_name="%(app_label)s_%(class)s_related",
+        related_query_name="%(app_label)s_%(class)ss",
     )
     created_at = models.DateTimeField(
         default=timezone.now,

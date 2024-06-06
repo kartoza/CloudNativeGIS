@@ -1,0 +1,4 @@
+include django_project/LICENSE
+include README.md
+recursive-include django_project/cloud_native_gis/static *
+recursive-include django_project/cloud_native_gis/templates *

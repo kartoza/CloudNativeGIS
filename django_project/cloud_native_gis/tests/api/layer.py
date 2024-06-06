@@ -34,7 +34,7 @@ class LayerTest(BaseTest, TestCase):
 
     def test_list_api(self):
         """Test List API."""
-        url = reverse('cloud-native-gis-view-set-list')
+        url = reverse('cloud-native-gis-layer-view-set-list')
         response = self.assertRequestGetView(url, 200, user=self.user)
         self.assertEqual(len(response.json()['results']), 2)
 
@@ -45,13 +45,13 @@ class LayerTest(BaseTest, TestCase):
                 'name__contains': 'Layer 2'
             }
         )
-        url = reverse('cloud-native-gis-view-set-list') + '?' + params
+        url = reverse('cloud-native-gis-layer-view-set-list') + '?' + params
         response = self.assertRequestGetView(url, 200, user=self.user)
         self.assertEqual(len(response.json()['results']), 1)
 
     def test_create_api(self):
         """Test POST API."""
-        url = reverse('cloud-native-gis-view-set-list')
+        url = reverse('cloud-native-gis-layer-view-set-list')
         response = self.assertRequestPostView(
             url, 201,
             user=self.user,
@@ -69,11 +69,11 @@ class LayerTest(BaseTest, TestCase):
 
     def test_detail_api(self):
         """Test GET detail api."""
-        url = reverse('cloud-native-gis-view-set-list', args=[0])
+        url = reverse('cloud-native-gis-layer-view-set-list', args=[0])
         self.assertRequestGetView(url, 404)
 
         url = reverse(
-            'cloud-native-gis-view-set-detail',
+            'cloud-native-gis-layer-view-set-detail',
             kwargs={'id': self.layer_1.id}
         )
         response = self.assertRequestGetView(url, 200, user=self.user).json()
@@ -86,11 +86,11 @@ class LayerTest(BaseTest, TestCase):
 
     def test_update_api(self):
         """Test PUT API."""
-        url = reverse('cloud-native-gis-view-set-list', args=[0])
+        url = reverse('cloud-native-gis-layer-view-set-list', args=[0])
         self.assertRequestPutView(url, 404, data={})
 
         url = reverse(
-            'cloud-native-gis-view-set-detail',
+            'cloud-native-gis-layer-view-set-detail',
             kwargs={'id': self.layer_1.id}
         )
         self.assertRequestPutView(url, 403, data={})
@@ -118,10 +118,10 @@ class LayerTest(BaseTest, TestCase):
     def test_delete_api(self):
         """Test DELETE API."""
         _id = self.layer_1.id
-        url = reverse('cloud-native-gis-view-set-detail', args=[0])
+        url = reverse('cloud-native-gis-layer-view-set-detail', args=[0])
         self.assertRequestDeleteView(url, 404)
         url = reverse(
-            'cloud-native-gis-view-set-detail', kwargs={'id': _id}
+            'cloud-native-gis-layer-view-set-detail', kwargs={'id': _id}
         )
         self.assertRequestDeleteView(url, 403)
         self.assertRequestDeleteView(url, 403, user=self.user_1)

@@ -14,7 +14,7 @@ from cloud_native_gis.models.layer import Layer
 from cloud_native_gis.models.style import Style
 from cloud_native_gis.serializer.layer import LayerSerializer
 from cloud_native_gis.serializer.style import LayerStyleSerializer
-from cloud_native_gis.utils.layer import layer_style_url, MAPUTNIK_URL
+from cloud_native_gis.utils.layer import layer_style_url, maputnik_url
 
 
 class LayerViewSet(BaseApi):
@@ -129,6 +129,6 @@ class LayerStyleViewSet(BaseReadApi):
         layer.styles.add(style)
 
         return Response(
-            f'{MAPUTNIK_URL}?styleUrl='
+            f'{maputnik_url()}?styleUrl='
             f'{layer_style_url(layer, style, self.request)}'
         )

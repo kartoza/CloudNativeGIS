@@ -1,4 +1,4 @@
 [submodule "maputnik"]
 	path = maputnik
-	url = git@github.com:kartoza/maputnik.git
+	url = https://github.com/kartoza/maputnik.git
 	branch = cloud-native-gis

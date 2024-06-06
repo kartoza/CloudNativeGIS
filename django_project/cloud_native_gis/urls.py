@@ -13,7 +13,7 @@ from cloud_native_gis.api.vector_tile import (VectorTileLayer)
 
 router = DefaultRouter()
 router.register(
-    r'layer', LayerViewSet, basename='cloud-native-gis-view-set'
+    r'layer', LayerViewSet, basename='cloud-native-gis-layer-view-set'
 )
 layer_router = NestedSimpleRouter(
     router, r'layer', lookup='layer'
@@ -27,12 +27,13 @@ urlpatterns = [
     path(
         '<str:identifier>/tile/<int:z>/<int:x>/<int:y>/',
         VectorTileLayer.as_view(),
-        name='cloud-native-gis-tile-api'
+        name='cloud-native-gis-vector-tile'
     ),
     path('api/', include(router.urls)),
     path('api/', include(layer_router.urls)),
     path(
         'maputnik/',
-        TemplateView.as_view(template_name='maputnik/index.html')
+        TemplateView.as_view(template_name='cloud_native_gis/maputnik.html'),
+        name='cloud-native-gis-maputnik'
     )
 ]
