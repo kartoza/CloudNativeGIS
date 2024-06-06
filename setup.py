@@ -1,3 +1,8 @@
+"""
+Cloud Native GIS.
+
+.. note:: Application setup.
+"""
 # !/usr/bin/env python
 
 import io

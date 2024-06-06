@@ -1,3 +1,8 @@
+"""
+Cloud Native GIS.
+
+.. note:: Script for changing html to django templates.
+"""
 import re
 
 
