@@ -1,20 +1,3 @@
-# Cloud Native GIS
-
-[![Tests](https://github.com/kartoza/CloudNativeGIS/workflows/Tests/badge.svg)](https://github.com/kartoza/CloudNativeGIS/actions/workflows/tests.yaml)
-[![📖 Documentation](https://github.com/kartoza/CloudNativeGIS/actions/workflows/BuildMKDocsAndPublishToGithubPages.yml/badge.svg)](https://kartoza.github.io/CloudNativeGIS/)
-
-## Overview
-
-Cloud Native GIS is a platform for handling layers and served on map.
-
-## Key Concepts
-
-**Layer** can be in vector and raster and being served as tile.
-
-**Style** is saved in database. Vector layer is in mapbox style.
-
-**Maputnik** is being used to change the style.
-
 ## Quick installation
 
 ### Production
@@ -87,8 +70,10 @@ Wait until it is on.
 
 The web can be accessed using `http://localhost:5000/`
 
-If the web is taking long time to load, restart cloud_native_gis_dev_1 container.<br>
-The sequence should be `make dev`, after that run or restart cloud_native_gis_dev_1.
+If the web is taking long time to load, restart cloud_native_gis_dev_1
+container.<br>
+The sequence should be `make dev`, after that run or restart
+cloud_native_gis_dev_1.
 
 ### Maputnik updates
 

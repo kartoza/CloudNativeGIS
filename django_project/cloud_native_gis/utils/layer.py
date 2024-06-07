@@ -12,7 +12,10 @@ from cloud_native_gis.models.style import Style
 def maputnik_url() -> str:
     """Return url for mapnik layer."""
     try:
-        return os.environ['MAPUTNIK_URL']
+        maputnik_url = os.environ['MAPUTNIK_URL']
+        if not maputnik_url:
+            raise KeyError()
+        return maputnik_url
     except KeyError:
         return reverse('cloud-native-gis-maputnik')
 

@@ -61,6 +61,7 @@ services:
       - DATABASE_PASSWORD=${DATABASE_PASSWORD:-docker}
       - DATABASE_HOST=${DATABASE_HOST:-db}
       - DJANGO_SETTINGS_MODULE=core.settings.dev
+      - MAPUTNIK_URL=${MAPUTNIK_URL}
 
       # Email where alters should be sent. This will be used by let's encrypt and as the django admin email.
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}

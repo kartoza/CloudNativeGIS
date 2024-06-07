@@ -68,6 +68,7 @@ jobs:
           make dev-runserver
           make dev-load-demo-data
           make sleep
+
       # TODO:
       #  Fix this after we have the tests
       #      - name: Test django endpoint

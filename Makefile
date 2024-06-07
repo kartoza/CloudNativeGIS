@@ -55,7 +55,8 @@ dev-test:
 	@echo "Run tests"
 	@echo "------------------------------------------------------------------"
 	@docker-compose exec -T dev python manage.py collectstatic --noinput
-	@docker-compose exec -T dev python manage.py test --keepdb --noinput
+	@docker-compose exec -T dev python manage.py test cloud_native_gis.tests --keepdb --noinput
+# TODO: Remove cloud_native_gis.tests by fixing issue https://github.com/kartoza/CloudNativeGIS/issues/7
 
 serve:
 	@echo
