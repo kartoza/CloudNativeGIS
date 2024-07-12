@@ -25,7 +25,7 @@ def layer_style_url(layer: Layer, style: Style, request) -> str:
     if not style:
         return None
     return request.build_absolute_uri('/')[:-1] + reverse(
-        'cloud-native-gis-style-view-set-detail',
+        'cloud-native-gis-style-detail',
         kwargs={
             'layer_id': layer.id,
             'id': style.id
@@ -36,7 +36,7 @@ def layer_style_url(layer: Layer, style: Style, request) -> str:
 def layer_api_url(layer: Layer, request) -> str:
     """Return layer api url."""
     return request.build_absolute_uri('/')[:-1] + reverse(
-        'cloud-native-gis-layer-view-set-detail',
+        'cloud-native-gis-layer-detail',
         kwargs={
             'id': layer.id
         }

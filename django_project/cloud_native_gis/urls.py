@@ -13,14 +13,14 @@ from cloud_native_gis.api.vector_tile import (VectorTileLayer)
 
 router = DefaultRouter()
 router.register(
-    r'layer', LayerViewSet, basename='cloud-native-gis-layer-view-set'
+    r'layer', LayerViewSet, basename='cloud-native-gis-layer'
 )
 layer_router = NestedSimpleRouter(
     router, r'layer', lookup='layer'
 )
 layer_router.register(
     'style', LayerStyleViewSet,
-    basename='cloud-native-gis-style-view-set'
+    basename='cloud-native-gis-style'
 )
 
 urlpatterns = [
