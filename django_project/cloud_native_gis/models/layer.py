@@ -147,6 +147,14 @@ class Layer(AbstractTerm, AbstractResource):
         else:
             return None
 
+    def maputnik_url(self, request):
+        """Return absolute url for maputnik."""
+        from cloud_native_gis.utils.layer import layer_api_url, maputnik_url
+        if self.tile_url and request:
+            return f"{maputnik_url()}?api-url={layer_api_url(self, request)}"
+        else:
+            return None
+
     def update_default_style(self, style: Style):
         """Update default style."""
         self.default_style = style
