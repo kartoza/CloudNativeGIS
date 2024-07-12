@@ -27,8 +27,8 @@ def maputnik_html_to_django():
             r'href="{% static "\1" %}"',
             filedata
         )
-        filedata = filedata.replace('/maputnik', '')
-        filedata = filedata.replace('/static', '')
+        filedata = filedata.replace('/maputnik/static/', '')
+        filedata = filedata.replace('/static/static/', '')
         filedata = filedata.replace(
             '</head>',
             '''
@@ -41,7 +41,13 @@ def maputnik_html_to_django():
         file.write(filedata)
 
     # Move static file
-    static_folder = os.path.join(folder, 'cloud_native_gis', 'static')
+    static_folder = os.path.join(
+        folder, 'cloud_native_gis', 'static', 'cloud_native_gis'
+    )
+    shutil.rmtree(
+        'django_project/cloud_native_gis/static/cloud_native_gis',
+        ignore_errors=True
+    )
     shutil.move(static_folder, 'django_project/cloud_native_gis/static')
     shutil.move(
         path, os.path.join(folder, 'cloud_native_gis/maputnik.html')
