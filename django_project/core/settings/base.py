@@ -54,7 +54,7 @@ STATICFILES_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
     absolute_path('core', 'static'),
     absolute_path('frontend', 'bundles'),
-    absolute_path('cloud_native_gis', 'templates', 'cloud_native_gis'),
+    absolute_path('cloud_native_gis', 'static'),
 )
 
 # Every cache key will get prefixed with this value - here we set it to
