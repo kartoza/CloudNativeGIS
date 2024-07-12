@@ -29,11 +29,13 @@ def start_upload_data(modeladmin, request, queryset):
         import_data.delay(layer.pk)
 
 
+@admin.register(Layer)
 class LayerAdmin(admin.ModelAdmin):
     """Layer admin."""
 
     list_display = (
-        'unique_id', 'name', 'created_by', 'created_at', 'tile_url', 'editor'
+        'unique_id', 'name', 'created_by', 'created_at',
+        'is_ready', 'tile_url', 'editor'
     )
     form = LayerForm
     inlines = [LayerAttributeInline]
@@ -60,6 +62,8 @@ class LayerAdmin(admin.ModelAdmin):
 
     def editor(self, obj: Layer):
         """Return fields."""
+        if not obj.tile_url:
+            return None
         return mark_safe(
             f"<a target='__blank__' href='{maputnik_url()}?"
             f"api-url={layer_api_url(obj, self.request)}"
@@ -69,6 +73,7 @@ class LayerAdmin(admin.ModelAdmin):
     editor.allow_tags = True
 
 
+@admin.register(LayerUpload)
 class LayerUploadAdmin(admin.ModelAdmin):
     """Layer admin."""
 
@@ -84,7 +89,3 @@ class LayerUploadAdmin(admin.ModelAdmin):
         form = super(LayerUploadAdmin, self).get_form(request, *args, **kwargs)
         form.user = request.user
         return form
-
-
-admin.site.register(Layer, LayerAdmin)
-admin.site.register(LayerUpload, LayerUploadAdmin)
