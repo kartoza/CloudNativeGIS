@@ -11,6 +11,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import mixins, GenericViewSet
 
+from cloud_native_gis.pagination import Pagination
+
 
 class BaseReadApi(
     mixins.ListModelMixin,
@@ -21,6 +23,7 @@ class BaseReadApi(
 
     form_class = None
     lookup_field = 'id'
+    pagination_class = Pagination
 
     def filter_query(self, request, query, ignores: list, fields: list = None):
         """Return filter query."""

@@ -144,7 +144,6 @@ class LayerStyleViewSet(LayerObjectViewSet):
 class LayerUploadViewSet(LayerObjectViewSet):
     """API layer upload style."""
 
-    parser_classes = (Layer,)
     serializer_class = LayerUploadSerializer
 
     def get_queryset(self):
