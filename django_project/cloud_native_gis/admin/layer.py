@@ -8,7 +8,6 @@ from cloud_native_gis.forms.layer import LayerForm, LayerUploadForm
 from cloud_native_gis.models.layer import Layer, LayerAttributes
 from cloud_native_gis.models.layer_upload import LayerUpload
 from cloud_native_gis.tasks import import_data
-from cloud_native_gis.utils.layer import layer_api_url, maputnik_url
 
 
 class LayerAttributeInline(admin.TabularInline):
@@ -29,11 +28,13 @@ def start_upload_data(modeladmin, request, queryset):
         import_data.delay(layer.pk)
 
 
+@admin.register(Layer)
 class LayerAdmin(admin.ModelAdmin):
     """Layer admin."""
 
     list_display = (
-        'unique_id', 'name', 'created_by', 'created_at', 'tile_url', 'editor'
+        'unique_id', 'name', 'created_by', 'created_at',
+        'is_ready', 'tile_url', 'editor'
     )
     form = LayerForm
     inlines = [LayerAttributeInline]
@@ -60,15 +61,17 @@ class LayerAdmin(admin.ModelAdmin):
 
     def editor(self, obj: Layer):
         """Return fields."""
+        maputnik_url = obj.maputnik_url(self.request)
+        if not maputnik_url:
+            return None
         return mark_safe(
-            f"<a target='__blank__' href='{maputnik_url()}?"
-            f"api-url={layer_api_url(obj, self.request)}"
-            f"'>Editor</a>"
+            f"<a target='__blank__' href='{maputnik_url}'>Editor</a>"
         )
 
     editor.allow_tags = True
 
 
+@admin.register(LayerUpload)
 class LayerUploadAdmin(admin.ModelAdmin):
     """Layer admin."""
 
@@ -84,7 +87,3 @@ class LayerUploadAdmin(admin.ModelAdmin):
         form = super(LayerUploadAdmin, self).get_form(request, *args, **kwargs)
         form.user = request.user
         return form
-
-
-admin.site.register(Layer, LayerAdmin)
-admin.site.register(LayerUpload, LayerUploadAdmin)
