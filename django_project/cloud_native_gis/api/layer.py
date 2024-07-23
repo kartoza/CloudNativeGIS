@@ -149,7 +149,7 @@ class LayerUploadViewSet(LayerObjectViewSet):
     def get_queryset(self):
         """Return queryset of API."""
         layer = self._get_layer()
-        return layer.layerupload_set.all()
+        return layer.layerupload_set.all().order_by('-pk')
 
     def post(self, request, layer_id):
         """Post file."""
