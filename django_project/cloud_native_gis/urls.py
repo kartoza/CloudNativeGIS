@@ -7,9 +7,9 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 
 from cloud_native_gis.api.layer import (
-    LayerViewSet, LayerStyleViewSet
+    LayerViewSet, LayerStyleViewSet, LayerUploadViewSet
 )
-from cloud_native_gis.api.vector_tile import (VectorTileLayer)
+from cloud_native_gis.api.vector_tile import VectorTileLayer
 
 router = DefaultRouter()
 router.register(
@@ -21,6 +21,10 @@ layer_router = NestedSimpleRouter(
 layer_router.register(
     'style', LayerStyleViewSet,
     basename='cloud-native-gis-style'
+)
+layer_router.register(
+    'layer-upload', LayerUploadViewSet,
+    basename='cloud-native-gis-layer-upload'
 )
 
 urlpatterns = [
