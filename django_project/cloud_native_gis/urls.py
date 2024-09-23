@@ -54,6 +54,10 @@ urlpatterns = [
         TemplateView.as_view(template_name='cloud_native_gis/maputnik.html'),
         name='cloud-native-gis-maputnik'
     ),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc-ui'),
+    path('swagger/',
+         schema_view.with_ui('swagger', cache_timeout=0),
+         name='schema-swagger-ui'),
+    path('redoc/',
+         schema_view.with_ui('redoc', cache_timeout=0),
+         name='schema-redoc-ui'),
 ]
