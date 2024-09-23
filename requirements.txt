@@ -19,4 +19,3 @@ black
 cffi
 # Needed for PDF back page QR Code
 qrcode
-drf-yasg==1.21.7
