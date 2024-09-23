@@ -40,4 +40,5 @@ redis==4.3.4
 
 # Library to handle geospatial functions
 GeoAlchemy2==0.15.1
-geopandas==0.13.2
+geopandas==0.14.4
+drf-yasg==1.21.7
