@@ -14,6 +14,8 @@ class ContextAPIViewTest(BaseTest, TestCase):
         self.client = APIClient()
 
         self.user = create_user(password=self.password)
+        self.client.login(
+            username=self.user.username, password=self.password)
 
         # Create a mock Layer object for testing
         self.layer = Layer.objects.create(

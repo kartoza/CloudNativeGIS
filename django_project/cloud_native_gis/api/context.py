@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -12,6 +13,8 @@ class ContextAPIView(APIView):
     """Context API endpoint for collection queries.
     Basic query validation, log query, get data and return results.
     """
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         try:
             key = request.GET.get('key', None)
