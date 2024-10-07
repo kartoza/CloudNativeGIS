@@ -12,9 +12,9 @@ def querying_vector_tile(
     # Define the zoom level at which to start simplifying geometries
     simplify_zoom_threshold = 5
 
-    # Apply exponential tolerance for simplification if zoom level is less than the threshold
     simplify_tolerance = (
-        0 if z > simplify_zoom_threshold else 1000 * math.exp(simplify_zoom_threshold - z)
+        0 if z > simplify_zoom_threshold else
+        1000 * math.exp(simplify_zoom_threshold - z)
     )
 
     # Conditional geometry transformation
