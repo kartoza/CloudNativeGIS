@@ -1,3 +1,6 @@
+# coding=utf-8
+"""Geometry utils."""
+
 import re
 
 from django.contrib.gis.geos import Point
@@ -6,6 +9,7 @@ from django.db import connection
 
 def parse_coord(x: str, y: str, srid: str = '4326') -> Point:
     """Parse string DD/DM/DMS coordinate input. Split by °,',".
+
     Signed degrees or suffix E/W/N/S.
 
     :param x: (longitude)
@@ -82,28 +86,23 @@ def query_features(
         field_names: list,
         coordinates: list,
         tolerance: float,
-        srid: int = 4326
-):
+        srid: int = 4326):
     """
-    Return raw feature data from the specified table for multiple (x, y)
-    coordinates within a tolerance radius.
+    Return raw feature data for multiple (x, y) coordinates within a radius.
 
-    :param table_name: Name of the table to query.
-    :param field_names: List of field names to retrieve.
-    :param coordinates: List of (x, y) tuples.
-    :param tolerance: The tolerance radius to use for the query.
-    :param srid: SRID of the coordinate
+    Args:
+        table_name (str): The name of the database table
+            containing the features.
+        field_names (list): A list of field names to retrieve from the table.
+        coordinates (list): A list of tuples containing (x, y)
+            coordinate pairs.
+        tolerance (float): The radius tolerance for the spatial query.
+        srid (int, optional): Spatial Reference System Identifier.
+            Defaults to 4326.
 
-    return: A dictionary containing a status message and a list of results
-            for each coordinate.
-         The 'result' key holds a list of dictionaries, each containing:
-         - 'coordinates': The (x, y) coordinate tuple.
-         - 'feature': A dictionary of field values if a feature is found;
-            empty fields if not.
-         The 'status_message' key holds an error or status message if any
-         issues are encountered.
+    Returns:
+        list: A list of dictionaries representing the feature data.
     """
-
     data = []
 
     status_message = ''

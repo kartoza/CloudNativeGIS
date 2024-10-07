@@ -1,3 +1,6 @@
+# coding=utf-8
+"""Cloud Native GIS."""
+
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,12 +13,17 @@ from cloud_native_gis.models.layer import Layer
 
 
 class ContextAPIView(APIView):
-    """Context API endpoint for collection queries.
-    Basic query validation, log query, get data and return results.
     """
+    Context API endpoint for collection queries.
+
+    Only accessible to authenticated users.
+    Validates the query, processes data, and returns results.
+    """
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """Handle GET requests."""
         try:
             key = request.GET.get('key', None)
             attributes = request.GET.get('attr', '')
