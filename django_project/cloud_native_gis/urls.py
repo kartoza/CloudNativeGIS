@@ -10,6 +10,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from cloud_native_gis.api.context import ContextAPIView
 from cloud_native_gis.api.layer import (
     LayerViewSet, LayerStyleViewSet
 )
@@ -49,6 +50,9 @@ urlpatterns = [
     ),
     path('api/', include(router.urls)),
     path('api/', include(layer_router.urls)),
+    path('api/context/',
+         ContextAPIView.as_view(),
+         name='cloud-native-gis-context'),
     path(
         'maputnik/',
         TemplateView.as_view(template_name='cloud_native_gis/maputnik.html'),
