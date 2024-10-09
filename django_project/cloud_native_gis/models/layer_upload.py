@@ -192,7 +192,7 @@ class LayerUpload(AbstractResource):
                 note='',
                 progress=100
             )
-            self.delete_folder()
+            # self.delete_folder()
 
 
 @receiver(post_delete, sender=LayerUpload)
