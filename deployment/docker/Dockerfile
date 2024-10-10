@@ -8,6 +8,7 @@ RUN apt-get update -y && \
     python3-dev python3-gdal python3-psycopg2 python3-ldap \
     python3-pip python3-pil python3-lxml python3-pylibmc \
     uwsgi uwsgi-plugin-python3 \
+    gdal-bin \
     libprotobuf-dev protobuf-compiler zlib1g-dev git && \
     echo "Installing Tippecanoe" && \
     git clone https://github.com/felt/tippecanoe.git /tmp/tippecanoe && \
