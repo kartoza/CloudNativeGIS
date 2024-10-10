@@ -14,6 +14,7 @@ from cloud_native_gis.api.context import ContextAPIView
 from cloud_native_gis.api.layer import (
     LayerViewSet, LayerStyleViewSet
 )
+from cloud_native_gis.api.pmtile import serve_pmtiles
 from cloud_native_gis.api.vector_tile import (VectorTileLayer)
 
 schema_view = get_schema_view(
@@ -64,4 +65,6 @@ urlpatterns = [
     path('redoc/',
          schema_view.with_ui('redoc', cache_timeout=0),
          name='schema-redoc-ui'),
+    path('api/serve-pmtile/<uuid:layer_uuid>/',
+         serve_pmtiles, name='serve-pmtiles'),
 ]
