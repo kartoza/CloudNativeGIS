@@ -156,6 +156,18 @@ class Layer(AbstractTerm, AbstractResource):
         else:
             return None
 
+    def absolute_pmtiles_url(self, request):
+        """Return absolute pmtiles url."""
+        if self.tile_url and request:
+            return (
+                f'pmtiles://{request.build_absolute_uri("/")[:-1]}'
+                + reverse('serve-pmtiles', kwargs={
+                    'layer_uuid': self.unique_id,
+                })
+            )
+        else:
+            return None
+
     def maputnik_url(self, request):
         """Return absolute url for maputnik."""
         from cloud_native_gis.utils.layer import layer_api_url, maputnik_url
@@ -264,7 +276,7 @@ class Layer(AbstractTerm, AbstractResource):
                         '-o',
                         pmtiles_filepath,
                         '-l',
-                        'zcta',
+                        'default',
                         json_filepath],
                     check=True
                 )
