@@ -11,9 +11,9 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from cloud_native_gis.api.layer import (
-    LayerViewSet, LayerStyleViewSet
+    LayerViewSet, LayerStyleViewSet, LayerUploadViewSet
 )
-from cloud_native_gis.api.vector_tile import (VectorTileLayer)
+from cloud_native_gis.api.vector_tile import VectorTileLayer
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -39,6 +39,10 @@ layer_router = NestedSimpleRouter(
 layer_router.register(
     'style', LayerStyleViewSet,
     basename='cloud-native-gis-style'
+)
+layer_router.register(
+    'layer-upload', LayerUploadViewSet,
+    basename='cloud-native-gis-layer-upload'
 )
 
 urlpatterns = [

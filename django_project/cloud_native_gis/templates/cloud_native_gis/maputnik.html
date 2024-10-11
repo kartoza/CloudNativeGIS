@@ -38,7 +38,13 @@
     }
 
   </style>
-  <script type="module" crossorigin src="{% static "cloud_native_gis/index-DRZ64yjZ.js" %}"></script>
+  <script>
+    let inputStyle = window.inputStyle;
+    if (inputStyle){
+      inputStyle = JSON.parse(inputStyle)
+    }
+  </script>
+  <script type="module" crossorigin src="{% static "cloud_native_gis/index-CHkHdgsP.js" %}"></script>
   <link rel="stylesheet" crossorigin href="{% static "cloud_native_gis/index-DW0d2Ij5.css" %}">
 
               <script>
