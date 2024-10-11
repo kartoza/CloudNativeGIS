@@ -10,9 +10,11 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from cloud_native_gis.api.context import ContextAPIView
 from cloud_native_gis.api.layer import (
     LayerViewSet, LayerStyleViewSet
 )
+from cloud_native_gis.api.pmtile import serve_pmtiles
 from cloud_native_gis.api.vector_tile import (VectorTileLayer)
 
 schema_view = get_schema_view(
@@ -49,6 +51,9 @@ urlpatterns = [
     ),
     path('api/', include(router.urls)),
     path('api/', include(layer_router.urls)),
+    path('api/context/',
+         ContextAPIView.as_view(),
+         name='cloud-native-gis-context'),
     path(
         'maputnik/',
         TemplateView.as_view(template_name='cloud_native_gis/maputnik.html'),
@@ -60,4 +65,6 @@ urlpatterns = [
     path('redoc/',
          schema_view.with_ui('redoc', cache_timeout=0),
          name='schema-redoc-ui'),
+    path('api/serve-pmtile/<uuid:layer_uuid>/',
+         serve_pmtiles, name='serve-pmtiles'),
 ]

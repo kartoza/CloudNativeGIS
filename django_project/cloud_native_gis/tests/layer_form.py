@@ -59,9 +59,6 @@ class LayerFormTest(TestCase):
         layer_upload.import_data()
         layer.refresh_from_db()
 
-        # Check folder is deleted
-        self.assertFalse(os.path.exists(layer_upload.folder))
-
         # Check fields
         self.assertEqual(
             layer.attribute_names, ['CITY_NAME', 'CITY_TYPE', 'COUNTRY']

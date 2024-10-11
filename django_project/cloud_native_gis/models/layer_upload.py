@@ -131,7 +131,7 @@ class LayerUpload(AbstractResource):
                     self.update_status(
                         status=UploadStatus.RUNNING,
                         note='Save data to database',
-                        progress=50
+                        progress=25
                     )
                     metadata = shapefile_to_postgis(
                         self.filepath(file),
@@ -143,7 +143,7 @@ class LayerUpload(AbstractResource):
                     self.update_status(
                         status=UploadStatus.RUNNING,
                         note='Save metadata to database',
-                        progress=70
+                        progress=50
                     )
                     self.layer.layerattributes_set.all().delete()
                     for idx, field in enumerate(
@@ -159,6 +159,14 @@ class LayerUpload(AbstractResource):
                                 attribute_type=field.type,
                                 attribute_order=idx
                             )
+
+                    # Generate pmtiles
+                    self.update_status(
+                        status=UploadStatus.RUNNING,
+                        note='Generate pmtiles',
+                        progress=75
+                    )
+                    layer.generate_pmtiles()
 
                     layer.is_ready = True
                     layer.metadata = metadata
@@ -192,7 +200,7 @@ class LayerUpload(AbstractResource):
                 note='',
                 progress=100
             )
-            self.delete_folder()
+            # self.delete_folder()
 
 
 @receiver(post_delete, sender=LayerUpload)

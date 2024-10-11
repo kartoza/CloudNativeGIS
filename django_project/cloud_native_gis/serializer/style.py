@@ -21,9 +21,16 @@ class LayerStyleSerializer(serializers.ModelSerializer):
             if 'sources' not in style:
                 style['sources'] = {}
             style['sources'][str(layer.unique_id)] = {
-                "tiles": [layer.absolute_tile_url(request)],
                 "type": "vector"
             }
+            if layer.pmtile:
+                style['sources'][str(layer.unique_id)]['url'] = (
+                    layer.absolute_pmtiles_url(request)
+                )
+            else:
+                style['sources'][str(layer.unique_id)]['tiles'] = (
+                    [layer.absolute_tile_url(request)]
+                )
             style = json.dumps(style).replace(
                 '<uuid>', str(layer.unique_id)
             )

@@ -1,12 +1,21 @@
+
 FROM python:3.12.0-slim-bookworm AS prod
 
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
-    gcc gettext cron \
-    spatialite-bin libsqlite3-mod-spatialite \
+    gcc g++ make build-essential gettext cron \
+    spatialite-bin libsqlite3-mod-spatialite libsqlite3-dev \
     python3-dev python3-gdal python3-psycopg2 python3-ldap \
     python3-pip python3-pil python3-lxml python3-pylibmc \
-    uwsgi uwsgi-plugin-python3
+    uwsgi uwsgi-plugin-python3 \
+    gdal-bin \
+    libprotobuf-dev protobuf-compiler zlib1g-dev git && \
+    echo "Installing Tippecanoe" && \
+    git clone https://github.com/felt/tippecanoe.git /tmp/tippecanoe && \
+    cd /tmp/tippecanoe && \
+    make -j$(nproc) && make install && \
+    rm -rf /tmp/tippecanoe && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install pip packages
 ADD deployment/docker/requirements.txt /requirements.txt

@@ -1,6 +1,5 @@
 # coding=utf-8
 """Cloud Native GIS."""
-
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
@@ -28,6 +27,17 @@ def start_upload_data(modeladmin, request, queryset):
         import_data.delay(layer.pk)
 
 
+@admin.action(description='Generate pmtiles')
+def generate_pmtiles(modeladmin, request, queryset):
+    """Generate pmtiles for layer."""
+    for layer in queryset:
+        success, message = layer.generate_pmtiles()
+        modeladmin.message_user(
+            request,
+            message,
+            level='success' if success else 'error')
+
+
 @admin.register(Layer)
 class LayerAdmin(admin.ModelAdmin):
     """Layer admin."""
@@ -39,6 +49,8 @@ class LayerAdmin(admin.ModelAdmin):
     form = LayerForm
     inlines = [LayerAttributeInline]
     filter_horizontal = ['styles']
+    actions = [generate_pmtiles]
+
 
     def get_form(self, request, *args, **kwargs):
         """Return form."""
