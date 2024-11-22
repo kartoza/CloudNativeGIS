@@ -38,6 +38,12 @@
     }
 
   </style>
+  <script>
+    let inputStyle = window.inputStyle;
+    if (inputStyle){
+      inputStyle = JSON.parse(inputStyle)
+    }
+  </script>
   <script type="module" crossorigin src="{% static "cloud_native_gis/index-yKDiDp5s.js" %}"></script>
   <link rel="stylesheet" crossorigin href="{% static "cloud_native_gis/index-DW0d2Ij5.css" %}">
 

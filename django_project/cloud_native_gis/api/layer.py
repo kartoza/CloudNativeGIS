@@ -3,6 +3,8 @@
 
 import copy
 
+from django.core.exceptions import PermissionDenied
+from django.core.files.storage import FileSystemStorage
 from django.http import Http404
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -11,8 +13,10 @@ from cloud_native_gis.api.base import BaseApi, BaseReadApi
 from cloud_native_gis.forms.layer import LayerForm
 from cloud_native_gis.forms.style import StyleForm
 from cloud_native_gis.models.layer import Layer
+from cloud_native_gis.models.layer_upload import LayerUpload
 from cloud_native_gis.models.style import Style
 from cloud_native_gis.serializer.layer import LayerSerializer
+from cloud_native_gis.serializer.layer_upload import LayerUploadSerializer
 from cloud_native_gis.serializer.style import LayerStyleSerializer
 from cloud_native_gis.utils.layer import layer_style_url, maputnik_url
 
@@ -34,11 +38,8 @@ class LayerViewSet(BaseApi):
         }
 
 
-class LayerStyleViewSet(BaseReadApi):
-    """API layer style."""
-
-    form_class = StyleForm
-    serializer_class = LayerStyleSerializer
+class LayerObjectViewSet(BaseReadApi):
+    """Abstract base class for layer objects."""
 
     def _get_layer(self) -> Layer:  # noqa: D102
         layer_id = self.kwargs.get('layer_id')
@@ -62,11 +63,17 @@ class LayerStyleViewSet(BaseReadApi):
         kwargs.setdefault('context', self.get_serializer_context())
         return serializer_class(*args, **kwargs)
 
+
+class LayerStyleViewSet(LayerObjectViewSet):
+    """API layer style."""
+
+    form_class = StyleForm
+    serializer_class = LayerStyleSerializer
+
     def get_queryset(self):
         """Return queryset of API."""
         layer = self._get_layer()
-        ids = layer.styles.values_list('id', flat=True)
-        return Style.objects.filter(id__in=ids)
+        return layer.styles.all()
 
     def list(self, request, *args, **kwargs):
         """Return just default style."""
@@ -132,3 +139,33 @@ class LayerStyleViewSet(BaseReadApi):
             f'{maputnik_url()}?styleUrl='
             f'{layer_style_url(layer, style, self.request)}'
         )
+
+
+class LayerUploadViewSet(LayerObjectViewSet):
+    """API layer upload style."""
+
+    serializer_class = LayerUploadSerializer
+
+    def get_queryset(self):
+        """Return queryset of API."""
+        layer = self._get_layer()
+        return layer.layerupload_set.all().order_by('-pk')
+
+    def post(self, request, layer_id):
+        """Post file."""
+        layer = get_object_or_404(Layer, id=layer_id)
+        if layer.created_by != self.request.user:
+            raise PermissionDenied
+
+        instance = LayerUpload(
+            created_by=request.user, layer=layer
+        )
+        instance.emptying_folder()
+
+        # Save files
+        file = request.FILES['file']
+        FileSystemStorage(
+            location=instance.folder
+        ).save(file.name, file)
+        instance.save()
+        return Response('Uploaded')
