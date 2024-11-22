@@ -3,6 +3,8 @@ services:
   db:
     volumes:
       - ./volumes/database:/opt/postgres/data
+    ports:
+      - "${DATABASE_PORT:-6432}:5432"
 
   worker:
     image: kartoza/${COMPOSE_PROJECT_NAME:-django_project}_dev
