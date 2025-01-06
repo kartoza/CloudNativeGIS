@@ -15,7 +15,9 @@ from cloud_native_gis.forms.style import StyleForm
 from cloud_native_gis.models.layer import Layer
 from cloud_native_gis.models.layer_upload import LayerUpload
 from cloud_native_gis.models.style import Style
-from cloud_native_gis.serializer.layer import LayerSerializer
+from cloud_native_gis.serializer.layer import (
+    LayerSerializer, LayerAttributeSerializer
+)
 from cloud_native_gis.serializer.layer_upload import LayerUploadSerializer
 from cloud_native_gis.serializer.style import LayerStyleSerializer
 from cloud_native_gis.utils.layer import layer_style_url, maputnik_url
@@ -169,3 +171,14 @@ class LayerUploadViewSet(LayerObjectViewSet):
         ).save(file.name, file)
         instance.save()
         return Response('Uploaded')
+
+
+class LayerAttributesViewSet(LayerObjectViewSet):
+    """API layer attributes."""
+
+    serializer_class = LayerAttributeSerializer
+
+    def get_queryset(self):
+        """Return queryset of API."""
+        layer = self._get_layer()
+        return layer.layerattributes_set.all()

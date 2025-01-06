@@ -3,15 +3,15 @@
 
 from django.urls import include, path
 from django.views.generic import TemplateView
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
-
 from cloud_native_gis.api.layer import (
-    LayerViewSet, LayerStyleViewSet, LayerUploadViewSet
+    LayerViewSet, LayerStyleViewSet, LayerUploadViewSet,
+    LayerAttributesViewSet
 )
 from cloud_native_gis.api.vector_tile import VectorTileLayer
 
@@ -28,7 +28,6 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-
 router = DefaultRouter()
 router.register(
     r'layer', LayerViewSet, basename='cloud-native-gis-layer'
@@ -43,6 +42,10 @@ layer_router.register(
 layer_router.register(
     'layer-upload', LayerUploadViewSet,
     basename='cloud-native-gis-layer-upload'
+)
+layer_router.register(
+    'attributes', LayerAttributesViewSet,
+    basename='cloud-native-layer-attributes'
 )
 
 urlpatterns = [

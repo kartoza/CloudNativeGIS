@@ -3,7 +3,7 @@
 
 from rest_framework import serializers
 
-from cloud_native_gis.models.layer import Layer
+from cloud_native_gis.models.layer import Layer, LayerAttributes
 from cloud_native_gis.models.style import Style
 from cloud_native_gis.serializer.general import LicenseSerializer
 from cloud_native_gis.utils.layer import layer_style_url
@@ -60,3 +60,11 @@ class LayerSerializer(serializers.ModelSerializer):
     class Meta:  # noqa: D106
         model = Layer
         exclude = ['unique_id']
+
+
+class LayerAttributeSerializer(serializers.ModelSerializer):
+    """Serializer for layer attribute."""
+
+    class Meta:  # noqa: D106
+        model = LayerAttributes
+        exclude = ['layer']
