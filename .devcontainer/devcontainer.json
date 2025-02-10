@@ -7,13 +7,8 @@
       "../deployment/docker-compose.override.devcontainer.yml"
     ],
     "service": "dev",
+    "runServices": ["db", "redis", "celery_beat", "worker", "dev"],
     "workspaceFolder": "/home/web/project",
-    "settings": {
-      "terminal.integrated.shell.linux": "/bin/bash",
-      "python.pythonPath": "/usr/local/bin/python",
-      "python.linting.pylintEnabled": true,
-      "python.linting.enabled": true
-    },
     "runArgs": [
       "--env-file",
       "../deployment/.env"
@@ -25,6 +20,16 @@
       }
     },
     "forwardPorts": [8000, 9000],
-    "extensions": ["ms-python.python", "ms-azuretools.vscode-docker"],
-    "shutdownAction": "stopCompose"
+    "shutdownAction": "stopCompose",
+    "customizations": {
+      "vscode": {
+        "extensions": ["ms-python.python", "ms-azuretools.vscode-docker"],
+        "settings": {
+          "terminal.integrated.shell.linux": "/bin/bash",
+          "python.pythonPath": "/usr/local/bin/python",
+          "python.linting.pylintEnabled": true,
+          "python.linting.enabled": true
+        }
+      }
+    }
   }
