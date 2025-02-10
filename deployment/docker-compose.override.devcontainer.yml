@@ -23,6 +23,8 @@ services:
       context: ../
       dockerfile: deployment/docker/Dockerfile
       target: vscode
+    env_file:
+      - .env
     entrypoint: []
     volumes:
       - ../:/home/web/project
