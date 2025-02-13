@@ -17,8 +17,9 @@ from cloud_native_gis.models.style import (
 )
 from cloud_native_gis.tasks import import_data
 from cloud_native_gis.utils.connection import fields
-from cloud_native_gis.utils.geopandas import shapefile_to_postgis
+from cloud_native_gis.utils.geopandas import collection_to_postgis
 from cloud_native_gis.utils.main import id_generator
+from cloud_native_gis.utils.fiona import FileType
 
 FOLDER_FILES = 'cloud_native_gis_files'
 FOLDER_ROOT = os.path.join(
@@ -125,7 +126,7 @@ class LayerUpload(AbstractResource):
 
             # Save the data
             for file in self.files:
-                if file.endswith('.shp'):
+                if FileType.guess_type(file):
 
                     # Save shapefile to database
                     self.update_status(
@@ -133,7 +134,7 @@ class LayerUpload(AbstractResource):
                         note='Save data to database',
                         progress=25
                     )
-                    metadata = shapefile_to_postgis(
+                    metadata = collection_to_postgis(
                         self.filepath(file),
                         table_name=layer.table_name,
                         schema_name=layer.schema_name

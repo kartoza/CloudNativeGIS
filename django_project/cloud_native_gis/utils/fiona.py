@@ -13,12 +13,31 @@ from django.core.files.uploadedfile import (
 )
 
 
+# Enable KML driver support in Fiona
+fiona.drvsupport.supported_drivers['KML'] = 'rw'
+
+
 class FileType:
     """File types."""
 
     GEOJSON = 'geojson'
     SHAPEFILE = 'shapefile'
     GEOPACKAGE = 'geopackage'
+    KML = 'kml'
+
+    @staticmethod
+    def guess_type(filename: str):
+        """Guess file type based on filename."""
+        if filename.endswith('.geojson') or filename.endswith('.json'):
+            return FileType.GEOJSON
+        elif filename.endswith('.zip') or filename.endswith('.shp'):
+            return FileType.SHAPEFILE
+        elif filename.endswith('.gpkg'):
+            return FileType.GEOPACKAGE
+        elif filename.endswith('.kml'):
+            return FileType.KML
+
+        return None
 
 
 def _open_collection(fp: str, type: str) -> Collection:
@@ -185,3 +204,19 @@ def validate_collection_crs(collection: Collection):
     valid = _get_crs_epsg(collection.crs) == epsg_mapping['init']
     crs = _get_crs_epsg(collection.crs)
     return valid, crs
+
+
+def list_layers(fp, type: str = None):
+    """List layers from filepath."""
+    layers = []
+    if not type and isinstance(fp, str):
+        type = FileType.guess_type(fp)
+
+    try:
+        if type == FileType.SHAPEFILE:
+            layers = _list_layers_shapefile(fp)
+        else:
+            layers = fiona.listlayers(fp)
+    except Exception as ex:
+        print(f'Failed to list layers: {ex}')
+    return layers
