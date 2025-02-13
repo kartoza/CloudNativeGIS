@@ -39,6 +39,19 @@ class FileType:
 
         return None
 
+    @staticmethod
+    def to_extension(type: str):
+        """Convert FileType to file extension."""
+        if type == FileType.GEOJSON:
+            return '.geojson'
+        elif type == FileType.SHAPEFILE:
+            return '.zip'
+        elif type == FileType.GEOPACKAGE:
+            return '.gpkg'
+        elif type == FileType.KML:
+            return '.kml'
+        return ''
+
 
 def _open_collection(fp: str, type: str) -> Collection:
     """Open collection from file path."""
@@ -178,13 +191,13 @@ def open_fiona_collection(file_obj, type: str) -> Collection:
     """
     # if less than <2MB, it will be InMemoryUploadedFile
     if isinstance(file_obj, InMemoryUploadedFile):
-        if type == FileType.SHAPEFILE:
-            # fiona having issues with reading ZipMemoryFile
-            # need to store to temp file
-            tmp_file = _store_zip_memory_to_temp_file(file_obj)
-            return fiona.open(tmp_file)
-        else:
-            return fiona.open(file_obj.file)
+        with NamedTemporaryFile(
+            delete=False, suffix=FileType.to_extension(type)
+        ) as temp_file:
+            for chunk in file_obj.chunks():
+                temp_file.write(chunk)
+            path = temp_file.name
+        return _open_collection(path, type)
     else:
         # TemporaryUploadedFile or just string to file path
         if isinstance(file_obj, TemporaryUploadedFile):
