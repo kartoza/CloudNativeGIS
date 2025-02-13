@@ -188,6 +188,9 @@ class LayerUpload(AbstractResource):
                         )
                         layer.update_default_style(style)
                     layer.save()
+
+                    # stop when found first file
+                    break
         except Exception as e:
             # Save fields to layer
             self.update_status(
