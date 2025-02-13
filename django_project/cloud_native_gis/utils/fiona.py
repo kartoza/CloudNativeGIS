@@ -73,15 +73,6 @@ def delete_tmp_shapefile(file_path: str):
             os.remove(cleaned_fp)
 
 
-def _store_zip_memory_to_temp_file(file_obj: InMemoryUploadedFile):
-    """Store in-memory shapefile to temporary file."""
-    with NamedTemporaryFile(delete=False, suffix='.zip') as temp_file:
-        for chunk in file_obj.chunks():
-            temp_file.write(chunk)
-        path = f'zip://{temp_file.name}'
-    return path
-
-
 def _read_layers_from_memory_file(fp: InMemoryUploadedFile):
     """Read layers from memory file of shapefile."""
     layers = []
