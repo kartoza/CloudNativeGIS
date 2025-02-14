@@ -44,6 +44,7 @@ setup(
         'GeoAlchemy2 >= 0.15.1',
         'geopandas >= 0.13.2',
         'drf-yasg == 1.21.7',
-        'drf-nested-routers == 0.93.5'
+        'drf-nested-routers == 0.93.5',
+        'fiona==1.10.1'
     ],
 )

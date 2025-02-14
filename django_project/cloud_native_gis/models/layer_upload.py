@@ -17,8 +17,9 @@ from cloud_native_gis.models.style import (
 )
 from cloud_native_gis.tasks import import_data
 from cloud_native_gis.utils.connection import fields
-from cloud_native_gis.utils.geopandas import shapefile_to_postgis
+from cloud_native_gis.utils.geopandas import collection_to_postgis
 from cloud_native_gis.utils.main import id_generator
+from cloud_native_gis.utils.fiona import FileType
 
 FOLDER_FILES = 'cloud_native_gis_files'
 FOLDER_ROOT = os.path.join(
@@ -125,15 +126,15 @@ class LayerUpload(AbstractResource):
 
             # Save the data
             for file in self.files:
-                if file.endswith('.shp'):
+                if FileType.guess_type(file):
 
                     # Save shapefile to database
                     self.update_status(
                         status=UploadStatus.RUNNING,
                         note='Save data to database',
-                        progress=50
+                        progress=25
                     )
-                    metadata = shapefile_to_postgis(
+                    metadata = collection_to_postgis(
                         self.filepath(file),
                         table_name=layer.table_name,
                         schema_name=layer.schema_name
@@ -143,7 +144,7 @@ class LayerUpload(AbstractResource):
                     self.update_status(
                         status=UploadStatus.RUNNING,
                         note='Save metadata to database',
-                        progress=70
+                        progress=50
                     )
                     self.layer.layerattributes_set.all().delete()
                     for idx, field in enumerate(
@@ -159,6 +160,14 @@ class LayerUpload(AbstractResource):
                                 attribute_type=field.type,
                                 attribute_order=idx
                             )
+
+                    # Generate pmtiles
+                    self.update_status(
+                        status=UploadStatus.RUNNING,
+                        note='Generate pmtiles',
+                        progress=75
+                    )
+                    layer.generate_pmtiles()
 
                     layer.is_ready = True
                     layer.metadata = metadata
@@ -179,6 +188,9 @@ class LayerUpload(AbstractResource):
                         )
                         layer.update_default_style(style)
                     layer.save()
+
+                    # stop when found first file
+                    break
         except Exception as e:
             # Save fields to layer
             self.update_status(
@@ -192,7 +204,7 @@ class LayerUpload(AbstractResource):
                 note='',
                 progress=100
             )
-            self.delete_folder()
+            # self.delete_folder()
 
 
 @receiver(post_delete, sender=LayerUpload)

@@ -42,3 +42,6 @@ redis==4.3.4
 GeoAlchemy2==0.15.1
 geopandas==0.14.4
 drf-yasg==1.21.7
+
+# fiona
+fiona==1.10.1
