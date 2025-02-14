@@ -18,6 +18,7 @@ from cloud_native_gis.models.general import (
 )
 from cloud_native_gis.models.style import Style
 from cloud_native_gis.utils.connection import delete_table
+from cloud_native_gis.utils.fiona import FileType, list_layers
 
 FOLDER_FILES = 'cloud_native_gis_files'
 PMTILES_FOLDER = 'pmtile_files'
@@ -182,12 +183,60 @@ class Layer(AbstractTerm, AbstractResource):
         self.styles.add(style)
         self.save()
 
+    def _convert_to_geojson(self, layer_upload, layer_files: list):
+        """
+        Convert resource to geojson if needed.
+
+        Returns:
+            tuple:
+                - str: FileType
+                - str: json_filepath
+        """
+        file_type = None
+        layer_filename = None
+        for layer_file in layer_files:
+            file_type = FileType.guess_type(layer_file)
+            if file_type:
+                layer_filename = layer_file
+                break
+
+        if file_type is None:
+            return None, None
+
+        if file_type == FileType.GEOJSON:
+            return file_type, layer_upload.filepath(layer_filename)
+
+        layer_file_path = layer_upload.filepath(layer_filename)
+        base_name = os.path.splitext(layer_filename)[0]
+        json_filename = f"{base_name}.json"
+        json_filepath = (
+            os.path.join(
+                settings.MEDIA_ROOT,
+                PMTILES_FOLDER, json_filename)
+        )
+
+        cmd = [
+            'ogr2ogr',
+            '-t_srs',
+            'EPSG:4326',
+            json_filepath,
+            layer_file_path
+        ]
+        if file_type == FileType.GEOPACKAGE or file_type == FileType.KML:
+            layers = list_layers(layer_file_path, file_type)
+            layer_name = layers[0] if layers else 'default'
+            cmd.append(layer_name)
+
+        subprocess.run(cmd, check=True)
+        return file_type, json_filepath
+
+
     def generate_pmtiles(self):
         """
         Generate PMTiles for the current layer.
 
-        This method converts a shapefile associated with the latest
-        uploaded layer into PMTiles format
+        This method converts a shapefile/geojson/GPKG/KML associated
+        with the latest uploaded layer into PMTiles format
         using the 'ogr2ogr' and 'tippecanoe' tools.
 
         Returns:
@@ -199,7 +248,7 @@ class Layer(AbstractTerm, AbstractResource):
         layer_files = layer_upload.files
         if not layer_files:
             return (
-                False, f"No shapefile (.shp) found for layer '{self.name}'.",
+                False, f"No resource found for layer '{self.name}'.",
             )
         if layer_files:
             ogr2ogr_installed = (
@@ -220,25 +269,6 @@ class Layer(AbstractTerm, AbstractResource):
                     "ogr2ogr or tippecanoe is not installed on the server."
                 )
 
-            shp_file = next(
-                (f for f in layer_files if f.endswith('.shp')),
-                None)
-            if not shp_file:
-                return (
-                    False,
-                    f"No shapefile (.shp) found for layer '{self.name}'.",
-                )
-
-            shp_file_path = layer_upload.filepath(shp_file)
-
-            base_name = os.path.splitext(shp_file)[0]
-            json_filename = f"{base_name}.json"
-            json_filepath = (
-                os.path.join(
-                    settings.MEDIA_ROOT,
-                    PMTILES_FOLDER, json_filename)
-            )
-            pmtiles_filename = f"{base_name}.pmtiles"
             pmtiles_folder = (
                 os.path.join(
                     settings.MEDIA_ROOT,
@@ -248,21 +278,26 @@ class Layer(AbstractTerm, AbstractResource):
             if not os.path.exists(pmtiles_folder):
                 os.mkdir(pmtiles_folder)
 
-            pmtiles_filepath = (
-                os.path.join(
-                    str(pmtiles_folder),
-                    pmtiles_filename)
-            )
-
             try:
-                subprocess.run(
-                    [
-                        'ogr2ogr',
-                        '-t_srs',
-                        'EPSG:4326',
-                        json_filepath,
-                        shp_file_path],
-                    check=True
+                file_type, json_filepath = self._convert_to_geojson(
+                    layer_upload,
+                    layer_files
+                )
+                if file_type is None:
+                    return (
+                        False,
+                        "No resource found (.shp/.geojson/.gpkg/.kml) "
+                        f"for layer '{self.name}'.",
+                    )
+
+                base_name = os.path.splitext(
+                    os.path.basename(json_filepath)
+                )[0]
+                pmtiles_filename = f"{base_name}.pmtiles"
+                pmtiles_filepath = (
+                    os.path.join(
+                        str(pmtiles_folder),
+                        pmtiles_filename)
                 )
 
                 if os.path.exists(pmtiles_filepath):

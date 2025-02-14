@@ -13,12 +13,44 @@ from django.core.files.uploadedfile import (
 )
 
 
+# Enable KML driver support in Fiona
+fiona.drvsupport.supported_drivers['KML'] = 'rw'
+
+
 class FileType:
     """File types."""
 
     GEOJSON = 'geojson'
     SHAPEFILE = 'shapefile'
     GEOPACKAGE = 'geopackage'
+    KML = 'kml'
+
+    @staticmethod
+    def guess_type(filename: str):
+        """Guess file type based on filename."""
+        if filename.endswith('.geojson') or filename.endswith('.json'):
+            return FileType.GEOJSON
+        elif filename.endswith('.zip') or filename.endswith('.shp'):
+            return FileType.SHAPEFILE
+        elif filename.endswith('.gpkg'):
+            return FileType.GEOPACKAGE
+        elif filename.endswith('.kml'):
+            return FileType.KML
+
+        return None
+
+    @staticmethod
+    def to_extension(type: str):
+        """Convert FileType to file extension."""
+        if type == FileType.GEOJSON:
+            return '.geojson'
+        elif type == FileType.SHAPEFILE:
+            return '.zip'
+        elif type == FileType.GEOPACKAGE:
+            return '.gpkg'
+        elif type == FileType.KML:
+            return '.kml'
+        return ''
 
 
 def _open_collection(fp: str, type: str) -> Collection:
@@ -39,15 +71,6 @@ def delete_tmp_shapefile(file_path: str):
             cleaned_fp = file_path.replace('/vsizip/', '')
         if os.path.exists(cleaned_fp):
             os.remove(cleaned_fp)
-
-
-def _store_zip_memory_to_temp_file(file_obj: InMemoryUploadedFile):
-    """Store in-memory shapefile to temporary file."""
-    with NamedTemporaryFile(delete=False, suffix='.zip') as temp_file:
-        for chunk in file_obj.chunks():
-            temp_file.write(chunk)
-        path = f'zip://{temp_file.name}'
-    return path
 
 
 def _read_layers_from_memory_file(fp: InMemoryUploadedFile):
@@ -159,13 +182,13 @@ def open_fiona_collection(file_obj, type: str) -> Collection:
     """
     # if less than <2MB, it will be InMemoryUploadedFile
     if isinstance(file_obj, InMemoryUploadedFile):
-        if type == FileType.SHAPEFILE:
-            # fiona having issues with reading ZipMemoryFile
-            # need to store to temp file
-            tmp_file = _store_zip_memory_to_temp_file(file_obj)
-            return fiona.open(tmp_file)
-        else:
-            return fiona.open(file_obj.file)
+        with NamedTemporaryFile(
+            delete=False, suffix=FileType.to_extension(type)
+        ) as temp_file:
+            for chunk in file_obj.chunks():
+                temp_file.write(chunk)
+            path = temp_file.name
+        return _open_collection(path, type)
     else:
         # TemporaryUploadedFile or just string to file path
         if isinstance(file_obj, TemporaryUploadedFile):
@@ -185,3 +208,19 @@ def validate_collection_crs(collection: Collection):
     valid = _get_crs_epsg(collection.crs) == epsg_mapping['init']
     crs = _get_crs_epsg(collection.crs)
     return valid, crs
+
+
+def list_layers(fp, type: str = None):
+    """List layers from filepath."""
+    layers = []
+    if not type and isinstance(fp, str):
+        type = FileType.guess_type(fp)
+
+    try:
+        if type == FileType.SHAPEFILE:
+            layers = _list_layers_shapefile(fp)
+        else:
+            layers = fiona.listlayers(fp)
+    except Exception as ex:
+        print(f'Failed to list layers: {ex}')
+    return layers
