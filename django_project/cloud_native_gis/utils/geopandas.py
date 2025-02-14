@@ -8,17 +8,29 @@ from sqlalchemy import create_engine
 from cloud_native_gis.utils.connection import (
     create_schema, delete_table
 )
+from cloud_native_gis.utils.fiona import list_layers
 
 
-def shapefile_to_postgis(filepath, table_name, schema_name) -> dict:
-    """Save shapefile data to postgis.
+def collection_to_postgis(filepath, table_name, schema_name) -> dict:
+    """Save shapefile/GPKG/Geojson/KML data to postgis.
+
+    Note:
+        For multilayer GPKG and KML, this will only read the first layer.
 
     Return metadata
     """
     create_schema(schema_name)
     delete_table(schema_name, table_name)
 
-    gdf = gpd.read_file(filepath)
+    gdf = None
+    if filepath.endswith('.gpkg') or filepath.endswith('.kml'):
+        layers = list_layers(filepath)
+        if not layers:
+            raise ValueError('Collection does not have layer!')
+
+        gdf = gpd.read_file(filepath, layer=layers[0])
+    else:
+        gdf = gpd.read_file(filepath)
 
     metadata = {}
     try:
@@ -32,8 +44,6 @@ def shapefile_to_postgis(filepath, table_name, schema_name) -> dict:
         **connection.settings_dict
     )
     engine = create_engine(con)
-    # TODO:
-    #  Fix this makes test database can't be deleted
     gdf.to_postgis(table_name, con=engine, schema=schema_name)
-
+    engine.dispose()
     return metadata
