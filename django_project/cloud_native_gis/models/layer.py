@@ -18,7 +18,8 @@ from cloud_native_gis.models.general import (
 )
 from cloud_native_gis.models.style import Style
 from cloud_native_gis.utils.connection import delete_table
-from cloud_native_gis.utils.fiona import FileType, list_layers
+from cloud_native_gis.utils.type import FileType
+from cloud_native_gis.utils.fiona import list_layers
 
 FOLDER_FILES = 'cloud_native_gis_files'
 PMTILES_FOLDER = 'pmtile_files'

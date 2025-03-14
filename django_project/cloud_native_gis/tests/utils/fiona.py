@@ -9,8 +9,8 @@ from django.core.files.uploadedfile import (
 )
 
 from core.settings.utils import absolute_path
+from cloud_native_gis.utils.type import FileType
 from cloud_native_gis.utils.fiona import (
-    FileType,
     validate_shapefile_zip,
     open_fiona_collection,
     validate_collection_crs,
