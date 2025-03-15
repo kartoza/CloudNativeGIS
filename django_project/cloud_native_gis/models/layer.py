@@ -4,6 +4,8 @@
 import os
 import subprocess
 import uuid
+import zipfile
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -231,7 +233,6 @@ class Layer(AbstractTerm, AbstractResource):
         subprocess.run(cmd, check=True)
         return file_type, json_filepath
 
-
     def generate_pmtiles(self):
         """
         Generate PMTiles for the current layer.
@@ -335,6 +336,104 @@ class Layer(AbstractTerm, AbstractResource):
                     False,
                     f"Failed to generate PMTiles for layer '{self.name}'."
                 )
+
+    def _zip_shapefile(self, shp_filepath, working_dir, remove_file=True):
+        zip_filepath = os.path.join(
+            working_dir,
+            shp_filepath.replace('.shp', '.zip')
+        )
+        file_name = os.path.basename(shp_filepath).replace('.shp', '')
+        shp_files = ['.shp', '.dbf', '.shx', '.cpg', '.prj']
+        with zipfile.ZipFile(
+                zip_filepath, 'w', zipfile.ZIP_DEFLATED) as archive:
+            for suffix in shp_files:
+                shape_file = os.path.join(
+                    working_dir,
+                    file_name
+                ) + suffix
+                if not os.path.exists(shape_file):
+                    continue
+                archive.write(
+                    shape_file,
+                    arcname=file_name + suffix
+                )
+                if remove_file:
+                    os.remove(shape_file)
+        return zip_filepath
+
+    def export_layer(
+        self, type: FileType, working_dir: str, filename = None
+    ):
+        """
+        Export the current layer to requested format.
+
+        This method converts a layer in postgis table into
+        shapefile/geojson/GPKG/KML using the 'ogr2ogr.
+
+        Returns:
+            tuple:
+                - bool: Success status of the operation.
+                - str: Message indicating the outcome
+        """
+        driver_dict = {
+            FileType.GEOJSON: 'GeoJSON',
+            FileType.GEOPACKAGE: 'GPKG',
+            FileType.KML: 'KML',
+            FileType.SHAPEFILE: 'ESRI Shapefile'
+        }
+        ext = (
+            '.shp' if type == FileType.SHAPEFILE else
+            FileType.to_extension(type)
+        )
+        name = Path(filename).stem if filename else str(self.unique_id)
+        export_filepath = os.path.join(
+            working_dir,
+            f'{name}{ext}'
+        )
+        conn_str = (
+            'PG:dbname={NAME} user={USER} password={PASSWORD} '
+            'host={HOST} port={PORT}'.format(
+                **connection.settings_dict
+            )
+        )
+        sql_str = (
+            'SELECT * FROM {table_name}'.format(
+                table_name=self.query_table_name
+            )
+        )
+        cmd_list = [
+            'ogr2ogr',
+            '-t_srs',
+            'EPSG:4326',
+            '-f',
+            f'{driver_dict[type]}',
+            export_filepath,
+            conn_str,
+            '-sql',
+            sql_str
+        ]
+        if type == FileType.SHAPEFILE:
+            cmd_list.append('-lco')
+            cmd_list.append('ENCODING=UTF-8')
+
+        try:
+            subprocess.run(cmd_list, check=True)
+
+            if type == FileType.SHAPEFILE:
+                # zip the files
+                export_filepath = self._zip_shapefile(
+                    export_filepath, working_dir
+                )
+
+            return (
+                export_filepath,
+                'Success'
+            )
+        except subprocess.CalledProcessError:
+            return (
+                None,
+                f'Failed to export layer {self.name} to format {type}'
+            )
 
 
 class LayerAttributes(models.Model):
