@@ -73,6 +73,7 @@ class LayerFormTest(TestCase):
             layer.default_style.name, Style.default_style_name('POINT')
         )
         self.assertTrue(layer.default_style.is_default_style)
+        self.assertTrue(layer.pmtile)
 
         # DELETE LAYER
         # Check table is deleted
