@@ -19,7 +19,7 @@ from cloud_native_gis.tasks import import_data
 from cloud_native_gis.utils.connection import fields
 from cloud_native_gis.utils.geopandas import collection_to_postgis
 from cloud_native_gis.utils.main import id_generator
-from cloud_native_gis.utils.fiona import FileType
+from cloud_native_gis.utils.type import FileType
 
 FOLDER_FILES = 'cloud_native_gis_files'
 FOLDER_ROOT = os.path.join(
