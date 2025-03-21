@@ -3,11 +3,15 @@
 
 import copy
 
+from psycopg2 import sql
+from django.db import connection
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import FileSystemStorage
 from django.http import Http404
+from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 from cloud_native_gis.api.base import BaseApi, BaseReadApi
 from cloud_native_gis.forms.layer import LayerForm
@@ -182,3 +186,98 @@ class LayerAttributesViewSet(LayerObjectViewSet):
         """Return queryset of API."""
         layer = self._get_layer()
         return layer.layerattributes_set.all()
+
+
+class DataPreviewAPI(APIView):
+    """API to preview data."""
+
+    permission_classes = [IsAuthenticated]
+
+    def _get_search_query(self, layer: Layer, search):
+        text_attributes = layer.layerattributes_set.filter(
+            attribute_type='text'
+        ).values_list('attribute_name', flat=True)
+        search_query = []
+        params = []
+        attrs = []
+        for attr in text_attributes:
+            attrs.append(sql.Identifier(attr))
+            search_query.append("{} ILIKE %s")
+            params.append(f"%{search}%")
+        return ' OR '.join(search_query), params, attrs
+
+    def _get_count(self, layer: Layer, search=None):
+        """Get count of features in layer."""
+        if search is None or search == '':
+            return layer.metadata['FEATURE COUNT']
+
+        search_cond, params, attrs = self._get_search_query(layer, search)
+        if search_cond == '':
+            return layer.metadata['FEATURE COUNT']
+        query = sql.SQL("SELECT COUNT(*) FROM {}.{} WHERE {}").format(
+            sql.Identifier(layer.schema_name),
+            sql.Identifier(layer.table_name),
+            sql.SQL(search_cond).format(*attrs)
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchone()[0]
+
+    def get(self, request, *args, **kwargs):
+        """Get data from layer table."""
+        layer = get_object_or_404(
+            Layer,
+            id=kwargs.get('layer_id')
+        )
+
+        page_size = int(request.GET.get('page_size', 10))
+        page = int(request.GET.get('page', 1))
+        search = request.GET.get('search', None)
+        total_count = self._get_count(layer, search)
+        columns = layer.layerattributes_set.all().values_list(
+            'attribute_name', flat=True
+        ).order_by('attribute_order')
+        id_col = 'id'
+        if id_col not in columns:
+            id_col = columns[0]
+        search_cond = sql.SQL('')
+        params = []
+        if search is not None and search != '':
+            search_cond, params, attrs = self._get_search_query(layer, search)
+            if search_cond != '':
+                search_cond = sql.SQL('WHERE {}').format(
+                    sql.SQL(search_cond).format(*attrs)
+                )
+        query = sql.SQL("""
+            SELECT {} FROM {}.{}
+            {}
+            ORDER BY {} ASC
+            OFFSET %s LIMIT %s
+        """).format(
+            sql.SQL(',').join(map(sql.Identifier, columns)),
+            sql.Identifier(layer.schema_name),
+            sql.Identifier(layer.table_name),
+            search_cond,
+            sql.Identifier(id_col)
+        )
+        rows = []
+        with connection.cursor() as cursor:
+            cursor.execute(
+                query,
+                params + [(int(page) - 1) * int(page_size), int(page_size)]
+            )
+            _rows = cursor.fetchall()
+            for _row in _rows:
+                _data = {}
+                for i, col in enumerate(columns):
+                    _data[col] = _row[i]
+                rows.append(_data)
+
+        return Response(data={
+            'layer_id': layer.id,
+            'page': page,
+            'page_size': page_size,
+            'count': total_count,
+            'data': rows,
+            'columns': columns
+        })
