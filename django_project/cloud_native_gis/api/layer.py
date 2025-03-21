@@ -274,7 +274,7 @@ class DataPreviewAPI(APIView):
                 rows.append(_data)
 
         return Response(data={
-            'layer_uuid': str(layer.unique_id),
+            'layer_id': layer.id,
             'page': page,
             'page_size': page_size,
             'count': total_count,
