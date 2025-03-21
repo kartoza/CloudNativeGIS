@@ -220,7 +220,6 @@ class DataPreviewAPI(APIView):
             sql.SQL(search_cond).format(*attrs)
         )
         with connection.cursor() as cursor:
-            print(cursor.mogrify(query, params).decode())
             cursor.execute(query, params)
             return cursor.fetchone()[0]
 
@@ -228,7 +227,7 @@ class DataPreviewAPI(APIView):
         """Get data from layer table."""
         layer = get_object_or_404(
             Layer,
-            unique_id=kwargs.get('pk')
+            id=kwargs.get('layer_id')
         )
 
         page_size = int(request.GET.get('page_size', 10))

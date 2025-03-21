@@ -1,7 +1,7 @@
 # coding=utf-8
 """Cloud Native GIS."""
 
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 
 from rest_framework.routers import DefaultRouter
@@ -51,10 +51,7 @@ layer_router.register(
     'attributes', LayerAttributesViewSet,
     basename='cloud-native-layer-attributes'
 )
-layer_router.register(
-    'data-preview', DataPreviewAPI,
-    basename='cloud-native-gis-data-preview'
-)
+
 
 urlpatterns = [
     path(
@@ -64,6 +61,11 @@ urlpatterns = [
     ),
     path('api/', include(router.urls)),
     path('api/', include(layer_router.urls)),
+    re_path(
+        r'^api/layer/(?P<layer_id>[\da-f-]+)/data-preview/$',
+        DataPreviewAPI.as_view(),
+        name='data-preview'
+    ),
     path('api/context/',
          ContextAPIView.as_view(),
          name='cloud-native-gis-context'),
