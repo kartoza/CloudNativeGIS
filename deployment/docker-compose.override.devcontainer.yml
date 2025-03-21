@@ -18,6 +18,18 @@ services:
       - ./volumes/static:/home/web/static
       - ./volumes/media:/home/web/media
 
+  celery_beat:
+    image: kartoza/${COMPOSE_PROJECT_NAME:-django_project}_dev
+    build:
+      context: ../
+      dockerfile: deployment/docker/Dockerfile
+      target: vscode
+    volumes:
+      - ../:/home/web/project
+      - ../django_project:/home/web/django_project
+      - ./volumes/static:/home/web/static
+      - ./volumes/media:/home/web/media
+
   dev:
     image: kartoza/${COMPOSE_PROJECT_NAME:-django_project}_dev
     build:
