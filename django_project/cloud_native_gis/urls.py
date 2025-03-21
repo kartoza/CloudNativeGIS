@@ -14,7 +14,7 @@ from drf_yasg import openapi
 from cloud_native_gis.api.context import ContextAPIView
 from cloud_native_gis.api.layer import (
     LayerViewSet, LayerStyleViewSet, LayerUploadViewSet,
-    LayerAttributesViewSet
+    LayerAttributesViewSet, DataPreviewAPI
 )
 from cloud_native_gis.api.pmtile import serve_pmtiles
 from cloud_native_gis.api.vector_tile import (VectorTileLayer)
@@ -50,6 +50,10 @@ layer_router.register(
 layer_router.register(
     'attributes', LayerAttributesViewSet,
     basename='cloud-native-layer-attributes'
+)
+layer_router.register(
+    'data-preview', DataPreviewAPI,
+    basename='cloud-native-gis-data-preview'
 )
 
 urlpatterns = [
