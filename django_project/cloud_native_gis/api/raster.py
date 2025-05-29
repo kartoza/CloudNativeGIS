@@ -35,4 +35,4 @@ def serve_cog(request, layer_uuid):
     if not os.path.exists(full_path):
         raise Http404("COG file does not exist.")
 
-    serve_bytes_range(request, full_path, 'image/tiff')
+    return serve_bytes_range(request, full_path, 'image/tiff')

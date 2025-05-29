@@ -21,4 +21,4 @@ def serve_pmtiles(request, layer_uuid):
     if not os.path.exists(full_path):
         raise Http404("PMTile file does not exist.")
 
-    serve_bytes_range(request, full_path, 'application/octet-stream')
+    return serve_bytes_range(request, full_path, 'application/octet-stream')
