@@ -118,7 +118,7 @@ class TestServePMTiles(TestCase):
         os.rmdir(self.temp_dir)
 
     @patch('cloud_native_gis.api.pmtile.os.path.exists')
-    @patch('cloud_native_gis.api.pmtile.RangeRequestReader')
+    @patch('cloud_native_gis.api.base.RangeRequestReader')
     def test_file_not_found(self, mock_reader, mock_exists):
         """Test 404 response when file doesn't exist."""
         mock_exists.return_value = False
@@ -137,7 +137,7 @@ class TestServePMTiles(TestCase):
             serve_pmtiles(request, layer_uuid)
 
     @patch('cloud_native_gis.api.pmtile.os.path.exists')
-    @patch('cloud_native_gis.api.pmtile.RangeRequestReader')
+    @patch('cloud_native_gis.api.base.RangeRequestReader')
     def test_serve_full_file(self, mock_reader, mock_exists):
         """Test serving entire file when no range header is present."""
         mock_exists.return_value = True
@@ -160,7 +160,7 @@ class TestServePMTiles(TestCase):
 
     @patch('cloud_native_gis.api.pmtile.os.path.exists')
     @patch('cloud_native_gis.api.pmtile.os.path.getsize')
-    @patch('cloud_native_gis.api.pmtile.RangeRequestReader')
+    @patch('cloud_native_gis.api.base.RangeRequestReader')
     def test_serve_partial_content(
         self, mock_reader, mock_getsize, mock_exists
     ):
@@ -187,7 +187,7 @@ class TestServePMTiles(TestCase):
         self.assertEqual(response.content, self.test_data[0:100])
 
     @patch('cloud_native_gis.api.pmtile.os.path.exists')
-    @patch('cloud_native_gis.api.pmtile.RangeRequestReader')
+    @patch('cloud_native_gis.api.base.RangeRequestReader')
     def test_invalid_range_header(self, mock_reader, mock_exists):
         """Test handling of invalid range header."""
         mock_exists.return_value = True
@@ -202,7 +202,7 @@ class TestServePMTiles(TestCase):
 
     @patch('cloud_native_gis.api.pmtile.os.path.exists')
     @patch('cloud_native_gis.api.pmtile.os.path.getsize')
-    @patch('cloud_native_gis.api.pmtile.RangeRequestReader')
+    @patch('cloud_native_gis.api.base.RangeRequestReader')
     def test_range_end_omitted(self, mock_reader, mock_getsize, mock_exists):
         """Test range request where end byte is omitted."""
         mock_exists.return_value = True
@@ -224,7 +224,7 @@ class TestServePMTiles(TestCase):
         self.assertEqual(response['Content-Range'], 'bytes 500-999/1000')
 
     @patch('cloud_native_gis.api.pmtile.os.path.exists')
-    @patch('cloud_native_gis.api.pmtile.RangeRequestReader')
+    @patch('cloud_native_gis.api.base.RangeRequestReader')
     def test_reader_cleanup(self, mock_reader, mock_exists):
         """Test that RangeRequestReader is properly closed."""
         mock_exists.return_value = True
@@ -241,7 +241,7 @@ class TestServePMTiles(TestCase):
         mock_reader_instance.close.assert_called_once()
 
     @patch('cloud_native_gis.api.pmtile.os.path.exists')
-    @patch('cloud_native_gis.api.pmtile.RangeRequestReader')
+    @patch('cloud_native_gis.api.base.RangeRequestReader')
     def test_reader_cleanup_on_error(self, mock_reader, mock_exists):
         """Test that RangeRequestReader is closed even if an error occurs."""
         mock_exists.return_value = True
