@@ -1,17 +1,19 @@
 # coding=utf-8
 """Cloud Native GIS."""
+import os
 from datetime import datetime
 
 from django.core.exceptions import (
     FieldError, ValidationError, SuspiciousOperation
 )
 from django.forms.models import model_to_dict
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, Http404, HttpResponse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import mixins, GenericViewSet
 
 from cloud_native_gis.pagination import Pagination
+from cloud_native_gis.utils.range_request import RangeRequestReader
 
 
 class BaseReadApi(
@@ -154,3 +156,49 @@ class BaseApi(
             return HttpResponseForbidden()
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def serve_bytes_range(request, full_path, content_type):
+    """Serve file using bytes range request."""
+    if not os.path.exists(full_path):
+        raise Http404("PMTile file does not exist.")
+
+    reader = RangeRequestReader(full_path)
+    try:
+        range_header = request.headers.get('Range')
+
+        if not range_header:
+            # Return entire file if no range is specified
+            data = reader.read_all()
+            response = HttpResponse(data)
+            response['Content-Type'] = content_type
+            response['Content-Length'] = len(data)
+            response['Accept-Ranges'] = 'bytes'
+            return response
+
+        # Parse range header
+        try:
+            range_match = range_header.replace('bytes=', '').split('-')
+            start = int(range_match[0])
+            end = int(range_match[1]) if range_match[1] else None
+        except (ValueError, IndexError):
+            return HttpResponse(status=400)
+
+        # Read the requested range
+        length = (
+            (end - start + 1) if end is not None else
+            (os.path.getsize(full_path) - start)
+        )
+        data = reader.read_range(start, length)
+
+        response = HttpResponse(data, status=206)
+        response['Content-Type'] = content_type
+        response['Content-Length'] = len(data)
+        response['Content-Range'] = (
+            f'bytes {start}-{start + len(data) - 1}/'
+            f'{os.path.getsize(full_path)}'
+        )
+        response['Accept-Ranges'] = 'bytes'
+        return response
+    finally:
+        reader.close()

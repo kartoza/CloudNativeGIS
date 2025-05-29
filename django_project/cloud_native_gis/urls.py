@@ -17,6 +17,7 @@ from cloud_native_gis.api.layer import (
     LayerAttributesViewSet, DataPreviewAPI
 )
 from cloud_native_gis.api.pmtile import serve_pmtiles
+from cloud_native_gis.api.raster import serve_cog
 from cloud_native_gis.api.vector_tile import (VectorTileLayer)
 
 schema_view = get_schema_view(
@@ -82,4 +83,6 @@ urlpatterns = [
          name='schema-redoc-ui'),
     path('api/serve-pmtile/<uuid:layer_uuid>/',
          serve_pmtiles, name='serve-pmtiles'),
+    path('api/serve-cog/<uuid:layer_uuid>/',
+         serve_cog, name='serve-cog'),
 ]
