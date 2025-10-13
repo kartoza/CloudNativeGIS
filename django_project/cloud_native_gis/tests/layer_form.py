@@ -61,7 +61,8 @@ class LayerFormTest(TestCase):
 
         # Check fields
         self.assertEqual(
-            layer.attribute_names, ['CITY_NAME', 'CITY_TYPE', 'COUNTRY']
+            layer.attribute_names,
+            ['CITY_NAME', 'CITY_TYPE', 'COUNTRY', 'index']
         )
         # Check count features
         self.assertEqual(

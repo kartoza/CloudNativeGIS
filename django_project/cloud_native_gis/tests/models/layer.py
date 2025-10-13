@@ -51,7 +51,8 @@ class TestLayerModel(TestCase):
 
         self.assertEqual(layer_upload.status, UploadStatus.SUCCESS)
         self.assertEqual(
-            layer.attribute_names, ['CITY_NAME', 'CITY_TYPE', 'COUNTRY']
+            layer.attribute_names,
+            ['CITY_NAME', 'CITY_TYPE', 'COUNTRY', 'index']
         )
         # Check count features
         self.assertEqual(

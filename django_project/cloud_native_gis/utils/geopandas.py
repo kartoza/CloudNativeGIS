@@ -39,14 +39,14 @@ def collection_to_postgis(filepath, table_name, schema_name) -> dict:
     except IndexError:
         pass
 
-    if 'id' in gdf.columns:
+    if 'index' in gdf.columns:
         use_index = False
         index_label = None
     else:
         gdf = gdf.reset_index(drop=True)
         gdf.index += 1
         use_index = True
-        index_label = 'id'
+        index_label = 'index'
 
     # Connect and save
     con = 'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{NAME}'.format(
