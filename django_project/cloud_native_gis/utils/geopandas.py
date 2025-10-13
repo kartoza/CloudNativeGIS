@@ -22,7 +22,6 @@ def collection_to_postgis(filepath, table_name, schema_name) -> dict:
     create_schema(schema_name)
     delete_table(schema_name, table_name)
 
-    gdf = None
     if filepath.endswith('.gpkg') or filepath.endswith('.kml'):
         layers = list_layers(filepath)
         if not layers:
@@ -40,10 +39,28 @@ def collection_to_postgis(filepath, table_name, schema_name) -> dict:
     except IndexError:
         pass
 
+    if 'id' in gdf.columns:
+        use_index = False
+        index_label = None
+    else:
+        gdf = gdf.reset_index(drop=True)
+        gdf.index += 1
+        use_index = True
+        index_label = 'id'
+
+    # Connect and save
     con = 'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{NAME}'.format(
         **connection.settings_dict
     )
     engine = create_engine(con)
-    gdf.to_postgis(table_name, con=engine, schema=schema_name)
+
+    gdf.to_postgis(
+        table_name,
+        con=engine,
+        schema=schema_name,
+        index=use_index,
+        index_label=index_label
+    )
+
     engine.dispose()
     return metadata
