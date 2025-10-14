@@ -70,6 +70,6 @@ def get_features(schema_name, table_name):
                 f"SELECT * FROM {schema_name}.{table_name}"
             )
             return cursor.fetchall()
-        except ProgrammingError as e:
+        except ProgrammingError:
             return []
     return []

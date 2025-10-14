@@ -11,6 +11,7 @@ from cloud_native_gis.utils.fiona import list_layers
 
 class Mode:
     """Class contains modes."""
+
     REPLACE = 'replace'
     APPEND = 'append'
 
