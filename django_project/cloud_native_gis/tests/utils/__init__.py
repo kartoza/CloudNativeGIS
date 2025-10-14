@@ -2,3 +2,4 @@
 """Cloud Native GIS."""
 
 from .fiona import *
+from .geopandas import *
