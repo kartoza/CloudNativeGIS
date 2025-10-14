@@ -116,7 +116,7 @@ class TestGeopandas(TransactionTestCase):
             )
 
         self.assertEqual(
-            ['category', 'geometry', 'id', 'name'], layer.attribute_names
+            ['category', 'id', 'name'], layer.attribute_names
         )
         ids = list(
             layer.layerattributes_set.values_list('id', flat=True)
@@ -146,7 +146,7 @@ class TestGeopandas(TransactionTestCase):
         )
         layer.reset_attributes()
         self.assertEqual(
-            ['category', 'geometry', 'id', 'name'], layer.attribute_names
+            ['category', 'id', 'name'], layer.attribute_names
         )
         new_ids = list(
             layer.layerattributes_set.values_list('id', flat=True)
@@ -179,7 +179,7 @@ class TestGeopandas(TransactionTestCase):
         )
         layer.reset_attributes()
         self.assertEqual(
-            ['category', 'geometry', 'id', 'name', 'new_field'],
+            ['category', 'id', 'name', 'new_field'],
             layer.attribute_names
         )
         new_ids = list(

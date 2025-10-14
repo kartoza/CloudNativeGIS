@@ -438,6 +438,7 @@ class Layer(AbstractTerm, AbstractResource):
         """Reset attributes."""
         new_fields = [
             field.name for field in fields(self.schema_name, self.table_name)
+            if field.name != 'geometry'
         ]
         new_fields.sort()
         old_fields = list(
@@ -452,12 +453,13 @@ class Layer(AbstractTerm, AbstractResource):
             for idx, field in enumerate(
                     fields(self.schema_name, self.table_name)
             ):
-                LayerAttributes.objects.create(
-                    layer=self,
-                    attribute_name=field.name,
-                    attribute_type=field.type,
-                    attribute_order=idx
-                )
+                if field.name != 'geometry':
+                    LayerAttributes.objects.create(
+                        layer=self,
+                        attribute_name=field.name,
+                        attribute_type=field.type,
+                        attribute_order=idx
+                    )
 
 
 class LayerAttributes(models.Model):
