@@ -4,7 +4,6 @@
 import os
 import uuid
 from django.test import TestCase
-from django.conf import settings
 import shutil
 
 from cloud_native_gis.models import (

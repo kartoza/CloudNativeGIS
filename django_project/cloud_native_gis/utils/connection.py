@@ -60,3 +60,16 @@ def count_features(schema_name, table_name):
             if 'does not exist' in str(e):
                 count = None
     return count
+
+
+def get_features(schema_name, table_name):
+    """Return features of table."""
+    with connection.cursor() as cursor:
+        try:
+            cursor.execute(
+                f"SELECT * FROM {schema_name}.{table_name}"
+            )
+            return cursor.fetchall()
+        except ProgrammingError:
+            return []
+    return []
