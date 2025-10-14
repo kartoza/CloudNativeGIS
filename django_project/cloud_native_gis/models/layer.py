@@ -19,9 +19,9 @@ from cloud_native_gis.models.general import (
     AbstractTerm, AbstractResource, License
 )
 from cloud_native_gis.models.style import Style
-from cloud_native_gis.utils.connection import delete_table
-from cloud_native_gis.utils.type import FileType
+from cloud_native_gis.utils.connection import delete_table, fields
 from cloud_native_gis.utils.fiona import list_layers
+from cloud_native_gis.utils.type import FileType
 
 FOLDER_FILES = 'cloud_native_gis_files'
 PMTILES_FOLDER = 'pmtile_files'
@@ -31,7 +31,6 @@ FOLDER_ROOT = os.path.join(
 FOLDER_URL = os.path.join(
     settings.MEDIA_URL, FOLDER_FILES
 )
-
 
 User = get_user_model()
 
@@ -434,6 +433,31 @@ class Layer(AbstractTerm, AbstractResource):
                 None,
                 f'Failed to export layer {self.name} to format {type}'
             )
+
+    def reset_attributes(self):
+        """Reset attributes."""
+        new_fields = [
+            field.name for field in fields(self.schema_name, self.table_name)
+        ]
+        new_fields.sort()
+        old_fields = list(
+            self.layerattributes_set.values_list(
+                'attribute_name', flat=True
+            )
+        )
+        old_fields.sort()
+
+        if new_fields != old_fields:
+            self.layerattributes_set.all().delete()
+            for idx, field in enumerate(
+                    fields(self.schema_name, self.table_name)
+            ):
+                LayerAttributes.objects.create(
+                    layer=self,
+                    attribute_name=field.name,
+                    attribute_type=field.type,
+                    attribute_order=idx
+                )
 
 
 class LayerAttributes(models.Model):
