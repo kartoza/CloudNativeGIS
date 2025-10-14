@@ -53,6 +53,7 @@ class TestGeopandas(TransactionTestCase):
                 ]
             }, layer.schema_name, layer.table_name
         )
+        layer.reset_attributes()
         features = get_features(layer.schema_name, layer.table_name)
         self.assertEqual(len(features), 1)
         self.assertEqual(features[0][1], 1)
@@ -114,6 +115,13 @@ class TestGeopandas(TransactionTestCase):
                 mode=Mode.APPEND
             )
 
+        self.assertEqual(
+            ['category', 'geometry', 'id', 'name'], layer.attribute_names
+        )
+        ids = list(
+            layer.layerattributes_set.values_list('id', flat=True)
+        )
+        # Replace
         geojson_to_geopanda(
             {
                 "type": "FeatureCollection",
@@ -136,6 +144,49 @@ class TestGeopandas(TransactionTestCase):
                 ]
             }, layer.schema_name, layer.table_name
         )
+        layer.reset_attributes()
+        self.assertEqual(
+            ['category', 'geometry', 'id', 'name'], layer.attribute_names
+        )
+        new_ids = list(
+            layer.layerattributes_set.values_list('id', flat=True)
+        )
+        self.assertEqual(ids, new_ids)
+
+        # Replace with different attributes
+        geojson_to_geopanda(
+            {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "id": 10,
+                            "name": "New shop",
+                            "category": "shop",
+                            "new_field": "value"
+                        },
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                                106.827153,
+                                -6.17511
+                            ]
+                        }
+                    }
+                ]
+            }, layer.schema_name, layer.table_name
+        )
+        layer.reset_attributes()
+        self.assertEqual(
+            ['category', 'geometry', 'id', 'name', 'new_field'],
+            layer.attribute_names
+        )
+        new_ids = list(
+            layer.layerattributes_set.values_list('id', flat=True)
+        )
+        self.assertNotEqual(ids, new_ids)
+
         features = get_features(layer.schema_name, layer.table_name)
         self.assertEqual(len(features), 1)
         self.assertEqual(features[0][1], 10)
