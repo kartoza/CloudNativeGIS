@@ -1,12 +1,16 @@
 # coding=utf-8
 """Cloud Native GIS."""
+import tempfile
+
 from django.contrib import admin
+from django.http import FileResponse
 from django.utils.safestring import mark_safe
 
 from cloud_native_gis.forms.layer import LayerForm, LayerUploadForm
 from cloud_native_gis.models.layer import Layer, LayerAttributes
 from cloud_native_gis.models.layer_upload import LayerUpload
 from cloud_native_gis.tasks import import_data
+from cloud_native_gis.utils.type import FileType
 
 
 class LayerAttributeInline(admin.TabularInline):
@@ -38,6 +42,54 @@ def generate_pmtiles(modeladmin, request, queryset):
             level='success' if success else 'error')
 
 
+def create_download_action(file_type, description, extension, action_name):
+    """Create a download action for a specific file type."""
+
+    @admin.action(description=description)
+    def download_action(modeladmin, request, queryset):
+        """Download layer in the specified format."""
+        if queryset.count() != 1:
+            modeladmin.message_user(
+                request,
+                'Please select exactly one layer to download.',
+                level='error')
+            return
+
+        layer = queryset.first()
+        with tempfile.TemporaryDirectory() as working_dir:
+            export_filepath, message = layer.export_layer(
+                file_type, working_dir
+            )
+            if export_filepath:
+                response = FileResponse(
+                    open(export_filepath, 'rb'),
+                    as_attachment=True,
+                    filename=f'{layer.name}{extension}'
+                )
+                return response
+            else:
+                modeladmin.message_user(request, message, level='error')
+
+    download_action.__name__ = action_name
+    return download_action
+
+
+# Create download actions for each file type
+download_geojson = create_download_action(
+    FileType.GEOJSON, 'Download as GeoJSON', '.geojson', 'download_geojson'
+)
+download_shapefile = create_download_action(
+    FileType.SHAPEFILE, 'Download as Shapefile', '.zip', 'download_shapefile'
+)
+download_geopackage = create_download_action(
+    FileType.GEOPACKAGE, 'Download as GeoPackage', '.gpkg',
+    'download_geopackage'
+)
+download_kml = create_download_action(
+    FileType.KML, 'Download as KML', '.kml', 'download_kml'
+)
+
+
 @admin.register(Layer)
 class LayerAdmin(admin.ModelAdmin):
     """Layer admin."""
@@ -49,8 +101,13 @@ class LayerAdmin(admin.ModelAdmin):
     form = LayerForm
     inlines = [LayerAttributeInline]
     filter_horizontal = ['styles']
-    actions = [generate_pmtiles]
-
+    actions = [
+        generate_pmtiles,
+        download_geojson,
+        download_shapefile,
+        download_geopackage,
+        download_kml
+    ]
 
     def get_form(self, request, *args, **kwargs):
         """Return form."""

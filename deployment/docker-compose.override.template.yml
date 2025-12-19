@@ -79,5 +79,6 @@ services:
     links:
       - db
       - redis
+      - worker
       - celery_beat
     entrypoint: [ ]
