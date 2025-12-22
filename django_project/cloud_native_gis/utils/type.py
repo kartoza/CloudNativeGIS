@@ -5,6 +5,7 @@
 class FileType:
     """File types."""
 
+    ORIGINAL = 'original'
     GEOJSON = 'geojson'
     SHAPEFILE = 'shapefile'
     GEOPACKAGE = 'geopackage'
