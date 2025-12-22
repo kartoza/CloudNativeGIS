@@ -136,7 +136,7 @@ class LayerDownload(AbstractResource):
         # For other file type
         else:
             file_path, success = self.layer.export_layer(
-                self.file_type, self.working_dir
+                self.file_type, self.working_dir, filename=str(self.unique_id)
             )
             if file_path:
                 self.path = file_path

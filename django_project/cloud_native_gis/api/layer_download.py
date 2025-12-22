@@ -70,6 +70,16 @@ class DownloadFileAPI(APIView):
                 "You don't have permission to download this file."
             )
 
+        # Check if download failed
+        if layer_download.status == DownloadStatus.FAILED:
+            return Response(
+                {
+                    'error': 'Download failed.',
+                    'note': layer_download.note
+                },
+                status=500
+            )
+
         # Check if download is ready
         if layer_download.status != DownloadStatus.SUCCESS:
             return Response(
@@ -92,7 +102,8 @@ class DownloadFileAPI(APIView):
         extension = FileType.to_extension(layer_download.file_type)
         filename = f'{layer_download.layer.name}{extension}'
 
-        if layer_download.file_type == FileType.ORIGINAL:
+        is_head_request = request.method == 'HEAD'
+        if layer_download.file_type == FileType.ORIGINAL or is_head_request:
             return FileResponse(
                 open(layer_download.path, 'rb'),
                 as_attachment=True,
