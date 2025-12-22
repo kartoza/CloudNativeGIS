@@ -56,7 +56,8 @@ class LayerDownload(AbstractResource):
             (FileType.KML, FileType.KML),
             (FileType.SHAPEFILE, FileType.SHAPEFILE),
             (FileType.GEOPACKAGE, FileType.GEOPACKAGE),
-        )
+        ),
+        max_length=256
     )
     working_dir = models.TextField()
     filename = models.TextField(null=True, blank=True)
