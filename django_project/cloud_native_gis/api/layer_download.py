@@ -100,7 +100,10 @@ class DownloadFileAPI(APIView):
 
         # Determine filename
         extension = FileType.to_extension(layer_download.file_type)
-        filename = f'{layer_download.layer.name}{extension}'
+        if layer_download.filename:
+            filename = f'{layer_download.filename}{extension}'
+        else:
+            filename = f'{layer_download.unique_id}{extension}'
 
         is_head_request = request.method == 'HEAD'
         if layer_download.file_type == FileType.ORIGINAL or is_head_request:
