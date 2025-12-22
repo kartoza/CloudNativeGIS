@@ -7,6 +7,8 @@ import uuid
 
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 from cloud_native_gis.models.general import AbstractResource
 from cloud_native_gis.models.layer import Layer
@@ -145,3 +147,13 @@ class LayerDownload(AbstractResource):
                 self.status = DownloadStatus.FAILED
                 self.note = success
             self.save()
+
+
+@receiver(pre_delete, sender=LayerDownload)
+def delete_layer_download_file(sender, instance, **kwargs):
+    """Delete the file at path when LayerDownload is deleted."""
+    if instance.path and os.path.exists(instance.path):
+        try:
+            os.remove(instance.path)
+        except OSError:
+            pass
