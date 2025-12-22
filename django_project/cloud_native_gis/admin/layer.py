@@ -110,29 +110,30 @@ def create_layer_download_action(
             return
 
         layer = queryset.first()
-        with tempfile.TemporaryDirectory() as working_dir:
-            # Create LayerDownload instance
-            layer_download = LayerDownload.export_layer(
-                request.user, layer, file_type, working_dir
+        working_dir = os.path.join(settings.MEDIA_ROOT, 'tmp')
+
+        # Create LayerDownload instance
+        layer_download = LayerDownload.export_layer(
+            request.user, layer, file_type, working_dir
+        )
+
+        # Run the download task
+        layer_download.run()
+
+        # Check if download was successful
+        if layer_download.path:
+            response = FileResponse(
+                open(layer_download.path, 'rb'),
+                as_attachment=True,
+                filename=f'{layer.name}{extension}'
             )
-
-            # Run the download task
-            layer_download.run()
-
-            # Check if download was successful
-            if layer_download.path:
-                response = FileResponse(
-                    open(layer_download.path, 'rb'),
-                    as_attachment=True,
-                    filename=f'{layer.name}{extension}'
-                )
-                return response
-            else:
-                modeladmin.message_user(
-                    request,
-                    layer_download.note or 'Download failed.',
-                    level='error'
-                )
+            return response
+        else:
+            modeladmin.message_user(
+                request,
+                layer_download.note or 'Download failed.',
+                level='error'
+            )
 
     download_action.__name__ = action_name
     return download_action
