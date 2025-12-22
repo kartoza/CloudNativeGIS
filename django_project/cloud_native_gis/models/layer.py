@@ -361,7 +361,7 @@ class Layer(AbstractTerm, AbstractResource):
         return zip_filepath
 
     def export_layer(
-        self, type: FileType, working_dir: str, filename = None
+            self, type: FileType, working_dir: str, filename=None
     ):
         """
         Export the current layer to requested format.
@@ -385,6 +385,8 @@ class Layer(AbstractTerm, AbstractResource):
             FileType.to_extension(type)
         )
         name = Path(filename).stem if filename else str(self.unique_id)
+
+        os.makedirs(working_dir, exist_ok=True)
         export_filepath = os.path.join(
             working_dir,
             f'{name}{ext}'
@@ -428,11 +430,8 @@ class Layer(AbstractTerm, AbstractResource):
                 export_filepath,
                 'Success'
             )
-        except subprocess.CalledProcessError:
-            return (
-                None,
-                f'Failed to export layer {self.name} to format {type}'
-            )
+        except subprocess.CalledProcessError as e:
+            return (None, f'{e}')
 
     def reset_attributes(self):
         """Reset attributes."""
