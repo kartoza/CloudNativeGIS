@@ -73,6 +73,9 @@ class TestLayerDownloadAPI(TestCase):
         )
         layer_download.run()
 
+        # Store original path for verification
+        original_path = layer_download.path
+
         # Download file
         url = reverse(
             'download-file',
@@ -86,6 +89,15 @@ class TestLayerDownloadAPI(TestCase):
             f'{self.layer.name}.geojson',
             response['Content-Disposition']
         )
+
+        # Verify file is marked as downloaded
+        layer_download.refresh_from_db()
+        self.assertIsNone(layer_download.path)
+        self.assertIn('downloaded', layer_download.note.lower())
+
+        # Verify trying to download again fails
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
 
     def test_download_file_not_ready(self):
         """Test downloading a file that's not ready."""

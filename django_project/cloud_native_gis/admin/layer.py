@@ -1,7 +1,9 @@
 # coding=utf-8
 """Cloud Native GIS."""
+import os
 import tempfile
 
+from django.conf import settings
 from django.contrib import admin
 from django.http import FileResponse, HttpResponseRedirect
 from django.urls import reverse
@@ -173,29 +175,30 @@ def create_layer_download_async_action(file_type, description, action_name):
             return
 
         layer = queryset.first()
-        with tempfile.TemporaryDirectory() as working_dir:
-            # Create LayerDownload instance
-            layer_download = LayerDownload.export_layer(
-                request.user, layer, file_type, working_dir
-            )
+        working_dir = os.path.join(settings.MEDIA_ROOT, 'tmp')
 
-            # Schedule async task
-            layer_download.schedule_task()
+        # Create LayerDownload instance
+        layer_download = LayerDownload.export_layer(
+            request.user, layer, file_type, working_dir
+        )
 
-            # Redirect to download API
-            download_url = reverse(
-                'download-file',
-                kwargs={'unique_id': layer_download.unique_id}
-            )
+        # Schedule async task
+        layer_download.schedule_task()
 
-            modeladmin.message_user(
-                request,
-                f'Download task queued for {layer.name}. '
-                f'Redirecting to download URL...',
-                level='success'
-            )
+        # Redirect to download API
+        download_url = reverse(
+            'download-file',
+            kwargs={'unique_id': layer_download.unique_id}
+        )
 
-            return HttpResponseRedirect(download_url)
+        modeladmin.message_user(
+            request,
+            f'Download task queued for {layer.name}. '
+            f'Redirecting to download URL...',
+            level='success'
+        )
+
+        return HttpResponseRedirect(download_url)
 
     download_action.__name__ = action_name
     return download_action
@@ -304,14 +307,53 @@ class LayerDownloadAdmin(admin.ModelAdmin):
     """LayerDownload admin."""
 
     list_display = (
-        'created_at', 'created_by', 'layer', 'file_type', 'status', 'note'
+        'created_at', 'created_by', 'layer', 'file_type', 'status',
+        'download_link', 'path_display'
     )
     list_filter = ['layer', 'file_type', 'status']
     readonly_fields = (
         'unique_id', 'status', 'note', 'layer', 'file_type',
-        'working_dir', 'filename', 'task_id', 'path'
+        'working_dir', 'filename', 'task_id', 'path', 'download_link'
     )
 
     def has_add_permission(self, request):
         """Disable add permission."""
         return False
+
+    def download_link(self, obj):
+        """Return download link if available."""
+        from cloud_native_gis.models.layer_download import DownloadStatus
+        if obj.status == DownloadStatus.SUCCESS and obj.path:
+            download_url = reverse(
+                'download-file',
+                kwargs={'unique_id': obj.unique_id}
+            )
+            return mark_safe(
+                f'<a href="{download_url}" target="_blank">Download</a>'
+            )
+        elif obj.status == DownloadStatus.SUCCESS and not obj.path:
+            return mark_safe(
+                '<span style="color: gray;">Already downloaded</span>')
+        elif obj.status == DownloadStatus.FAILED:
+            return mark_safe('<span style="color: red;">Failed</span>')
+        else:
+            return mark_safe(
+                f'<span style="color: orange;">{obj.status}</span>'
+            )
+
+    download_link.short_description = 'Download'
+    download_link.allow_tags = True
+
+    def path_display(self, obj):
+        """Display path with truncation."""
+        if obj.path:
+            # Show just the filename, not the full path
+            import os
+            filename = os.path.basename(obj.path)
+            return mark_safe(
+                f'<span title="{obj.path}">{filename}</span>'
+            )
+        return mark_safe('<span style="color: gray;">-</span>')
+
+    path_display.short_description = 'File'
+    path_display.allow_tags = True

@@ -5,13 +5,50 @@ import os
 
 from django.core.exceptions import PermissionDenied
 from django.http import FileResponse
-from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from cloud_native_gis.models.layer_download import LayerDownload, DownloadStatus
+from cloud_native_gis.models.layer_download import LayerDownload, \
+    DownloadStatus
 from cloud_native_gis.utils.type import FileType
+
+
+class FileWrapper:
+    """File wrapper that deletes file on close."""
+
+    def __init__(self, file_path):
+        """Initialize wrapper."""
+        self.file_path = file_path
+        self.file = open(file_path, 'rb')
+
+    def __iter__(self):
+        """Iterate over file chunks."""
+        return self
+
+    def __next__(self):
+        """Get next chunk."""
+        chunk = self.file.read(8192)
+        if not chunk:
+            raise StopIteration
+        return chunk
+
+    def read(self, size=-1):
+        """Read from file."""
+        return self.file.read(size)
+
+    def close(self):
+        """Close file and delete it."""
+        try:
+            self.file.close()
+        finally:
+            # Delete the file after closing
+            try:
+                if os.path.exists(self.file_path):
+                    os.remove(self.file_path)
+            except OSError:
+                pass
 
 
 class DownloadFileAPI(APIView):
@@ -54,10 +91,18 @@ class DownloadFileAPI(APIView):
         extension = FileType.to_extension(layer_download.file_type)
         filename = f'{layer_download.layer.name}{extension}'
 
-        # Return file
-        response = FileResponse(
-            open(layer_download.path, 'rb'),
+        if layer_download.file_type == FileType.ORIGINAL:
+            return FileResponse(
+                open(layer_download.path, 'rb'),
+                as_attachment=True,
+                filename=filename
+            )
+
+        # Create file wrapper that will delete file after download
+        file_wrapper = FileWrapper(layer_download.path)
+
+        return FileResponse(
+            file_wrapper,
             as_attachment=True,
             filename=filename
         )
-        return response
