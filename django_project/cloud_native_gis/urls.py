@@ -16,6 +16,7 @@ from cloud_native_gis.api.layer import (
     LayerViewSet, LayerStyleViewSet, LayerUploadViewSet,
     LayerAttributesViewSet, DataPreviewAPI
 )
+from cloud_native_gis.api.layer_download import DownloadFileAPI
 from cloud_native_gis.api.pmtile import serve_pmtiles
 from cloud_native_gis.api.raster import serve_cog
 from cloud_native_gis.api.vector_tile import (VectorTileLayer)
@@ -85,4 +86,6 @@ urlpatterns = [
          serve_pmtiles, name='serve-pmtiles'),
     path('api/serve-cog/<uuid:layer_uuid>/',
          serve_cog, name='serve-cog'),
+    path('api/download/<uuid:unique_id>/',
+         DownloadFileAPI.as_view(), name='download-file'),
 ]

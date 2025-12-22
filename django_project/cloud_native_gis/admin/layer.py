@@ -3,7 +3,8 @@
 import tempfile
 
 from django.contrib import admin
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponseRedirect
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from cloud_native_gis.forms.layer import LayerForm, LayerUploadForm
@@ -181,12 +182,20 @@ def create_layer_download_async_action(file_type, description, action_name):
             # Schedule async task
             layer_download.schedule_task()
 
+            # Redirect to download API
+            download_url = reverse(
+                'download-file',
+                kwargs={'unique_id': layer_download.unique_id}
+            )
+
             modeladmin.message_user(
                 request,
                 f'Download task queued for {layer.name}. '
-                f'Check LayerDownload admin for status.',
+                f'Redirecting to download URL...',
                 level='success'
             )
+
+            return HttpResponseRedirect(download_url)
 
     download_action.__name__ = action_name
     return download_action
