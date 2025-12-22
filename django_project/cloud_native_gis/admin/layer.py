@@ -158,6 +158,60 @@ download_kml_tracked = create_layer_download_action(
 )
 
 
+def create_layer_download_async_action(file_type, description, action_name):
+    """Create an async download action using LayerDownload model and Celery."""
+
+    @admin.action(description=description)
+    def download_action(modeladmin, request, queryset):
+        """Queue layer download using LayerDownload model and Celery."""
+        if queryset.count() != 1:
+            modeladmin.message_user(
+                request,
+                'Please select exactly one layer to download.',
+                level='error')
+            return
+
+        layer = queryset.first()
+        with tempfile.TemporaryDirectory() as working_dir:
+            # Create LayerDownload instance
+            layer_download = LayerDownload.export_layer(
+                request.user, layer, file_type, working_dir
+            )
+
+            # Schedule async task
+            layer_download.schedule_task()
+
+            modeladmin.message_user(
+                request,
+                f'Download task queued for {layer.name}. '
+                f'Check LayerDownload admin for status.',
+                level='success'
+            )
+
+    download_action.__name__ = action_name
+    return download_action
+
+
+# Create async download actions for each file type
+download_original_async = create_layer_download_async_action(
+    FileType.ORIGINAL, 'Download Original (Async)', 'download_original_async'
+)
+download_geojson_async = create_layer_download_async_action(
+    FileType.GEOJSON, 'Download as GeoJSON (Async)', 'download_geojson_async'
+)
+download_shapefile_async = create_layer_download_async_action(
+    FileType.SHAPEFILE, 'Download as Shapefile (Async)',
+    'download_shapefile_async'
+)
+download_geopackage_async = create_layer_download_async_action(
+    FileType.GEOPACKAGE, 'Download as GeoPackage (Async)',
+    'download_geopackage_async'
+)
+download_kml_async = create_layer_download_async_action(
+    FileType.KML, 'Download as KML (Async)', 'download_kml_async'
+)
+
+
 @admin.register(Layer)
 class LayerAdmin(admin.ModelAdmin):
     """Layer admin."""
@@ -179,7 +233,12 @@ class LayerAdmin(admin.ModelAdmin):
         download_geojson_tracked,
         download_shapefile_tracked,
         download_geopackage_tracked,
-        download_kml_tracked
+        download_kml_tracked,
+        download_original_async,
+        download_geojson_async,
+        download_shapefile_async,
+        download_geopackage_async,
+        download_kml_async
     ]
 
     def get_form(self, request, *args, **kwargs):

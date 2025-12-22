@@ -17,3 +17,14 @@ def import_data(layer_id):
         layer.import_data()
     except LayerUpload.DoesNotExist:
         logger.error(f'Layer {layer_id} does not exist')
+
+
+@app.task
+def process_layer_download(layer_download_id):
+    """Process layer download from layer_download id."""
+    from cloud_native_gis.models import LayerDownload
+    try:
+        layer_download = LayerDownload.objects.get(id=layer_download_id)
+        layer_download.run()
+    except LayerDownload.DoesNotExist:
+        logger.error(f'LayerDownload {layer_download_id} does not exist')

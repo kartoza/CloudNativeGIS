@@ -83,6 +83,14 @@ class LayerDownload(AbstractResource):
             filename=filename
         )
 
+    def schedule_task(self):
+        """Schedule async task to process download."""
+        from cloud_native_gis.tasks import process_layer_download
+        task = process_layer_download.delay(self.id)
+        self.task_id = task.id
+        self.save()
+        return task
+
     def run(self):
         """Run the download task."""
         self.status = DownloadStatus.START
