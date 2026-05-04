@@ -26,7 +26,7 @@ setup(
     scripts=[],
     url="https://github.com/kartoza/CloudNativeGIS",
     license="AGPL-3.0-or-later",
-    description=("A workbench for working with open source geospatial services."),
+    description=("A workbench for open source geospatial services."),
     include_package_data=True,
     long_description=io.open("README.md", encoding="utf-8").read(),
     classifiers=[
