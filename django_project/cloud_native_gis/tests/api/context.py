@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status

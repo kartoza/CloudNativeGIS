@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Cloud Native GIS.
 
@@ -23,7 +25,7 @@ setup(
     package_dir={'': 'django_project'},
     scripts=[],
     url='https://github.com/kartoza/CloudNativeGIS',
-    license='MIT',
+    license='AGPL-3.0-or-later',
     description=(
         'Django application to manage context layer.'
     ),
@@ -32,7 +34,7 @@ setup(
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Web Environment',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
         'Framework :: Django :: 4.2',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],

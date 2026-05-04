@@ -1,3 +1,10 @@
+# SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# NOTE: Ruff is the preferred linter for local development.
+# This file is kept for CI compatibility and IDE fallback.
+# See pyproject.toml for ruff configuration.
+
 [flake8]
 exclude = */tests/*,*/docs/*,*/.tox/*,*/.venv/*,.pycharm_helpers/*,*/migrations/*,docs/*,*/__init__.py,scripts/*,deployment/*,django_project/initialize.py
 max-line-length = 79

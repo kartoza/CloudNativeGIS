@@ -127,3 +127,7 @@ and also assets in the django_project/cloud_native_gis/static
 
 After that, test it by remove MAPUTNIK_URL and restart dev container.
 If satisfied, just create commit for the changes.
+
+---
+
+Made with :heart: by [Kartoza](https://kartoza.com) | [Donate!](https://github.com/sponsors/kartoza) | [GitHub](https://github.com/kartoza/CloudNativeGIS)
