@@ -1,0 +1,248 @@
+# SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cloud-native-gis"
+version = "0.0.1"
+description = "Django platform for serving vector and raster geospatial layers as tiles"
+readme = "README.md"
+license = {text = "AGPL-3.0-or-later"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Kartoza", email = "info@kartoza.com"},
+    {name = "Irwan Fathurrahman", email = "irwan@kartoza.com"},
+]
+maintainers = [
+    {name = "Kartoza", email = "info@kartoza.com"},
+]
+keywords = [
+    "gis",
+    "geospatial",
+    "django",
+    "vector-tiles",
+    "pmtiles",
+    "cog",
+    "raster",
+    "mapbox",
+    "maputnik",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Framework :: Django :: 4.2",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "Django>=3.2.16",
+    "djangorestframework>=3.14.0",
+    "djangorestframework-gis>=1.0",
+    "django-cors-headers>=4.3.1",
+    "GeoAlchemy2>=0.15.1",
+    "geopandas>=0.13.2",
+    "drf-yasg>=1.21.7",
+    "drf-nested-routers>=0.93.5",
+    "fiona>=1.10.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-django>=4.5",
+    "factory-boy>=3.3",
+    "ruff>=0.1",
+    "black>=23.0",
+    "isort>=5.12",
+    "mypy>=1.0",
+    "pre-commit>=3.0",
+    "build>=1.0",
+    "twine>=4.0",
+    "commitizen>=3.0",
+]
+docs = [
+    "mkdocs>=1.5",
+    "mkdocs-material>=9.0",
+    "mkdocs-mermaid2-plugin>=1.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.2",
+    "mkdocstrings[python]>=0.24",
+]
+
+[project.urls]
+Homepage = "https://github.com/kartoza/CloudNativeGIS"
+Documentation = "https://kartoza.github.io/CloudNativeGIS/"
+Repository = "https://github.com/kartoza/CloudNativeGIS.git"
+Issues = "https://github.com/kartoza/CloudNativeGIS/issues"
+Changelog = "https://github.com/kartoza/CloudNativeGIS/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["django_project"]
+include = ["cloud_native_gis*"]
+
+[tool.setuptools.package-dir]
+"" = "django_project"
+
+[tool.setuptools.package-data]
+"cloud_native_gis" = [
+    "templates/**/*",
+    "static/**/*",
+]
+
+# =============================================================================
+# Ruff - Fast Python linter and formatter
+# =============================================================================
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "*/migrations/*",
+    "*/node_modules/*",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+    "C901",   # too complex
+    "ARG001", # unused function argument
+    "ARG002", # unused method argument
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"*/tests/*" = ["ARG001", "ARG002"]
+"*/migrations/*" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["cloud_native_gis", "core", "frontend"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+# =============================================================================
+# Black - Code formatter
+# =============================================================================
+[tool.black]
+line-length = 88
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+    | \.venv
+    | __pycache__
+    | migrations
+    | node_modules
+    | build
+    | dist
+)/
+'''
+
+# =============================================================================
+# isort - Import sorting
+# =============================================================================
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["cloud_native_gis", "core", "frontend"]
+skip = [".git", ".venv", "__pycache__", "migrations", "node_modules"]
+
+# =============================================================================
+# MyPy - Static type checking
+# =============================================================================
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = [
+    "migrations/",
+    "tests/",
+    ".venv/",
+]
+
+[[tool.mypy.overrides]]
+module = "cloud_native_gis.*"
+ignore_missing_imports = true
+
+# =============================================================================
+# Pytest - Testing
+# =============================================================================
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "core.settings.test"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+testpaths = ["django_project"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+# =============================================================================
+# Coverage - Test coverage
+# =============================================================================
+[tool.coverage.run]
+source = ["django_project/cloud_native_gis"]
+branch = true
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+show_missing = true
+
+# =============================================================================
+# Commitizen - Conventional commits
+# =============================================================================
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.0.1"
+version_files = [
+    "pyproject.toml:version",
+    "django_project/version.txt",
+]
+tag_format = "v$version"
+update_changelog_on_bump = true
+changelog_file = "CHANGELOG.md"

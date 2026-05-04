@@ -1,0 +1,133 @@
+# SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Pre-commit hooks for CloudNativeGIS
+# Install: pre-commit install
+# Run all: pre-commit run --all-files
+
+default_language_version:
+  python: python3
+
+repos:
+  # ==========================================================================
+  # General checks
+  # ==========================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  # ==========================================================================
+  # Python - Ruff (linting and formatting)
+  # ==========================================================================
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # ==========================================================================
+  # Python - Black (backup formatter)
+  # ==========================================================================
+  - repo: https://github.com/psf/black
+    rev: 24.2.0
+    hooks:
+      - id: black
+        language_version: python3
+
+  # ==========================================================================
+  # Python - isort (import sorting)
+  # ==========================================================================
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [--profile, black]
+
+  # ==========================================================================
+  # REUSE license compliance
+  # ==========================================================================
+  - repo: https://github.com/fsfe/reuse-tool
+    rev: v3.0.1
+    hooks:
+      - id: reuse
+
+  # ==========================================================================
+  # Security checks
+  # ==========================================================================
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.7
+    hooks:
+      - id: bandit
+        args: [-c, pyproject.toml, -r, django_project/cloud_native_gis]
+        additional_dependencies: ["bandit[toml]"]
+        exclude: tests/
+
+  # ==========================================================================
+  # Commit message format
+  # ==========================================================================
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.14.1
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  # ==========================================================================
+  # JavaScript/TypeScript/JSON/YAML formatting
+  # ==========================================================================
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        types_or: [javascript, jsx, ts, tsx, json, yaml, markdown]
+        exclude: |
+          (?x)^(
+            django_project/frontend/node_modules/.*|
+            django_project/frontend/static/.*|
+            .*/migrations/.*
+          )$
+
+  # ==========================================================================
+  # Shell script formatting
+  # ==========================================================================
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.8.0-1
+    hooks:
+      - id: shfmt
+        args: [-i, "2", -ci]
+
+  # ==========================================================================
+  # Spell checking
+  # ==========================================================================
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.6
+    hooks:
+      - id: codespell
+        args: [--skip, "*.min.js,*.min.css,*.lock,node_modules,*.svg"]
+        exclude: |
+          (?x)^(
+            django_project/frontend/node_modules/.*|
+            django_project/frontend/static/.*|
+            .*/migrations/.*
+          )$
+
+ci:
+  autofix_prs: true
+  autoupdate_schedule: weekly
+  skip: [bandit]  # Skip heavy checks in CI auto-fixes

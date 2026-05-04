@@ -1,0 +1,84 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: CloudNativeGIS
+Upstream-Contact: Kartoza <info@kartoza.com>
+Source: https://github.com/kartoza/CloudNativeGIS
+
+# Configuration files
+Files: *.json *.yml *.yaml *.toml *.cfg *.ini *.conf
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Documentation
+Files: *.md *.rst *.txt docs/*
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Web assets
+Files: *.html *.css *.scss *.less
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Static files and templates
+Files: django_project/*/static/* django_project/*/templates/*
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Frontend build artifacts
+Files: django_project/frontend/static/*
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Test fixtures
+Files: django_project/*/tests/_fixtures/*
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Migrations
+Files: django_project/*/migrations/*.py
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Docker and deployment files
+Files: deployment/* Dockerfile* docker-compose* Makefile
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Nix files
+Files: *.nix flake.lock
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Editor and IDE config
+Files: .editorconfig .exrc .nvim.lua .vscode/* .devcontainer/*
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Git and GitHub files
+Files: .gitignore .gitmodules .github/*
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Package manifests
+Files: package.json package-lock.json requirements*.txt setup.cfg MANIFEST.in
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Version file
+Files: django_project/version.txt
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Playwright tests
+Files: playwright/*
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Maputnik submodule assets
+Files: maputnik/*
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
+
+# Lock files and generated files
+Files: *.lock
+Copyright: 2024 Kartoza and Contributors
+License: AGPL-3.0-or-later
