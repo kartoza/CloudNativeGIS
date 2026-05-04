@@ -25,15 +25,15 @@ setup(
     package_dir={"": "django_project"},
     scripts=[],
     url="https://github.com/kartoza/CloudNativeGIS",
-    license="AGPL-3.0-or-later"
+    license="AGPL-3.0-or-later",
     description=("A workbench for working with open source geospatial services."),
     include_package_data=True,
     long_description=io.open("README.md", encoding="utf-8").read(),
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Environment :: Web Environment",
-        "License :: OSI Approved :: GNU Affero General " +
-        "Public License v3 or later (AGPLv3+)",
+        "License :: OSI Approved :: GNU Affero General "
+        + "Public License v3 or later (AGPLv3+)",
         "Framework :: Django :: 4.2",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
