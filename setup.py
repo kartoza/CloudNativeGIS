@@ -1,52 +1,50 @@
-# SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# !/usr/bin/env python
 """
 Cloud Native GIS.
 
 .. note:: Application setup.
 """
-# !/usr/bin/env python
+# SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 import io
 
 from setuptools import setup, find_packages
 
-__version__ = io.open('django_project/version.txt', encoding='utf-8').read()
+__version__ = io.open("django_project/version.txt", encoding="utf-8").read()
 
 setup(
-    name='Cloud Native GIS',
+    name="Cloud Native GIS",
     version=__version__,
-    author='Irwan Fathurrahman',
-    author_email='irwan@kartoza.com',
+    author="Irwan Fathurrahman",
+    author_email="irwan@kartoza.com",
     packages=find_packages(
-        where='django_project',
-        include=['cloud_native_gis*'],
+        where="django_project",
+        include=["cloud_native_gis*"],
     ),
-    package_dir={'': 'django_project'},
+    package_dir={"": "django_project"},
     scripts=[],
-    url='https://github.com/kartoza/CloudNativeGIS',
-    license='AGPL-3.0-or-later',
-    description=(
-        'Django application to manage context layer.'
-    ),
+    url="https://github.com/kartoza/CloudNativeGIS",
+    license="AGPL-3.0-or-later",
+    description=("Django application to manage context layer."),
     include_package_data=True,
-    long_description=io.open('README.md', encoding='utf-8').read(),
+    long_description=io.open("README.md", encoding="utf-8").read(),
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Environment :: Web Environment',
-        'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
-        'Framework :: Django :: 4.2',
-        'Topic :: Software Development :: Libraries :: Python Modules'
+        "Development Status :: 2 - Pre-Alpha",
+        "Environment :: Web Environment",
+        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+        "Framework :: Django :: 4.2",
+        "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     install_requires=[
-        'Django >= 3.2.16',
-        'djangorestframework >= 3.14.0',
-        'djangorestframework-gis >= 1.0',
-        'django-cors-headers==4.3.1',
-        'GeoAlchemy2 >= 0.15.1',
-        'geopandas >= 0.13.2',
-        'drf-yasg == 1.21.7',
-        'drf-nested-routers == 0.93.5',
-        'fiona==1.10.1'
+        "Django >= 3.2.16",
+        "djangorestframework >= 3.14.0",
+        "djangorestframework-gis >= 1.0",
+        "django-cors-headers==4.3.1",
+        "GeoAlchemy2 >= 0.15.1",
+        "geopandas >= 0.13.2",
+        "drf-yasg == 1.21.7",
+        "drf-nested-routers == 0.93.5",
+        "fiona==1.10.1",
     ],
 )
