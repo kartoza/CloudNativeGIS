@@ -1,0 +1,73 @@
+# SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# EditorConfig - https://editorconfig.org
+
+root = true
+
+# Default settings for all files
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Python
+[*.py]
+indent_size = 4
+max_line_length = 88
+
+# JavaScript, TypeScript, JSON, YAML
+[*.{js,jsx,ts,tsx,json,yml,yaml}]
+indent_size = 2
+
+# HTML, CSS, SCSS
+[*.{html,css,scss,less}]
+indent_size = 2
+
+# Nix
+[*.nix]
+indent_size = 2
+
+# Makefile (must use tabs)
+[Makefile]
+indent_style = tab
+
+# justfile
+[justfile]
+indent_size = 4
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# reStructuredText
+[*.rst]
+indent_size = 3
+max_line_length = 79
+
+# TOML
+[*.toml]
+indent_size = 4
+
+# INI/CFG
+[*.{ini,cfg}]
+indent_size = 4
+
+# Shell scripts
+[*.sh]
+indent_size = 2
+
+# Docker
+[Dockerfile*]
+indent_size = 4
+
+[docker-compose*.{yml,yaml}]
+indent_size = 2
+
+# Git
+[.git*]
+indent_size = 4

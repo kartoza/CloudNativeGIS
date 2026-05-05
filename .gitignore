@@ -26,3 +26,6 @@ docs/site/*
 docks/mkdocs.yml
 .direnv
 docs/mkdocs.yml
+.claude/
+Kartoza-Compliance-Plan.md
+PROMPT.log
