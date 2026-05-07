@@ -62,9 +62,6 @@ plugins:
       handlers:
         python:
           paths: [ ../django_project ]
-          import:
-            - https://docs.python.org/3/objects.inv
-            - https://mkdocstrings.github.io/autorefs/objects.inv
           options:
             # Lots of other nice options can be found at  
             # https://mkdocstrings.github.io/python/usage/

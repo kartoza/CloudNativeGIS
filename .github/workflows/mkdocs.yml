@@ -6,7 +6,7 @@ on:
       - docs
     # Paths can be used to only trigger actions when you have edited certain files, such as a file within the /docs directory
     paths:
-      - ".github/workflows/BuildMKDocsAndPublishToGithubPages.yml"
+      - "mkdocs.yml"
       - "docs/**.md"
       - "docs/**.py"
       - "docs/assets/**"
