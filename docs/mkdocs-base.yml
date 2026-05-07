@@ -33,10 +33,22 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.emoji:
-      emoji_generator: !!python/name:materialx.emoji.to_svg
-      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
 
 nav:
   - Home:
       - index.md
-      - quick_installation.md
+      - Quick Installation: quick_installation.md
+  - User Guide:
+      - user/index.md
+      - user/getting-started.md
+      - user/layers.md
+      - user/styles.md
+  - Administrator:
+      - administrator/index.md
+      - administrator/deployment.md
+      - administrator/configuration.md
+      - administrator/maintenance.md
+  - Developer:
+      - developer/index.md
