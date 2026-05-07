@@ -23,15 +23,27 @@ jobs:
       - name: Checkout main from github
         uses: actions/checkout@v4
 
-      - name: Create Mkdocs Config 🚀
-        working-directory: ./docs
-        run: ./create-mkdocs-html-config.sh
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install --no-cache-dir -r docs/requirements.txt
+            pip install --upgrade pip
+            pip install --no-cache-dir -r docs/requirements.txt
 
+      - name: Verify installed packages
+        run: |
+          pip list | grep mkdocs || echo "MkDocs is NOT installed!"
+          pip list | grep mkdocs-video || echo "mkdocs-video is NOT installed!"
+
+      - name: Create MkDocs Config 🚀
+        working-directory: ./docs
+        run: ./create-mkdocs-html-config.sh
+
+      - name: Build MkDocs Site (Explicit Config Path)
+        run: mkdocs build --clean --config-file ./docs/mkdocs.yml
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
