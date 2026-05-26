@@ -45,3 +45,6 @@ drf-yasg==1.21.7
 
 # fiona
 fiona==1.10.1
+
+# OGC API server
+pygeoapi==0.23.4

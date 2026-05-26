@@ -81,4 +81,3 @@ services:
       - redis
       - worker
       - celery_beat
-    entrypoint: [ ]
