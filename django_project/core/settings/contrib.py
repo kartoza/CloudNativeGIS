@@ -70,6 +70,13 @@ PYGEOAPI_SERVER_URL = os.environ.get(
 os.environ.setdefault('PYGEOAPI_CONFIG', _pygeoapi_config_path)
 os.environ.setdefault('PYGEOAPI_OPENAPI', PYGEOAPI_OPENAPI)
 os.environ.setdefault('PYGEOAPI_SERVER_URL', PYGEOAPI_SERVER_URL)
+os.environ.setdefault(
+    'PYGEOAPI_TEMPLATES_PATH',
+    os.environ.get(
+        'PYGEOAPI_TEMPLATES_PATH',
+        absolute_path('cloud_native_gis', 'templates', 'pygeoapi'),
+    ),
+)
 
 from pygeoapi.config import get_config  # noqa: E402
 from pygeoapi.openapi import load_openapi_document  # noqa: E402

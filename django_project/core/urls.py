@@ -6,13 +6,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-from pygeoapi.django_ import urls as pygeoapi_urls
-
 urlpatterns = [
     path('', include('frontend.urls')),
     path('', include('cloud_native_gis.urls')),
     path('admin/', admin.site.urls),
-    path('ogc/', include(pygeoapi_urls)),
 ]
 
 if settings.DEBUG:

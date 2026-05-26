@@ -110,6 +110,7 @@ components:
       name: resourceId
       required: true
       schema:
+        default: collection
         type: string
     skipGeometry:
       description: This option can be used to skip response geometries for each feature.
@@ -140,6 +141,12 @@ components:
           schema:
             $ref: '#/components/schemas/queryables'
       description: successful queryables operation
+    Tiles:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/tiles'
+      description: Retrieves the tiles description for this collection
     default:
       content:
         application/json:
@@ -181,6 +188,29 @@ components:
           type: array
       required:
       - queryables
+      type: object
+    tilematrixsetlink:
+      properties:
+        tileMatrixSet:
+          type: string
+        tileMatrixSetURI:
+          type: string
+      required:
+      - tileMatrixSet
+      type: object
+    tiles:
+      properties:
+        links:
+          items:
+            $ref: https://schemas.opengis.net/ogcapi/tiles/part1/1.0/openapi/ogcapi-tiles-1.yaml#/components/schemas/link
+          type: array
+        tileMatrixSetLinks:
+          items:
+            $ref: '#/components/schemas/tilematrixsetlink'
+          type: array
+      required:
+      - tileMatrixSetLinks
+      - links
       type: object
 info:
   contact:
@@ -241,7 +271,272 @@ paths:
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
       summary: Collections
       tags:
-      - server
+      - collections
+  /collections/{collectionId}:
+    get:
+      description: A feature collection
+      operationId: describeCollectionCollection
+      parameters:
+      - description: Local identifier of a collection
+        in: path
+        name: collectionId
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/f'
+      - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/Collection
+        '400':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+      summary: Get Collection metadata
+      tags:
+      - collections
+  /collections/{collectionId}/items:
+    get:
+      description: A feature collection
+      operationId: getCollectionFeatures
+      parameters:
+      - description: Local identifier of a collection
+        in: path
+        name: collectionId
+        required: true
+        schema:
+          type: string
+      - description: The optional f parameter indicates the output format which the
+          server shall provide as part of the response document.  The default format
+          is GeoJSON.
+        explode: false
+        in: query
+        name: f
+        required: false
+        schema:
+          default: json
+          enum:
+          - json
+          - html
+          - jsonld
+          - csv
+          type: string
+        style: form
+      - $ref: '#/components/parameters/lang'
+      - $ref: '#/components/parameters/bbox'
+      - description: The optional limit parameter limits the number of items that
+          are presented in the response document (maximum=10, default=10).
+        explode: false
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 10
+          minimum: 1
+          type: integer
+        style: form
+      - $ref: '#/components/parameters/crs'
+      - $ref: '#/components/parameters/bbox-crs'
+      - description: The properties that should be included. The parameter value is
+          a comma-separated list of property names.
+        explode: false
+        in: query
+        name: properties
+        required: false
+        schema:
+          items:
+            enum:
+            - id
+            type: string
+          type: array
+        style: form
+      - $ref: '#/components/parameters/vendorSpecificParameters'
+      - $ref: '#/components/parameters/skipGeometry'
+      - $ref: https://raw.githubusercontent.com/opengeospatial/ogcapi-records/master/core/openapi/parameters/sortby.yaml
+      - $ref: '#/components/parameters/offset'
+      - explode: false
+        in: query
+        name: id
+        required: false
+        schema:
+          type: integer
+        style: form
+      responses:
+        '200':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/Features
+        '400':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+      summary: Get Collection items
+      tags:
+      - collections
+    options:
+      description: A feature collection
+      operationId: optionsCollectionFeatures
+      parameters:
+      - description: Local identifier of a collection
+        in: path
+        name: collectionId
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: options response
+      summary: Options for Collection items
+      tags:
+      - collections
+    post:
+      description: A feature collection
+      operationId: getCQL2CollectionFeatures
+      parameters:
+      - description: Local identifier of a collection
+        in: path
+        name: collectionId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: https://schemas.opengis.net/cql2/1.0/cql2.json
+        description: Get items with CQL2
+        required: true
+      responses:
+        '200':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/Features
+        '400':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+      summary: Get Collection items with CQL2
+      tags:
+      - collections
+  /collections/{collectionId}/items/{featureId}:
+    get:
+      description: A feature collection
+      operationId: getCollectionFeature
+      parameters:
+      - description: Local identifier of a collection
+        in: path
+        name: collectionId
+        required: true
+        schema:
+          type: string
+      - $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/parameters/featureId
+      - $ref: '#/components/parameters/crs'
+      - $ref: '#/components/parameters/f'
+      - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/Feature
+        '400':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+      summary: Get Collection item by id
+      tags:
+      - collections
+    options:
+      description: A feature collection
+      operationId: optionsCollectionFeature
+      parameters:
+      - description: Local identifier of a collection
+        in: path
+        name: collectionId
+        required: true
+        schema:
+          type: string
+      - $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/parameters/featureId
+      responses:
+        '200':
+          description: options response
+      summary: Options for Collection item by id
+      tags:
+      - collections
+  /collections/{collectionId}/queryables:
+    get:
+      description: A feature collection
+      operationId: getCollectionQueryables
+      parameters:
+      - description: Local identifier of a collection
+        in: path
+        name: collectionId
+        required: true
+        schema:
+          type: string
+      - description: The properties that should be included. The parameter value is
+          a comma-separated list of property names.
+        explode: false
+        in: query
+        name: properties
+        required: false
+        schema:
+          items:
+            enum:
+            - id
+            type: string
+          type: array
+        style: form
+      - $ref: '#/components/parameters/f'
+      - description: The profile to be applied to a given request
+        explode: false
+        in: query
+        name: profile
+        required: false
+        schema:
+          enum:
+          - actual-domain
+          - valid-domain
+          type: string
+        style: form
+      - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          $ref: '#/components/responses/Queryables'
+        '400':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+      summary: Get Collection queryables
+      tags:
+      - collections
+  /collections/{collectionId}/schema:
+    get:
+      description: A feature collection
+      operationId: getCollectionSchema
+      parameters:
+      - description: Local identifier of a collection
+        in: path
+        name: collectionId
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/f'
+      - $ref: '#/components/parameters/lang'
+      responses:
+        '200':
+          $ref: '#/components/responses/Queryables'
+        '400':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+      summary: Get Collection schema
+      tags:
+      - collections
   /conformance:
     get:
       description: API conformance definition
@@ -259,75 +554,6 @@ paths:
       summary: API conformance definition
       tags:
       - server
-  /jobs:
-    get:
-      description: Retrieve a list of jobs
-      operationId: getJobs
-      responses:
-        '200':
-          $ref: '#/components/responses/200'
-        '404':
-          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/NotFound.yaml
-        default:
-          $ref: '#/components/responses/default'
-      summary: Retrieve jobs list
-      tags:
-      - jobs
-  /jobs/{jobId}:
-    delete:
-      description: Cancel / delete job
-      operationId: deleteJob
-      parameters:
-      - &id001
-        description: job identifier
-        in: path
-        name: jobId
-        required: true
-        schema:
-          type: string
-      responses:
-        '204':
-          $ref: '#/components/responses/204'
-        '404':
-          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/NotFound.yaml
-        default:
-          $ref: '#/components/responses/default'
-      summary: Cancel / delete job
-      tags:
-      - jobs
-    get:
-      description: Retrieve job details
-      operationId: getJob
-      parameters:
-      - *id001
-      - $ref: '#/components/parameters/f'
-      responses:
-        '200':
-          $ref: '#/components/responses/200'
-        '404':
-          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/NotFound.yaml
-        default:
-          $ref: '#/components/responses/default'
-      summary: Retrieve job details
-      tags:
-      - jobs
-  /jobs/{jobId}/results:
-    get:
-      description: Retrieve job results
-      operationId: getJobResults
-      parameters:
-      - *id001
-      - $ref: '#/components/parameters/f'
-      responses:
-        '200':
-          $ref: '#/components/responses/200'
-        '404':
-          $ref: https://schemas.opengis.net/ogcapi/processes/part1/1.0/openapi/responses/NotFound.yaml
-        default:
-          $ref: '#/components/responses/default'
-      summary: Retrieve job results
-      tags:
-      - jobs
   /openapi:
     get:
       description: This document
@@ -361,17 +587,9 @@ servers:
 - description: OGC API Features for CloudNativeGIS layers
   url: http://localhost:5000/ogc
 tags:
+- name: collections
 - description: OGC API Features for CloudNativeGIS layers
   externalDocs:
     description: information
     url: http://localhost:5000/ogc
   name: server
-- name: coverages
-- name: edr
-- name: records
-- name: features
-- name: maps
-- name: processes
-- name: jobs
-- name: tiles
-- name: stac
