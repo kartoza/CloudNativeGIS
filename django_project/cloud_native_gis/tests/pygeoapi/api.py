@@ -351,3 +351,79 @@ class OGCCollectionTest(BaseTest, TransactionTestCase):
         data = response.json()
         self.assertEqual(data['numberReturned'], 1)
         self.assertEqual(data['features'][0]['properties']['name'], 'kenya')
+
+    # -- Write operations --
+
+    _NEW_FEATURE = {
+        'type': 'Feature',
+        'id': 3,
+        'geometry': {
+            'type': 'Polygon',
+            'coordinates': [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+        },
+        'properties': {'name': 'new_country'},
+    }
+
+    def test_create_feature(self):
+        """POST …/items with GeoJSON body creates a new feature (201)."""
+        import json
+        from django.test.client import Client
+        url = reverse('collection-items', kwargs={'collection_id': self.cid})
+        response = Client().post(
+            url,
+            data=json.dumps(self._NEW_FEATURE),
+            content_type='application/geo+json',
+        )
+        self.assertEqual(response.status_code, 201)
+        # Total count increased to 3
+        data = self.assertRequestGetView(
+            _url('collection-items', collection_id=self.cid), 200
+        ).json()
+        self.assertEqual(data['numberMatched'], 3)
+
+    def test_replace_feature(self):
+        """PUT …/items/{id} replaces an existing feature (204)."""
+        import json
+        from django.test.client import Client
+        url = reverse(
+            'collection-item',
+            kwargs={'collection_id': self.cid, 'item_id': '1'},
+        )
+        updated = dict(self._NEW_FEATURE)
+        updated['properties'] = {'name': 'updated_country'}
+        response = Client().put(
+            url,
+            data=json.dumps(updated),
+            content_type='application/geo+json',
+        )
+        self.assertEqual(response.status_code, 204)
+        # Verify the name changed
+        data = self.assertRequestGetView(
+            _url('collection-item', collection_id=self.cid, item_id='1'), 200
+        ).json()
+        self.assertEqual(data['properties']['name'], 'updated_country')
+
+    def test_delete_feature(self):
+        """DELETE …/items/{id} removes a feature (200)."""
+        from django.test.client import Client
+        url = reverse(
+            'collection-item',
+            kwargs={'collection_id': self.cid, 'item_id': '1'},
+        )
+        response = Client().delete(url)
+        self.assertEqual(response.status_code, 200)
+        # Total count decreased to 1
+        data = self.assertRequestGetView(
+            _url('collection-items', collection_id=self.cid), 200
+        ).json()
+        self.assertEqual(data['numberMatched'], 1)
+
+    def test_delete_feature_not_found(self):
+        """DELETE …/items/99999 returns 404."""
+        from django.test.client import Client
+        url = reverse(
+            'collection-item',
+            kwargs={'collection_id': self.cid, 'item_id': '99999'},
+        )
+        response = Client().delete(url)
+        self.assertEqual(response.status_code, 404)

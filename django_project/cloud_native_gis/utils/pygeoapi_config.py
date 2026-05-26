@@ -1,7 +1,7 @@
 # coding=utf-8
 # SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Utilities for building pygeoapi config from Django Layer model."""
+"""Utilities for building pygeoapi provider config from Django Layer models."""
 
 import copy
 import logging
@@ -14,8 +14,16 @@ _ID_FIELD_CANDIDATES = ('id', 'ogc_fid', 'fid', 'gid')
 
 def _detect_id_field(layer):
     """
-    Return the first available id_field candidate from the layer table.
-    Falls back to the first non-geometry attribute, or None if table is empty.
+    Detect the primary-key column name for a layer's PostGIS table.
+
+    Checks ``_ID_FIELD_CANDIDATES`` in order and returns the first match
+    found in the table's columns.  Falls back to the first non-geometry
+    column when none of the candidates exist.
+
+    :param layer: Layer instance whose table is inspected
+    :type layer: cloud_native_gis.models.layer.Layer
+    :returns: column name to use as the pygeoapi ``id_field``
+    :rtype: str
     """
     from cloud_native_gis.utils.connection import fields
     col_names = [
@@ -29,7 +37,21 @@ def _detect_id_field(layer):
 
 
 def _layer_to_resource(layer, db_settings):
-    """Build a pygeoapi collection resource dict from a Layer instance."""
+    """
+    Build a pygeoapi collection resource dict from a Layer instance.
+
+    The returned dict is suitable for use as a value in the ``resources``
+    section of a pygeoapi config.  Write operations (POST / PUT / DELETE)
+    are enabled via ``editable: True``.
+
+    :param layer: Layer instance to expose as an OGC API collection
+    :type layer: cloud_native_gis.models.layer.Layer
+    :param db_settings: Django database settings dict
+        (typically ``django.db.connection.settings_dict``)
+    :type db_settings: dict
+    :returns: pygeoapi resource definition dict
+    :rtype: dict
+    """
     return {
         'type': 'collection',
         'title': {'en': layer.name},
@@ -56,16 +78,23 @@ def _layer_to_resource(layer, db_settings):
             'id_field': _detect_id_field(layer),
             'table': layer.table_name,
             'geom_field': 'geometry',
+            'editable': True,
         }],
     }
 
 
 def refresh_pygeoapi_config():
     """
-    Rebuild settings.PYGEOAPI_CONFIG resources from all ready Layer objects.
+    Rebuild ``settings.PYGEOAPI_CONFIG`` resources from all ready Layer objects.
 
-    Safe to call at any time — failures are caught and logged so a missing
-    table or DB error never crashes the server.
+    Iterates over every :class:`~cloud_native_gis.models.layer.Layer` with
+    ``is_ready=True`` and replaces the ``resources`` section of
+    ``settings.PYGEOAPI_CONFIG`` in-place.
+
+    Safe to call at any time — individual layer failures are caught and logged
+    so a missing table or DB error never crashes the server.
+
+    :returns: None
     """
     from django.conf import settings
     from django.db import connection

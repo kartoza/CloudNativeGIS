@@ -1,4 +1,7 @@
-"""Base helpers for dynamic per-user pygeoapi config and request execution."""
+# coding=utf-8
+# SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Base helpers for dynamic per-request pygeoapi config and request execution."""
 
 import copy
 from typing import Union
@@ -11,31 +14,39 @@ from pygeoapi.django_.views import apply_gzip
 from cloud_native_gis.utils.pygeoapi_config import _layer_to_resource
 
 
-def get_queryset(
-    request: HttpRequest
-):
+def get_queryset(request: HttpRequest):
     """
     Return the Layer queryset exposed as OGC API resources.
 
-    Override this function to apply custom filtering or permission logic.
+    Override this function in a subclass or by monkey-patching to apply
+    custom filtering or permission logic (e.g. restrict to layers owned
+    by the authenticated user).
 
-    :param request: the current Django request
-    :returns: Layer queryset
+    :param request: the current Django HTTP request
+    :type request: HttpRequest
+    :returns: queryset of :class:`~cloud_native_gis.models.layer.Layer` objects
+    :rtype: django.db.models.QuerySet
     """
     from cloud_native_gis.models.layer import Layer
     return Layer.objects.all()
 
 
-def get_resources(
-    request: HttpRequest
-) -> dict:
+def get_resources(request: HttpRequest) -> dict:
     """
-    Build a pygeoapi config dict whose resources come from get_queryset().
+    Build a pygeoapi config dict whose ``resources`` section is populated
+    from :func:`get_queryset`.
 
-    Override get_queryset() to control which layers are exposed.
+    The returned dict is a deep copy of ``settings.PYGEOAPI_CONFIG`` with the
+    ``resources`` key replaced by a mapping from collection ID to provider
+    definition for every layer returned by :func:`get_queryset`.
 
-    :param request: the current Django request
-    :returns: pygeoapi config dict with resources populated from the queryset
+    Override :func:`get_queryset` to control which layers are exposed without
+    having to touch this function.
+
+    :param request: the current Django HTTP request
+    :type request: HttpRequest
+    :returns: pygeoapi config dict with ``resources`` populated from the queryset
+    :rtype: dict
     """
     from django.db import connection
     qs = get_queryset(request)
@@ -61,8 +72,26 @@ def execute_with_config(
     skip_valid_check: bool = False,
 ) -> HttpResponse:
     """
-    Equivalent to pygeoapi's execute_from_django but accepts an explicit
-    config dict instead of reading from settings.PYGEOAPI_CONFIG.
+    Execute a pygeoapi API function using an explicit config dict.
+
+    Equivalent to pygeoapi's ``execute_from_django`` helper but accepts a
+    pre-built config dict instead of reading from ``settings.PYGEOAPI_CONFIG``.
+    This allows per-request dynamic resource configs (see :func:`get_resources`).
+
+    :param api_function: callable with signature
+        ``(api, request, *args) -> (headers, status, content)``
+    :type api_function: callable
+    :param config: pygeoapi config dict (e.g. from :func:`get_resources`)
+    :type config: dict
+    :param request: the current Django HTTP request
+    :type request: HttpRequest
+    :param args: additional positional arguments forwarded to ``api_function``
+    :param skip_valid_check: when ``True`` skip the ``APIRequest.is_valid()``
+        check; useful for endpoints that validate internally
+    :type skip_valid_check: bool
+    :returns: Django HTTP response with headers, status code, and body from
+        the pygeoapi function
+    :rtype: HttpResponse
     """
     api_: Union[API, object]
     if config['server'].get('admin'):

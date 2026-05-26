@@ -393,7 +393,20 @@ paths:
       tags:
       - collections
     post:
-      description: A feature collection
+      description: "This endpoint serves two purposes depending on the `Content-Type`:\n\
+        \n---\n\n### 1. Create a new feature\n**Content-Type:** `application/geo+json`\n\
+        \nSend a GeoJSON Feature in the request body. Returns `201 Created` with a\
+        \ `Location` header pointing to the new feature.\n\n**Example body:**\n```json\n\
+        {\n  \"type\": \"Feature\",\n  \"geometry\": {\n    \"type\": \"Point\",\n\
+        \    \"coordinates\": [36.8, -1.3]\n  },\n  \"properties\": {\n    \"name\"\
+        : \"Nairobi\"\n  }\n}\n```\n\n---\n\n### 2. Filter features with CQL2-JSON\n\
+        **Content-Type:** `application/cql2+json`\n\nSend a CQL2 filter expression\
+        \ as JSON. Returns `200 OK` with a GeoJSON FeatureCollection of matching features.\n\
+        \n**Example body:**\n```json\n{\n  \"op\": \"=\",\n  \"args\": [{\"property\"\
+        : \"name\"}, \"kenya\"]\n}\n```\n\n---\n\n### 3. Filter features with CQL\
+        \ text\n**Content-Type:** `application/cql-text`\n\nSend a CQL text filter\
+        \ expression as plain text. Returns `200 OK` with a GeoJSON FeatureCollection\
+        \ of matching features.\n\n**Example body:**\n```\nname = 'kenya'\n```"
       operationId: getCQL2CollectionFeatures
       parameters:
       - description: Local identifier of a collection
@@ -404,22 +417,79 @@ paths:
           type: string
       requestBody:
         content:
+          application/cql-text:
+            example: name = 'kenya'
+            schema:
+              type: string
+          application/cql2+json:
+            example:
+              args:
+              - property: name
+              - kenya
+              op: '='
+            schema:
+              $ref: https://schemas.opengis.net/cql2/1.0/cql2.json
+          application/geo+json:
+            example:
+              geometry:
+                coordinates:
+                - 36.8
+                - -1.3
+                type: Point
+              properties:
+                name: Nairobi
+              type: Feature
+            schema:
+              $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/schemas/featureGeoJSON
           application/json:
             schema:
               $ref: https://schemas.opengis.net/cql2/1.0/cql2.json
-        description: Get items with CQL2
+        description: Use `application/geo+json` to create a feature, `application/cql2+json`
+          or `application/cql-text` to filter.
         required: true
       responses:
         '200':
-          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/Features
+          description: GeoJSON FeatureCollection (CQL filter result)
+        '201':
+          description: Feature created — Location header contains the new feature
+            URL
         '400':
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
         '500':
           $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
-      summary: Get Collection items with CQL2
+      summary: Create feature or filter with CQL2
       tags:
       - collections
   /collections/{collectionId}/items/{featureId}:
+    delete:
+      operationId: deleteCollectionFeature
+      parameters:
+      - description: Local identifier of a collection
+        in: path
+        name: collectionId
+        required: true
+        schema:
+          type: string
+      - description: Local identifier of a feature
+        in: path
+        name: featureId
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Feature deleted successfully
+        '400':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+      summary: Delete a feature
+      tags:
+      - collections
     get:
       description: A feature collection
       operationId: getCollectionFeature
@@ -461,6 +531,40 @@ paths:
         '200':
           description: options response
       summary: Options for Collection item by id
+      tags:
+      - collections
+    put:
+      operationId: replaceCollectionFeature
+      parameters:
+      - description: Local identifier of a collection
+        in: path
+        name: collectionId
+        required: true
+        schema:
+          type: string
+      - description: Local identifier of a feature
+        in: path
+        name: featureId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/geo+json:
+            schema:
+              $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/schemas/featureGeoJSON
+        description: A GeoJSON feature
+        required: true
+      responses:
+        '200':
+          description: Feature replaced successfully
+        '400':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/InvalidParameter
+        '404':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/NotFound
+        '500':
+          $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/responses/ServerError
+      summary: Replace a feature
       tags:
       - collections
   /collections/{collectionId}/queryables:

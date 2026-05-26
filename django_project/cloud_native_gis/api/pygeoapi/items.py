@@ -1,4 +1,7 @@
-"""Item-level views: collection_items and collection_item."""
+# coding=utf-8
+# SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""OGC API item-level views: collection_items and collection_item."""
 
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -16,10 +19,38 @@ def collection_items(
     request: HttpRequest,
     collection_id: str,
 ) -> HttpResponse:
+    """
+    List, filter, or create features in a collection.
+
+    **GET** — return features as a GeoJSON FeatureCollection.  Supports the
+    following query parameters:
+
+    - ``limit`` / ``offset`` — pagination
+    - ``bbox`` — spatial bounding-box filter
+    - ``datetime`` — temporal filter
+    - ``properties`` — comma-separated list of property names to include
+    - ``filter`` — CQL text filter expression (e.g. ``name='kenya'``)
+
+    **POST** — behaviour depends on ``Content-Type``:
+
+    - ``application/geo+json`` — create a new feature; returns ``201 Created``
+      with a ``Location`` header pointing to the new resource.
+    - ``application/cql2+json`` — filter features using a CQL2-JSON expression
+      in the request body; returns ``200 OK`` with a FeatureCollection.
+    - ``application/cql-text`` — filter features using a CQL text expression
+      in the request body; returns ``200 OK`` with a FeatureCollection.
+
+    :param request: incoming Django HTTP request
+    :type request: HttpRequest
+    :param collection_id: local identifier of the collection
+    :type collection_id: str
+    :returns: GeoJSON FeatureCollection (GET / filter POST) or empty 201 (create POST)
+    :rtype: HttpResponse
+    """
     config = get_resources(request)
 
     if request.method == 'GET':
-        # CQL text filter is passed via ?filter=<expr>&filter-lang=cql-text
+        # CQL text filter is passed via ?filter=<expr>
         return execute_with_config(
             itemtypes_api.get_collection_items,
             config, request, collection_id,
@@ -64,6 +95,26 @@ def collection_item(
     collection_id: str,
     item_id: str,
 ) -> HttpResponse:
+    """
+    Retrieve, replace, or delete a single feature.
+
+    **GET** — return the feature as a GeoJSON Feature object.
+
+    **PUT** — replace the feature with the GeoJSON Feature supplied in the
+    request body (``Content-Type: application/geo+json``);
+    returns ``204 No Content`` on success.
+
+    **DELETE** — remove the feature; returns ``200 OK`` on success.
+
+    :param request: incoming Django HTTP request
+    :type request: HttpRequest
+    :param collection_id: local identifier of the collection
+    :type collection_id: str
+    :param item_id: local identifier of the feature
+    :type item_id: str
+    :returns: GeoJSON Feature (GET), empty 204 (PUT), or empty 200 (DELETE)
+    :rtype: HttpResponse
+    """
     config = get_resources(request)
 
     if request.method == 'GET':
