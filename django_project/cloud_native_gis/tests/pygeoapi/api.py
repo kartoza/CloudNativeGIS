@@ -390,6 +390,7 @@ class OGCCollectionTest(BaseTest, TransactionTestCase):
             kwargs={'collection_id': self.cid, 'item_id': '1'},
         )
         updated = dict(self._NEW_FEATURE)
+        updated['id'] = 1
         updated['properties'] = {'name': 'updated_country'}
         response = Client().put(
             url,
