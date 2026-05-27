@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """OGC API landing page, OpenAPI document, and conformance views."""
 
-from django.http import HttpRequest, HttpResponse
 import pygeoapi.api as core_api
+from django.http import HttpRequest, HttpResponse
 
 from .base import get_resources, execute_with_config
 
