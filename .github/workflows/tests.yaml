@@ -12,37 +12,31 @@ jobs:
     name: Python Lint
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Setup Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.13.13
+          python-version: '3.13'
           architecture: x64
-      - name: Checkout PyTorch
-        uses: actions/checkout@master
       - name: Install flake8
-        run: pip install flake8
-      - name: Install flake8-docstrings
-        run: pip install flake8-docstrings
+        run: pip install flake8 flake8-docstrings
       - name: Run flake8
-        uses: suo/flake8-github-action@releases/v1
-        with:
-          checkName: 'Python Lint'   # NOTE: this needs to be the same as the job name
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: flake8 .
   django_app_test:
     name: 'Django App'
     runs-on: ubuntu-latest
     env:
       APP_IMAGE: kartoza/cloud_native_gis
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Build test image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: deployment/docker/Dockerfile
@@ -53,7 +47,7 @@ jobs:
           cache-from: |
             type=gha,scope=test
             type=gha,scope=prod
-          cache-to: type=gha,scope=test
+          cache-to: type=gha,scope=test,mode=max
 
       - name: Run docker-compose services
         working-directory: deployment
@@ -68,30 +62,6 @@ jobs:
           make dev-runserver
           make dev-load-demo-data
           make sleep
-
-      # TODO:
-      #  Fix this after we have the tests
-      #      - name: Test django endpoint
-      #        run: |
-      #          curl http://localhost:5000/
-      #          if [ $? -ne 0 ]; then
-      #            echo "Curl command failed"
-      #            exit 1
-      #          fi
-      #
-      #      - name: Test E2E
-      #        working-directory: ./playwright/ci-test
-      #        run: |
-      #          npm install
-      #          npm ci
-      #          npx playwright install --with-deps
-      #          npx playwright test --workers 1
-      #      - uses: actions/upload-artifact@v3
-      #        if: always()
-      #        with:
-      #          name: playwright-report
-      #          path: playwright/ci-test/playwright-report/
-      #          retention-days: 30
 
       - name: Test backend
         run: make dev-test
