@@ -84,8 +84,7 @@ def _layer_to_resource(layer, db_settings):
 
 
 def refresh_pygeoapi_config():
-    """
-    Rebuild ``settings.PYGEOAPI_CONFIG`` resources from all ready Layer objects.
+    """Rebuild settings.PYGEOAPI_CONFIG resources from all ready Layer objects.
 
     Iterates over every :class:`~cloud_native_gis.models.layer.Layer` with
     ``is_ready=True`` and replaces the ``resources`` section of

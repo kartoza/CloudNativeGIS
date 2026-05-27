@@ -3,13 +3,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """OGC API item-level views: collection_items and collection_item."""
 
+import pygeoapi.api.itemtypes as itemtypes_api
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-import pygeoapi.api.itemtypes as itemtypes_api
 
 from .base import get_resources, execute_with_config
 
-# Content-types that signal a CQL filter POST rather than a feature-create POST.
 _CQL_JSON_TYPES = frozenset({'application/cql2+json', 'application/cql+json'})
 _CQL_TEXT_TYPES = frozenset({'application/cql-text', 'text/plain'})
 
@@ -44,7 +43,9 @@ def collection_items(
     :type request: HttpRequest
     :param collection_id: local identifier of the collection
     :type collection_id: str
-    :returns: GeoJSON FeatureCollection (GET / filter POST) or empty 201 (create POST)
+    :returns:
+        GeoJSON FeatureCollection (GET / filter POST)
+        or empty 201 (create POST)
     :rtype: HttpResponse
     """
     config = get_resources(request)

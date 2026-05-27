@@ -1,7 +1,7 @@
 # coding=utf-8
 # SPDX-FileCopyrightText: 2024 Kartoza <info@kartoza.com>
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""Base helpers for dynamic per-request pygeoapi config and request execution."""
+"""Base helpers for dynamic per-request pygeoapi."""
 
 import copy
 from typing import Union
@@ -32,9 +32,7 @@ def get_queryset(request: HttpRequest):
 
 
 def get_resources(request: HttpRequest) -> dict:
-    """
-    Build a pygeoapi config dict whose ``resources`` section is populated
-    from :func:`get_queryset`.
+    """Build a pygeoapi config dict whose ``resources`` section is populated.
 
     The returned dict is a deep copy of ``settings.PYGEOAPI_CONFIG`` with the
     ``resources`` key replaced by a mapping from collection ID to provider
@@ -45,7 +43,8 @@ def get_resources(request: HttpRequest) -> dict:
 
     :param request: the current Django HTTP request
     :type request: HttpRequest
-    :returns: pygeoapi config dict with ``resources`` populated from the queryset
+    :returns:
+        pygeoapi config dict with ``resources`` populated from the queryset
     :rtype: dict
     """
     from django.db import connection
@@ -76,7 +75,8 @@ def execute_with_config(
 
     Equivalent to pygeoapi's ``execute_from_django`` helper but accepts a
     pre-built config dict instead of reading from ``settings.PYGEOAPI_CONFIG``.
-    This allows per-request dynamic resource configs (see :func:`get_resources`).
+    This allows per-request dynamic
+    resource configs (see :func:`get_resources`).
 
     :param api_function: callable with signature
         ``(api, request, *args) -> (headers, status, content)``

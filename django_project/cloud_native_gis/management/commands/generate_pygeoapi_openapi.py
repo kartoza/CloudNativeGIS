@@ -6,8 +6,8 @@
 import copy
 import re
 
-from django.core.management.base import BaseCommand
 from django.conf import settings
+from django.core.management.base import BaseCommand
 
 # Path prefixes to exclude from the generated OpenAPI spec.
 _EXCLUDED_PATH_PREFIXES = (
@@ -110,8 +110,7 @@ _COLLECTION_ID_PARAM = {
 
 
 def _parameterize_collection_ids(openapi: dict) -> dict:
-    """
-    Replace hardcoded collection IDs in paths with a ``{collectionId}`` parameter.
+    """Replace hardcoded collection IDs in paths with a parameter.
 
     pygeoapi generates one path entry per configured layer
     (e.g. ``/collections/uuid_a/items``, ``/collections/uuid_b/items``).
@@ -124,7 +123,8 @@ def _parameterize_collection_ids(openapi: dict) -> dict:
 
     :param openapi: OpenAPI dict (after ``_filter_openapi``)
     :type openapi: dict
-    :returns: OpenAPI dict with parameterised collection paths (mutated in place
+    :returns:
+        OpenAPI dict with parameterised collection paths (mutated in place
         and returned)
     :rtype: dict
     """
@@ -145,7 +145,8 @@ def _parameterize_collection_ids(openapi: dict) -> dict:
                     continue
                 params = [
                     p for p in operation.get('parameters', [])
-                    if not (isinstance(p, dict) and p.get('name') == 'collectionId')
+                    if not (isinstance(p, dict) and p.get(
+                        'name') == 'collectionId')
                 ]
                 params.insert(0, copy.deepcopy(_COLLECTION_ID_PARAM))
                 operation['parameters'] = params
@@ -220,14 +221,14 @@ def _add_write_operations(openapi: dict) -> dict:
 
     Adds or updates the following operations in the OpenAPI paths:
 
-    - ``POST /collections/{collectionId}/items`` — create a feature
+    - POST /collections/{collectionId}/items — create a feature
       (``application/geo+json``) or filter with CQL2-JSON /
       CQL text.  If pygeoapi already generated a ``post`` entry for CQL2,
       it is extended with the GeoJSON content type and an updated description.
-    - ``PUT /collections/{collectionId}/items/{featureId}`` — replace a feature.
-    - ``DELETE /collections/{collectionId}/items/{featureId}`` — delete a feature.
+    - PUT /collections/{collectionId}/items/{featureId} - replace a feature.
+    - DELETE /collections/{collectionId}/items/{featureId} — delete a feature.
 
-    :param openapi: OpenAPI dict (after ``_parameterize_collection_ids``)
+    :param openapi: OpenAPI dict (after _parameterize_collection_ids)
     :type openapi: dict
     :returns: OpenAPI dict with write operations added (mutated in place and
         returned)
@@ -247,12 +248,13 @@ def _add_write_operations(openapi: dict) -> dict:
     })
     post_op['summary'] = 'Create feature or filter with CQL2'
     post_op['description'] = (
-        'This endpoint serves two purposes depending on the `Content-Type`:\n\n'
+        'This endpoint serves two purposes depending on the Content-Type:\n\n'
         '---\n\n'
         '### 1. Create a new feature\n'
         '**Content-Type:** `application/geo+json`\n\n'
         'Send a GeoJSON Feature in the request body. '
-        'Returns `201 Created` with a `Location` header pointing to the new feature.\n\n'
+        'Returns `201 Created` with a `Location` '
+        'header pointing to the new feature.\n\n'
         '**Example body:**\n'
         '```json\n'
         '{\n'
@@ -270,7 +272,8 @@ def _add_write_operations(openapi: dict) -> dict:
         '### 2. Filter features with CQL2-JSON\n'
         '**Content-Type:** `application/cql2+json`\n\n'
         'Send a CQL2 filter expression as JSON. '
-        'Returns `200 OK` with a GeoJSON FeatureCollection of matching features.\n\n'
+        'Returns `200 OK` with '
+        'a GeoJSON FeatureCollection of matching features.\n\n'
         '**Example body:**\n'
         '```json\n'
         '{\n'
@@ -282,18 +285,25 @@ def _add_write_operations(openapi: dict) -> dict:
         '### 3. Filter features with CQL text\n'
         '**Content-Type:** `application/cql-text`\n\n'
         'Send a CQL text filter expression as plain text. '
-        'Returns `200 OK` with a GeoJSON FeatureCollection of matching features.\n\n'
+        'Returns `200 OK` with a GeoJSON FeatureCollection '
+        'of matching features.\n\n'
         '**Example body:**\n'
         '```\n'
         "name = 'kenya'\n"
         '```'
     )
-    post_op['responses']['200'] = {'description': 'GeoJSON FeatureCollection (CQL filter result)'}
-    post_op['responses']['201'] = {'description': 'Feature created — Location header contains the new feature URL'}
+    post_op['responses']['200'] = {
+        'description': 'GeoJSON FeatureCollection (CQL filter result)'}
+    post_op['responses']['201'] = {
+        'description': (
+            'Feature created — Location header contains the new feature URL'
+        )
+    }
     for k, v in copy.deepcopy(_STD_RESPONSES).items():
         post_op['responses'].setdefault(k, v)
 
-    request_body = post_op.setdefault('requestBody', {'required': True, 'content': {}})
+    request_body = post_op.setdefault('requestBody',
+                                      {'required': True, 'content': {}})
     request_body['description'] = (
         'Use `application/geo+json` to create a feature, '
         '`application/cql2+json` or `application/cql-text` to filter.'
@@ -407,9 +417,12 @@ def _group_collections_tag(openapi: dict) -> dict:
 
 
 class Command(BaseCommand):
+    """Management command to generate the pygeoapi OpenAPI document."""
+
     help = 'Generate pygeoapi OpenAPI document from pygeoapi-config.yml'
 
     def handle(self, *args, **options):
+        """Execute the command."""
         import json
         import os
         import tempfile

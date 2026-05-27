@@ -5,9 +5,9 @@
 
 from typing import Optional
 
-from django.http import HttpRequest, HttpResponse
 import pygeoapi.api as core_api
 import pygeoapi.api.itemtypes as itemtypes_api
+from django.http import HttpRequest, HttpResponse
 
 from .base import get_resources, execute_with_config
 
@@ -40,8 +40,7 @@ def collection_schema(
     request: HttpRequest,
     collection_id: Optional[str] = None,
 ) -> HttpResponse:
-    """
-    Return the JSON Schema describing the properties of a collection's features.
+    """Return the JSON Schema describing the properties of a collection.
 
     :param request: incoming Django HTTP request
     :type request: HttpRequest
