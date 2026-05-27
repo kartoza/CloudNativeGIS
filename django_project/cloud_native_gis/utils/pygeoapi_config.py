@@ -78,6 +78,7 @@ def _layer_to_resource(layer, db_settings):
             'id_field': _detect_id_field(layer),
             'table': layer.table_name,
             'geom_field': 'geometry',
+            'storage_crs': 'http://www.opengis.net/def/crs/EPSG/0/4326',
             'editable': True,
         }],
     }

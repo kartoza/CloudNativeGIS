@@ -92,18 +92,6 @@ components:
         minimum: 0
         type: integer
       style: form
-    properties:
-      description: The properties that should be included. The parameter value is
-        a comma-separated list of property names.
-      explode: false
-      in: query
-      name: properties
-      required: false
-      schema:
-        items:
-          type: string
-        type: array
-      style: form
     resourceId:
       description: Configuration resource identifier
       in: path
@@ -231,7 +219,7 @@ info:
     url: https://creativecommons.org/licenses/by/4.0/
   termsOfService: https://creativecommons.org/licenses/by/4.0/
   title: CloudNativeGIS OGC API
-  version: 0.23.4
+  version: 0.21.0
   x-keywords:
   - geospatial
   - cloud
@@ -308,22 +296,7 @@ paths:
         required: true
         schema:
           type: string
-      - description: The optional f parameter indicates the output format which the
-          server shall provide as part of the response document.  The default format
-          is GeoJSON.
-        explode: false
-        in: query
-        name: f
-        required: false
-        schema:
-          default: json
-          enum:
-          - json
-          - html
-          - jsonld
-          - csv
-          type: string
-        style: form
+      - $ref: '#/components/parameters/f'
       - $ref: '#/components/parameters/lang'
       - $ref: '#/components/parameters/bbox'
       - description: The optional limit parameter limits the number of items that
@@ -340,8 +313,8 @@ paths:
         style: form
       - $ref: '#/components/parameters/crs'
       - $ref: '#/components/parameters/bbox-crs'
-      - description: The properties that should be included. The parameter value is
-          a comma-separated list of property names.
+      - description: The properties that should be included for each feature. The
+          parameter value is a comma-separated list of property names.
         explode: false
         in: query
         name: properties
@@ -393,7 +366,7 @@ paths:
       tags:
       - collections
     post:
-      description: "This endpoint serves two purposes depending on the `Content-Type`:\n\
+      description: "This endpoint serves two purposes depending on the Content-Type:\n\
         \n---\n\n### 1. Create a new feature\n**Content-Type:** `application/geo+json`\n\
         \nSend a GeoJSON Feature in the request body. Returns `201 Created` with a\
         \ `Location` header pointing to the new feature.\n\n**Example body:**\n```json\n\
@@ -407,7 +380,7 @@ paths:
         \ text\n**Content-Type:** `application/cql-text`\n\nSend a CQL text filter\
         \ expression as plain text. Returns `200 OK` with a GeoJSON FeatureCollection\
         \ of matching features.\n\n**Example body:**\n```\nname = 'kenya'\n```"
-      operationId: getCQL2CollectionFeatures
+      operationId: postCollectionFeatures
       parameters:
       - description: Local identifier of a collection
         in: path
@@ -441,9 +414,6 @@ paths:
               type: Feature
             schema:
               $ref: https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/ogcapi-features-1.yaml#/components/schemas/featureGeoJSON
-          application/json:
-            schema:
-              $ref: https://schemas.opengis.net/cql2/1.0/cql2.json
         description: Use `application/geo+json` to create a feature, `application/cql2+json`
           or `application/cql-text` to filter.
         required: true
@@ -578,8 +548,8 @@ paths:
         required: true
         schema:
           type: string
-      - description: The properties that should be included. The parameter value is
-          a comma-separated list of property names.
+      - description: The properties that should be included for each feature. The
+          parameter value is a comma-separated list of property names.
         explode: false
         in: query
         name: properties

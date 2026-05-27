@@ -130,6 +130,12 @@ def collection_item(
             skip_valid_check=True,
         )
     if request.method == 'DELETE':
+        exists = execute_with_config(
+            itemtypes_api.get_collection_item,
+            config, request, collection_id, item_id,
+        )
+        if exists.status_code == 404:
+            return exists
         return execute_with_config(
             itemtypes_api.manage_collection_item,
             config, request, 'delete', collection_id, item_id,
