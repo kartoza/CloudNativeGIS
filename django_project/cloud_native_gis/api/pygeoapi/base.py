@@ -52,7 +52,7 @@ def get_resources(request: HttpRequest) -> dict:
 
     db_settings = connection.settings_dict
     resources = {
-        str(layer.unique_id).replace('-', '_'): _layer_to_resource(
+        str(layer.unique_id): _layer_to_resource(
             layer, db_settings
         )
         for layer in qs

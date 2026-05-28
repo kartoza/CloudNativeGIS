@@ -190,6 +190,7 @@ class LayerUpload(AbstractResource):
                         )
                         layer.update_default_style(style)
                     layer.save()
+                    layer.add_id()
 
                     # stop when found first file
                     break
@@ -200,7 +201,6 @@ class LayerUpload(AbstractResource):
                 note=f'{e}'
             )
         else:
-            # Save fields to layer
             self.update_status(
                 status=UploadStatus.SUCCESS,
                 note='',

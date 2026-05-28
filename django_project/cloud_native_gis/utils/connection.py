@@ -75,3 +75,18 @@ def get_features(schema_name, table_name):
         except ProgrammingError:
             return []
     return []
+
+
+def get_json_features(schema_name, table_name):
+    """Return features as list of dicts with column names from the query."""
+    with connection.cursor() as cursor:
+        try:
+            cursor.execute(
+                f"SELECT * FROM {schema_name}.{table_name}"
+            )
+            columns = [col.name for col in cursor.description]
+            return [
+                dict(zip(columns, row)) for row in cursor.fetchall()
+            ]
+        except ProgrammingError:
+            return []

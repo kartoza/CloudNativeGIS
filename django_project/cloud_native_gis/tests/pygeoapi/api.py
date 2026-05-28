@@ -17,7 +17,7 @@ from cloud_native_gis.tests.model_factories import create_user
 
 def _cid(layer):
     """Return the OGC collection ID string for a layer."""
-    return str(layer.unique_id).replace('-', '_')
+    return str(layer.unique_id)
 
 
 def _url(name, **kwargs):

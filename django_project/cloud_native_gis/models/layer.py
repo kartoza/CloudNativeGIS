@@ -435,6 +435,30 @@ class Layer(AbstractTerm, AbstractResource):
         except subprocess.CalledProcessError as e:
             return (None, f'{e}')
 
+    def add_id(self):
+        """Add id column with row_number if it does not exist."""
+        existing = [f.name for f in fields(self.schema_name, self.table_name)]
+        if 'id' in existing:
+            return
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f'ALTER TABLE {self.query_table_name} ADD COLUMN id INTEGER'
+            )
+            cursor.execute(
+                f'UPDATE {self.query_table_name} t '
+                f'SET id = sub.rn '
+                f'FROM ('
+                f'  SELECT ctid, ROW_NUMBER() OVER () AS rn '
+                f'  FROM {self.query_table_name}'
+                f') sub '
+                f'WHERE t.ctid = sub.ctid'
+            )
+        LayerAttributes.objects.create(
+            layer=self,
+            attribute_name='id',
+            attribute_type='integer',
+        )
+
     def reset_attributes(self):
         """Reset attributes."""
         new_fields = [

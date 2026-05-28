@@ -7,8 +7,8 @@ import tempfile
 
 from django.conf import settings
 from django.contrib import admin
-from django.http import FileResponse, HttpResponseRedirect
-from django.urls import reverse
+from django.http import FileResponse, HttpResponse, HttpResponseRedirect
+from django.urls import path, reverse
 from django.utils.safestring import mark_safe
 
 from cloud_native_gis.forms.layer import LayerForm, LayerUploadForm
@@ -16,6 +16,7 @@ from cloud_native_gis.models.layer import Layer, LayerAttributes
 from cloud_native_gis.models.layer_download import LayerDownload
 from cloud_native_gis.models.layer_upload import LayerUpload
 from cloud_native_gis.tasks import import_data
+from cloud_native_gis.utils.connection import get_json_features
 from cloud_native_gis.utils.type import FileType
 
 
@@ -35,6 +36,18 @@ def start_upload_data(modeladmin, request, queryset):
     """Import data of layer."""
     for layer in queryset:
         import_data.delay(layer.pk)
+
+
+@admin.action(description='Add ID column')
+def add_id(modeladmin, request, queryset):
+    """Add id column with row_number to selected layers."""
+    for layer in queryset:
+        layer.add_id()
+    modeladmin.message_user(
+        request,
+        f'ID column added for {queryset.count()} layer(s).',
+        level='success'
+    )
 
 
 @admin.action(description='Generate pmtiles')
@@ -239,6 +252,7 @@ class LayerAdmin(admin.ModelAdmin):
     inlines = [LayerAttributeInline]
     filter_horizontal = ['styles']
     actions = [
+        add_id,
         generate_pmtiles,
         download_geojson,
         download_shapefile,
@@ -255,6 +269,51 @@ class LayerAdmin(admin.ModelAdmin):
         download_geopackage_async,
         download_kml_async
     ]
+
+    readonly_fields = ('features_link',)
+
+    def get_urls(self):
+        """Add features view URL."""
+        urls = super().get_urls()
+        custom = [
+            path(
+                '<int:pk>/features/',
+                self.admin_site.admin_view(self.features_view),
+                name='cloud_native_gis_layer_features',
+            )
+        ]
+        return custom + urls
+
+    def features_view(self, request, pk):
+        """Return HTML table of layer features."""
+        layer = Layer.objects.get(pk=pk)
+        rows = get_json_features(layer.schema_name, layer.table_name)
+
+        columns = list(rows[0].keys()) if rows else []
+        header = ''.join(f'<th>{c}</th>' for c in columns)
+        body = ''.join(
+            '<tr>' + ''.join(
+                f'<td>{row.get(c, "")}</td>' for c in columns
+            ) + '</tr>'
+            for row in rows
+        )
+        html = (
+            f'<h2>Features: {layer.name}</h2>'
+            f'<table border="1" cellpadding="4" cellspacing="0">'
+            f'<thead><tr>{header}</tr></thead>'
+            f'<tbody>{body}</tbody>'
+            f'</table>'
+        )
+        return HttpResponse(html)
+
+    def features_link(self, obj):
+        """Return link to features view."""
+        if not obj.pk or not obj.is_ready:
+            return '-'
+        url = reverse('admin:cloud_native_gis_layer_features', args=[obj.pk])
+        return mark_safe(f"<a href='{url}' target='_blank'>View Features</a>")
+
+    features_link.short_description = 'Features'
 
     def get_form(self, request, *args, **kwargs):
         """Return form."""
