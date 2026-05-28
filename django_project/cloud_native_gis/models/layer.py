@@ -22,6 +22,7 @@ from cloud_native_gis.models.general import (
 )
 from cloud_native_gis.models.style import Style
 from cloud_native_gis.utils.connection import delete_table, fields
+from cloud_native_gis.utils.geopandas import create_id_field
 from cloud_native_gis.utils.fiona import list_layers
 from cloud_native_gis.utils.type import FileType
 
@@ -436,63 +437,14 @@ class Layer(AbstractTerm, AbstractResource):
             return (None, f'{e}')
 
     def add_id(self):
-        """Add id column with row_number if it does not exist.
+        """Add id column and sequence, then register as LayerAttribute."""
+        create_id_field(self.schema_name, self.table_name)
 
-        Ensure a sequence DEFAULT
-        """
-        existing = [f.name for f in fields(self.schema_name, self.table_name)]
-        if 'id' not in existing:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    f'ALTER TABLE {self.query_table_name} '
-                    'ADD COLUMN id INTEGER'
-                )
-                cursor.execute(
-                    f'UPDATE {self.query_table_name} t '
-                    f'SET id = sub.rn '
-                    f'FROM ('
-                    f'  SELECT ctid, ROW_NUMBER() OVER () AS rn '
-                    f'  FROM {self.query_table_name}'
-                    f') sub '
-                    f'WHERE t.ctid = sub.ctid'
-                )
+        if not self.layerattributes_set.filter(attribute_name='id').exists():
             LayerAttributes.objects.create(
                 layer=self,
                 attribute_name='id',
                 attribute_type='integer',
-            )
-        self._ensure_id_sequence()
-
-    def _ensure_id_sequence(self):
-        """Attach a sequence to the id column if it does not already have."""
-        seq_name = f'{self.schema_name}.{self.table_name}_id_seq'
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT column_default
-                FROM information_schema.columns
-                WHERE table_schema = %s
-                  AND table_name = %s
-                  AND column_name = 'id'
-                """,
-                [self.schema_name, self.table_name],
-            )
-            row = cursor.fetchone()
-            if row and row[0] and 'nextval' in row[0]:
-                return
-            cursor.execute(
-                f'CREATE SEQUENCE IF NOT EXISTS {seq_name}'
-            )
-            cursor.execute(
-                f'SELECT COALESCE(MAX(id), 0) FROM {self.query_table_name}'
-            )
-            max_id = cursor.fetchone()[0]
-            cursor.execute(
-                f'ALTER SEQUENCE {seq_name} RESTART WITH {max_id + 1}'
-            )
-            cursor.execute(
-                f'ALTER TABLE {self.query_table_name} '
-                f'ALTER COLUMN id SET DEFAULT nextval(\'{seq_name}\')'
             )
 
     def reset_attributes(self):
