@@ -8,7 +8,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 _ID_FIELD_CANDIDATES = ('id', 'ogc_fid', 'fid', 'gid')
 
 
@@ -61,7 +60,7 @@ def _layer_to_resource(layer, db_settings):
         'extents': {
             'spatial': {
                 'bbox': [-180, -90, 180, 90],
-                'crs': 'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
+                'crs': 'http://www.opengis.net/def/crs/EPSG/0/4326',
             }
         },
         'crs': [
@@ -83,6 +82,10 @@ def _layer_to_resource(layer, db_settings):
             'table': layer.table_name,
             'geom_field': 'geometry',
             'storage_crs': 'http://www.opengis.net/def/crs/EPSG/0/4326',
+            'crs': [
+                'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
+                'http://www.opengis.net/def/crs/EPSG/0/4326',
+            ],
             'editable': True,
         }],
     }
