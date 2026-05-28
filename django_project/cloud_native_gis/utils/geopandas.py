@@ -86,7 +86,8 @@ def create_id_field(schema_name, table_name):
         conn.execute(text(
             f'UPDATE {qualified} t '
             f'SET id = sub.rn '
-            f'FROM (SELECT ctid, ROW_NUMBER() OVER () AS rn FROM {qualified}) sub '
+            f'FROM (SELECT ctid, ROW_NUMBER() OVER () AS rn '
+            f'FROM {qualified}) sub '
             f'WHERE t.ctid = sub.ctid AND t.id IS NULL'
         ))
         conn.execute(text(f'CREATE SEQUENCE IF NOT EXISTS {seq_name}'))
