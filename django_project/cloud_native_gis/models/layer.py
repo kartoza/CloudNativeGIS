@@ -436,25 +436,46 @@ class Layer(AbstractTerm, AbstractResource):
             return (None, f'{e}')
 
     def add_id(self):
-        """Add id column with row_number if it does not exist."""
+        """Add id column with row_number if it does not exist, then ensure a sequence DEFAULT."""
         existing = [f.name for f in fields(self.schema_name, self.table_name)]
-        if 'id' in existing:
-            return
+        if 'id' not in existing:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    f'ALTER TABLE {self.query_table_name} ADD COLUMN id INTEGER'
+                )
+                cursor.execute(
+                    f'UPDATE {self.query_table_name} t '
+                    f'SET id = sub.rn '
+                    f'FROM ('
+                    f'  SELECT ctid, ROW_NUMBER() OVER () AS rn '
+                    f'  FROM {self.query_table_name}'
+                    f') sub '
+                    f'WHERE t.ctid = sub.ctid'
+                )
+            LayerAttributes.objects.create(
+                layer=self,
+                attribute_name='id',
+                attribute_type='integer',
+            )
+        self._ensure_id_sequence()
+
+    def _ensure_id_sequence(self):
+        """Attach a sequence to the id column if it does not already have one."""
         seq_name = f'{self.schema_name}.{self.table_name}_id_seq'
         with connection.cursor() as cursor:
             cursor.execute(
-                f'ALTER TABLE {self.query_table_name} ADD COLUMN id INTEGER'
+                """
+                SELECT column_default
+                FROM information_schema.columns
+                WHERE table_schema = %s
+                  AND table_name = %s
+                  AND column_name = 'id'
+                """,
+                [self.schema_name, self.table_name],
             )
-            cursor.execute(
-                f'UPDATE {self.query_table_name} t '
-                f'SET id = sub.rn '
-                f'FROM ('
-                f'  SELECT ctid, ROW_NUMBER() OVER () AS rn '
-                f'  FROM {self.query_table_name}'
-                f') sub '
-                f'WHERE t.ctid = sub.ctid'
-            )
-            # Create a sequence so future INSERTs get auto-incremented ids.
+            row = cursor.fetchone()
+            if row and row[0] and 'nextval' in row[0]:
+                return
             cursor.execute(
                 f'CREATE SEQUENCE IF NOT EXISTS {seq_name}'
             )
@@ -469,11 +490,6 @@ class Layer(AbstractTerm, AbstractResource):
                 f'ALTER TABLE {self.query_table_name} '
                 f'ALTER COLUMN id SET DEFAULT nextval(\'{seq_name}\')'
             )
-        LayerAttributes.objects.create(
-            layer=self,
-            attribute_name='id',
-            attribute_type='integer',
-        )
 
     def reset_attributes(self):
         """Reset attributes."""

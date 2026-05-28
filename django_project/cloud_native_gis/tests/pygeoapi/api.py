@@ -428,3 +428,33 @@ class OGCCollectionTest(BaseTest, TransactionTestCase):
         )
         response = Client().delete(url)
         self.assertEqual(response.status_code, 404)
+
+    def test_create_feature_without_id(self):
+        """POST …/items with no 'id' in body returns 201 with a valid Location."""
+        import json
+        from django.test.client import Client
+        feature_without_id = {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+            },
+            'properties': {'name': 'auto_id_country'},
+        }
+        url = reverse('collection-items', kwargs={'collection_id': self.cid})
+        response = Client().post(
+            url,
+            data=json.dumps(feature_without_id),
+            content_type='application/geo+json',
+        )
+        self.assertEqual(response.status_code, 201)
+        location = response.get('Location', '')
+        # Location must end with an integer id, not 'None'
+        item_id = location.rstrip('/').split('/')[-1]
+        self.assertNotEqual(item_id, 'None')
+        self.assertTrue(item_id.isdigit(), f'Expected integer id in Location, got: {location}')
+        # Feature count increased
+        data = self.assertRequestGetView(
+            _url('collection-items', collection_id=self.cid), 200
+        ).json()
+        self.assertEqual(data['numberMatched'], 3)
