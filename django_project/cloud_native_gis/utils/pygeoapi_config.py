@@ -64,6 +64,10 @@ def _layer_to_resource(layer, db_settings):
                 'crs': 'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
             }
         },
+        'crs': [
+            'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
+            'http://www.opengis.net/def/crs/EPSG/0/4326',
+        ],
         'providers': [{
             'type': 'feature',
             'name': 'PostgreSQL',
