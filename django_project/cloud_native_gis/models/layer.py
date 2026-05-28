@@ -436,12 +436,16 @@ class Layer(AbstractTerm, AbstractResource):
             return (None, f'{e}')
 
     def add_id(self):
-        """Add id column with row_number if it does not exist, then ensure a sequence DEFAULT."""
+        """Add id column with row_number if it does not exist.
+
+        Ensure a sequence DEFAULT
+        """
         existing = [f.name for f in fields(self.schema_name, self.table_name)]
         if 'id' not in existing:
             with connection.cursor() as cursor:
                 cursor.execute(
-                    f'ALTER TABLE {self.query_table_name} ADD COLUMN id INTEGER'
+                    f'ALTER TABLE {self.query_table_name} '
+                    'ADD COLUMN id INTEGER'
                 )
                 cursor.execute(
                     f'UPDATE {self.query_table_name} t '
@@ -460,7 +464,7 @@ class Layer(AbstractTerm, AbstractResource):
         self._ensure_id_sequence()
 
     def _ensure_id_sequence(self):
-        """Attach a sequence to the id column if it does not already have one."""
+        """Attach a sequence to the id column if it does not already have."""
         seq_name = f'{self.schema_name}.{self.table_name}_id_seq'
         with connection.cursor() as cursor:
             cursor.execute(
