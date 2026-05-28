@@ -440,6 +440,7 @@ class Layer(AbstractTerm, AbstractResource):
         existing = [f.name for f in fields(self.schema_name, self.table_name)]
         if 'id' in existing:
             return
+        seq_name = f'{self.schema_name}.{self.table_name}_id_seq'
         with connection.cursor() as cursor:
             cursor.execute(
                 f'ALTER TABLE {self.query_table_name} ADD COLUMN id INTEGER'
@@ -452,6 +453,21 @@ class Layer(AbstractTerm, AbstractResource):
                 f'  FROM {self.query_table_name}'
                 f') sub '
                 f'WHERE t.ctid = sub.ctid'
+            )
+            # Create a sequence so future INSERTs get auto-incremented ids.
+            cursor.execute(
+                f'CREATE SEQUENCE IF NOT EXISTS {seq_name}'
+            )
+            cursor.execute(
+                f'SELECT COALESCE(MAX(id), 0) FROM {self.query_table_name}'
+            )
+            max_id = cursor.fetchone()[0]
+            cursor.execute(
+                f'ALTER SEQUENCE {seq_name} RESTART WITH {max_id + 1}'
+            )
+            cursor.execute(
+                f'ALTER TABLE {self.query_table_name} '
+                f'ALTER COLUMN id SET DEFAULT nextval(\'{seq_name}\')'
             )
         LayerAttributes.objects.create(
             layer=self,
