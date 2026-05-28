@@ -4,7 +4,6 @@ from django.urls import path
 
 from . import collections, items, landing
 
-
 urlpatterns = [
     # Landing / meta
     path('', landing.landing_page, name='landing-page'),
@@ -42,5 +41,4 @@ urlpatterns = [
         items.collection_item,
         name='collection-item',
     ),
-
 ]
