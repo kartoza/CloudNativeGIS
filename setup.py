@@ -47,5 +47,7 @@ setup(
         "drf-yasg == 1.21.7",
         "drf-nested-routers == 0.93.5",
         "fiona==1.10.1",
+        "pygeoapi==0.21.0",
+        "jsonpatch>=1.33",
     ],
 )

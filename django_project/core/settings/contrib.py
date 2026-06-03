@@ -20,6 +20,7 @@ INSTALLED_APPS = INSTALLED_APPS + (
     'django_celery_beat',
     'django_celery_results',
     'drf_yasg',
+    'pygeoapi',
 )
 
 WEBPACK_LOADER = {
@@ -51,3 +52,36 @@ TEMPLATES[0]['OPTIONS']['context_processors'] += [
 ]
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
+
+# ----------------------------------------------------------------------------
+# --------------------------------- PyGeoAPI ---------------------------------
+# ----------------------------------------------------------------------------
+_pygeoapi_config_path = os.environ.get(
+    'PYGEOAPI_CONFIG',
+    absolute_path('core', 'settings', 'pygeoapi', 'pygeoapi-config.yml'),
+)
+PYGEOAPI_OPENAPI = os.environ.get(
+    'PYGEOAPI_OPENAPI',
+    absolute_path('core', 'settings', 'pygeoapi', 'pygeoapi-openapi.yml'),
+)
+PYGEOAPI_SERVER_URL = os.environ.get(
+    'PYGEOAPI_SERVER_URL', 'http://localhost:5000/ogc'
+)
+os.environ.setdefault('PYGEOAPI_CONFIG', _pygeoapi_config_path)
+os.environ.setdefault('PYGEOAPI_OPENAPI', PYGEOAPI_OPENAPI)
+os.environ.setdefault('PYGEOAPI_SERVER_URL', PYGEOAPI_SERVER_URL)
+os.environ.setdefault(
+    'PYGEOAPI_TEMPLATES_PATH',
+    os.environ.get(
+        'PYGEOAPI_TEMPLATES_PATH',
+        absolute_path('cloud_native_gis', 'templates', 'pygeoapi'),
+    ),
+)
+
+from pygeoapi.config import get_config  # noqa: E402
+from pygeoapi.openapi import load_openapi_document  # noqa: E402
+from pygeoapi.util import get_api_rules  # noqa: E402
+
+PYGEOAPI_CONFIG = get_config()
+OPENAPI_DOCUMENT = load_openapi_document()
+API_RULES = get_api_rules(PYGEOAPI_CONFIG)

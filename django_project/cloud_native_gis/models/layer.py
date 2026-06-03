@@ -22,6 +22,7 @@ from cloud_native_gis.models.general import (
 )
 from cloud_native_gis.models.style import Style
 from cloud_native_gis.utils.connection import delete_table, fields
+from cloud_native_gis.utils.geopandas import create_id_field
 from cloud_native_gis.utils.fiona import list_layers
 from cloud_native_gis.utils.type import FileType
 
@@ -434,6 +435,17 @@ class Layer(AbstractTerm, AbstractResource):
             )
         except subprocess.CalledProcessError as e:
             return (None, f'{e}')
+
+    def add_id(self):
+        """Add id column and sequence, then register as LayerAttribute."""
+        create_id_field(self.schema_name, self.table_name)
+
+        if not self.layerattributes_set.filter(attribute_name='id').exists():
+            LayerAttributes.objects.create(
+                layer=self,
+                attribute_name='id',
+                attribute_type='integer',
+            )
 
     def reset_attributes(self):
         """Reset attributes."""

@@ -13,6 +13,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from cloud_native_gis.api.pygeoapi import urls as ogc_urls
 from cloud_native_gis.api.context import ContextAPIView
 from cloud_native_gis.api.layer import (
     LayerViewSet, LayerStyleViewSet, LayerUploadViewSet,
@@ -58,6 +59,7 @@ layer_router.register(
 
 
 urlpatterns = [
+    path('ogc/', include(ogc_urls)),
     path(
         '<str:identifier>/tile/<int:z>/<int:x>/<int:y>/',
         VectorTileLayer.as_view(),

@@ -28,6 +28,9 @@ RUN pip3 install -r /requirements.txt
 RUN apt-get update -y && apt-get install -y nodejs npm
 
 ADD django_project /home/web/django_project
+# Run NPM
+WORKDIR /home/web/django_project/frontend
+RUN npm install --verbose && npm run build
 
 EXPOSE 8080
 

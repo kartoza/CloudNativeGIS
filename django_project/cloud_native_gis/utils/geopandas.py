@@ -5,7 +5,7 @@
 
 import geopandas as gpd
 from django.db import connection
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 from cloud_native_gis.utils.connection import create_schema
 from cloud_native_gis.utils.fiona import list_layers
@@ -19,8 +19,8 @@ class Mode:
 
 
 def geopanda_to_postgis(
-        gdf, table_name, schema_name,
-        mode=Mode.REPLACE
+    gdf, table_name, schema_name,
+    mode=Mode.REPLACE
 ) -> dict:
     """Save geopandas data to postgis."""
     create_schema(schema_name)
@@ -49,7 +49,7 @@ def geopanda_to_postgis(
 
 
 def geojson_to_geopanda(
-        geojson, schema_name, table_name, mode=Mode.REPLACE
+    geojson, schema_name, table_name, mode=Mode.REPLACE
 ) -> dict:
     """Save geojson data to geopandas."""
     gdf = gpd.GeoDataFrame.from_features(geojson["features"])
@@ -68,6 +68,44 @@ def geojson_to_geopanda(
     return geopanda_to_postgis(
         gdf, table_name, schema_name, mode=mode
     )
+
+
+def create_id_field(schema_name, table_name):
+    """Add id column and sequence to table."""
+    qualified = f'{schema_name}."{table_name}"'
+    seq_name = f'{schema_name}.{table_name}_id_seq'
+
+    con = 'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{NAME}'.format(
+        **connection.settings_dict
+    )
+    engine = create_engine(con)
+    with engine.begin() as conn:
+        conn.execute(text(
+            f'ALTER TABLE {qualified} ADD COLUMN IF NOT EXISTS id BIGINT'
+        ))
+        conn.execute(text(
+            f"ALTER TABLE {qualified} ALTER COLUMN id TYPE BIGINT "
+            f"USING id::bigint"
+        ))
+        conn.execute(text(
+            f'UPDATE {qualified} t '
+            f'SET id = sub.rn '
+            f'FROM (SELECT ctid, ROW_NUMBER() OVER () AS rn '
+            f'FROM {qualified}) sub '
+            f'WHERE t.ctid = sub.ctid AND t.id IS NULL'
+        ))
+        conn.execute(text(f'CREATE SEQUENCE IF NOT EXISTS {seq_name}'))
+        max_id = conn.execute(
+            text(f'SELECT COALESCE(MAX(id), 0) FROM {qualified}')
+        ).scalar()
+        conn.execute(text(
+            f'ALTER SEQUENCE {seq_name} RESTART WITH {max_id + 1}'
+        ))
+        conn.execute(text(
+            f'ALTER TABLE {qualified} '
+            f"ALTER COLUMN id SET DEFAULT nextval('{seq_name}')"
+        ))
+    engine.dispose()
 
 
 def collection_to_postgis(filepath, table_name, schema_name) -> dict:
