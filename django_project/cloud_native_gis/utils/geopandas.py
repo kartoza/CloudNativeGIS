@@ -81,7 +81,11 @@ def create_id_field(schema_name, table_name):
     engine = create_engine(con)
     with engine.begin() as conn:
         conn.execute(text(
-            f'ALTER TABLE {qualified} ADD COLUMN IF NOT EXISTS id INTEGER'
+            f'ALTER TABLE {qualified} ADD COLUMN IF NOT EXISTS id BIGINT'
+        ))
+        conn.execute(text(
+            f"ALTER TABLE {qualified} ALTER COLUMN id TYPE BIGINT "
+            f"USING id::bigint"
         ))
         conn.execute(text(
             f'UPDATE {qualified} t '
