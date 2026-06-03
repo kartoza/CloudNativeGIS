@@ -7,13 +7,14 @@ import pygeoapi.api.itemtypes as itemtypes_api
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from .base import get_resources, execute_with_config
+from .base import get_resources, execute_with_config, ogc_authenticate
 
 _CQL_JSON_TYPES = frozenset({'application/cql2+json', 'application/cql+json'})
 _CQL_TEXT_TYPES = frozenset({'application/cql-text', 'text/plain'})
 
 
 @csrf_exempt
+@ogc_authenticate
 def collection_items(
     request: HttpRequest,
     collection_id: str,
@@ -91,6 +92,7 @@ def collection_items(
 
 
 @csrf_exempt
+@ogc_authenticate
 def collection_item(
     request: HttpRequest,
     collection_id: str,

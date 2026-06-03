@@ -3,15 +3,58 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Base helpers for dynamic per-request pygeoapi."""
 
+import base64
 import copy
+from functools import wraps
 from typing import Union
 
 from django.conf import settings
-from django.http import HttpRequest, HttpResponse
+from django.contrib.auth import authenticate
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from pygeoapi.api import API, APIRequest
 from pygeoapi.django_.views import apply_gzip
 
 from cloud_native_gis.utils.pygeoapi_config import _layer_to_resource
+
+
+def ogc_authenticate(view_func):
+    """Optionally authenticate via Basic Auth.
+
+    - No Authorization header: proceed as anonymous.
+    - Valid Basic credentials: set request.user and proceed.
+    - Invalid Basic credentials: return 401.
+    """
+    @wraps(view_func)
+    def wrapper(request: HttpRequest, *args, **kwargs):
+        auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+
+        if auth_header.startswith('Basic '):
+            try:
+                credentials = base64.b64decode(
+                    auth_header[6:]
+                ).decode('utf-8')
+                username, password = credentials.split(':', 1)
+                user = authenticate(
+                    request, username=username, password=password
+                )
+                if user is not None:
+                    request.user = user
+                else:
+                    return _unauthorized()
+            except Exception:
+                return _unauthorized()
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def _unauthorized() -> JsonResponse:
+    response = JsonResponse(
+        {'code': 401, 'description': 'Unauthorized'}, status=401
+    )
+    response['WWW-Authenticate'] = 'Basic realm="OGC API"'
+    return response
 
 
 def get_queryset(request: HttpRequest):

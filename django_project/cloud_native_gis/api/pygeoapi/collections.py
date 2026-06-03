@@ -9,9 +9,10 @@ import pygeoapi.api as core_api
 import pygeoapi.api.itemtypes as itemtypes_api
 from django.http import HttpRequest, HttpResponse
 
-from .base import get_resources, execute_with_config
+from .base import get_resources, execute_with_config, ogc_authenticate
 
 
+@ogc_authenticate
 def collections(
     request: HttpRequest,
     collection_id: Optional[str] = None,
@@ -36,6 +37,7 @@ def collections(
     )
 
 
+@ogc_authenticate
 def collection_schema(
     request: HttpRequest,
     collection_id: Optional[str] = None,
@@ -55,6 +57,7 @@ def collection_schema(
     )
 
 
+@ogc_authenticate
 def collection_queryables(
     request: HttpRequest,
     collection_id: Optional[str] = None,

@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Tests for OGC API (pygeoapi) endpoints and base helpers."""
 
+import base64
+
 from django.core.files.storage import FileSystemStorage
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
@@ -61,6 +63,81 @@ class BaseHelpersTest(TestCase):
         layer = Layer.objects.create(name='L', created_by=self.user)
         config = get_resources(self._get())
         self.assertIn(_cid(layer), config['resources'])
+
+# ---------------------------------------------------------------------------
+# Authentication – ogc_authenticate decorator
+# ---------------------------------------------------------------------------
+
+class OGCAuthTest(TestCase):
+    """Tests for the ogc_authenticate decorator on OGC API endpoints."""
+
+    def setUp(self):
+        self.user = create_user(password='password')
+        self.landing_url = _url('landing-page')
+
+    def _basic_header(self, username, password):
+        credentials = base64.b64encode(
+            f'{username}:{password}'.encode()
+        ).decode()
+        return f'Basic {credentials}'
+
+    def test_no_auth_header_allowed(self):
+        """Requests without Authorization header proceed as anonymous (200)."""
+        from django.test.client import Client
+        response = Client().get(self.landing_url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_valid_basic_auth(self):
+        """Valid Basic Auth credentials authenticate the user (200)."""
+        from django.test.client import Client
+        response = Client().get(
+            self.landing_url,
+            HTTP_AUTHORIZATION=self._basic_header(
+                self.user.username, 'password'
+            ),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_invalid_basic_auth_wrong_password(self):
+        """Wrong password in Basic Auth returns 401."""
+        from django.test.client import Client
+        response = Client().get(
+            self.landing_url,
+            HTTP_AUTHORIZATION=self._basic_header(
+                self.user.username, 'wrongpassword'
+            ),
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_invalid_basic_auth_unknown_user(self):
+        """Unknown username in Basic Auth returns 401."""
+        from django.test.client import Client
+        response = Client().get(
+            self.landing_url,
+            HTTP_AUTHORIZATION=self._basic_header('nobody', 'password'),
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_malformed_basic_auth(self):
+        """Malformed Basic Auth value returns 401."""
+        from django.test.client import Client
+        response = Client().get(
+            self.landing_url,
+            HTTP_AUTHORIZATION='Basic not-valid-base64!!!',
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_401_response_has_www_authenticate_header(self):
+        """401 response includes WWW-Authenticate header."""
+        from django.test.client import Client
+        response = Client().get(
+            self.landing_url,
+            HTTP_AUTHORIZATION=self._basic_header(
+                self.user.username, 'wrong'
+            ),
+        )
+        self.assertIn('WWW-Authenticate', response)
+
 
 # ---------------------------------------------------------------------------
 # Landing, OpenAPI, Conformance  (no layer data required)

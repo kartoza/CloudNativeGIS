@@ -6,9 +6,10 @@
 import pygeoapi.api as core_api
 from django.http import HttpRequest, HttpResponse
 
-from .base import get_resources, execute_with_config
+from .base import get_resources, execute_with_config, ogc_authenticate
 
 
+@ogc_authenticate
 def landing_page(request: HttpRequest) -> HttpResponse:
     """
     Return the OGC API landing page.
@@ -25,6 +26,7 @@ def landing_page(request: HttpRequest) -> HttpResponse:
     return execute_with_config(core_api.landing_page, config, request)
 
 
+@ogc_authenticate
 def openapi(request: HttpRequest) -> HttpResponse:
     """
     Return the OpenAPI 3.x document describing this OGC API instance.
@@ -38,6 +40,7 @@ def openapi(request: HttpRequest) -> HttpResponse:
     return execute_with_config(core_api.openapi_, config, request)
 
 
+@ogc_authenticate
 def conformance(request: HttpRequest) -> HttpResponse:
     """
     Return the list of OGC conformance classes implemented by this API.
