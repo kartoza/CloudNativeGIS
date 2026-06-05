@@ -19,6 +19,7 @@ class ContextLayerConfig(AppConfig):
     verbose_name = _('Cloud Native Layer')
 
     def ready(self):
+        """Run startup logic after app registry is populated."""
         _patch_pygeoapi_sql_provider()
 
 
