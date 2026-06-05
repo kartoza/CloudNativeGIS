@@ -60,12 +60,11 @@ def _layer_to_resource(layer, db_settings):
         'extents': {
             'spatial': {
                 'bbox': [-180, -90, 180, 90],
-                'crs': 'http://www.opengis.net/def/crs/EPSG/0/4326',
+                'crs': 'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
             }
         },
         'crs': [
             'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
-            'http://www.opengis.net/def/crs/EPSG/0/4326',
         ],
         'providers': [{
             'type': 'feature',
@@ -84,7 +83,6 @@ def _layer_to_resource(layer, db_settings):
             'storage_crs': 'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
             'crs': [
                 'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
-                'http://www.opengis.net/def/crs/EPSG/0/4326',
             ],
             'editable': True,
         }],
