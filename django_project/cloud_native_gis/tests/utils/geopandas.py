@@ -13,7 +13,7 @@ from cloud_native_gis.models import Layer
 from cloud_native_gis.tests.model_factories import create_user
 from cloud_native_gis.utils.connection import get_features
 from cloud_native_gis.utils.geopandas import (
-    create_id_field, geojson_to_geopanda, Mode
+    create_id_field, geojson_to_geopanda, geopanda_to_postgis, Mode
 )
 
 
@@ -229,6 +229,100 @@ class TestGeopandas(TransactionTestCase):
         self.assertEqual(features[1][1], 1)
         self.assertEqual(features[1][2], "Alice's Home")
         self.assertEqual(features[1][3], "residence")
+
+
+class TestGeopandaToPostgisIdValidation(TransactionTestCase):
+    """Test id column validation in geopanda_to_postgis."""
+
+    def setUp(self):
+        self.user = create_user()
+        self.layer = Layer.objects.create(
+            unique_id=uuid.uuid4(),
+            name='Id Validation Test',
+            created_by=self.user,
+        )
+
+    def tearDown(self):
+        self.layer.delete()
+
+    def _make_gdf(self, id_value):
+        import geopandas as gpd
+        import pandas as pd
+        from shapely.geometry import Point
+        return gpd.GeoDataFrame(
+            {'id': [id_value], 'name': ['Test']},
+            geometry=[Point(106.8, -6.2)],
+            crs='EPSG:4326'
+        )
+
+    def test_string_id_raises_value_error(self):
+        """geopanda_to_postgis raises ValueError when id is a string."""
+        gdf = self._make_gdf('SOM')
+        with self.assertRaises(ValueError) as ctx:
+            geopanda_to_postgis(
+                gdf, self.layer.table_name, self.layer.schema_name
+            )
+        self.assertIn("'id'", str(ctx.exception))
+        self.assertIn('integer', str(ctx.exception))
+
+    def test_float_id_raises_value_error(self):
+        """geopanda_to_postgis raises ValueError when id is a float."""
+        import geopandas as gpd
+        import pandas as pd
+        from shapely.geometry import Point
+        gdf = gpd.GeoDataFrame(
+            {'id': [1.5], 'name': ['Test']},
+            geometry=[Point(106.8, -6.2)],
+            crs='EPSG:4326'
+        )
+        with self.assertRaises(ValueError):
+            geopanda_to_postgis(
+                gdf, self.layer.table_name, self.layer.schema_name
+            )
+
+    def test_integer_id_succeeds(self):
+        """geopanda_to_postgis accepts an integer id column."""
+        import geopandas as gpd
+        from shapely.geometry import Point
+        gdf = gpd.GeoDataFrame(
+            {'id': [1], 'name': ['Test']},
+            geometry=[Point(106.8, -6.2)],
+            crs='EPSG:4326'
+        )
+        geopanda_to_postgis(
+            gdf, self.layer.table_name, self.layer.schema_name
+        )
+
+    def test_no_id_column_succeeds(self):
+        """geopanda_to_postgis works fine when there is no id column."""
+        import geopandas as gpd
+        from shapely.geometry import Point
+        gdf = gpd.GeoDataFrame(
+            {'name': ['Test']},
+            geometry=[Point(106.8, -6.2)],
+            crs='EPSG:4326'
+        )
+        geopanda_to_postgis(
+            gdf, self.layer.table_name, self.layer.schema_name
+        )
+
+    def test_geojson_string_id_raises_value_error(self):
+        """geojson_to_geopanda raises ValueError when id is a string."""
+        with self.assertRaises(ValueError):
+            geojson_to_geopanda(
+                {
+                    'type': 'FeatureCollection',
+                    'features': [{
+                        'type': 'Feature',
+                        'properties': {'id': 'SOM', 'name': 'Somalia'},
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [46.0, 6.0]
+                        }
+                    }]
+                },
+                self.layer.schema_name, self.layer.table_name
+            )
 
 
 class TestCreateIdField(TransactionTestCase):
