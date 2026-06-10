@@ -23,7 +23,15 @@ def geopanda_to_postgis(
     mode=Mode.REPLACE
 ) -> dict:
     """Save geopandas data to postgis."""
+    import pandas as pd
     create_schema(schema_name)
+
+    if 'id' in gdf.columns and not pd.api.types.is_integer_dtype(gdf['id']):
+        raise ValueError(
+            f"Column 'id' must be integer or bigint, "
+            f"got '{gdf['id'].dtype}'. "
+            f"Please rename or remove the 'id' column from your data."
+        )
 
     metadata = {}
     try:

@@ -110,7 +110,7 @@ download_kml = create_download_action(
 
 
 def create_layer_download_action(
-        file_type, description, extension, action_name
+    file_type, description, extension, action_name
 ):
     """Create a download action using LayerDownload model."""
 
@@ -351,11 +351,38 @@ class LayerUploadAdmin(admin.ModelAdmin):
     """Layer admin."""
 
     list_display = (
-        'created_at', 'created_by', 'layer', 'status', 'progress', 'note'
+        'created_at', 'created_by', 'layer', 'status', 'progress', 'note',
+        'folder_exists_display', 'files_display'
     )
     list_filter = ['layer', 'status']
+    readonly_fields = (
+        'created_at', 'created_by', 'status', 'progress', 'note',
+        'folder', 'folder_exists_display', 'files_display'
+    )
     actions = [start_upload_data]
     form = LayerUploadForm
+
+    def folder_exists_display(self, obj):
+        """Show whether the upload folder exists on disk."""
+        if os.path.exists(obj.folder):
+            return mark_safe(
+                '<span style="color: green;">&#10003; Exists</span>')
+        return mark_safe('<span style="color: red;">&#10007; Missing</span>')
+
+    folder_exists_display.short_description = 'Folder on disk'
+
+    def files_display(self, obj):
+        """Show files currently in the upload folder."""
+        files = obj.files
+        if not files:
+            if not os.path.exists(obj.folder):
+                return mark_safe('<span style="color: gray;">-</span>')
+            return mark_safe('<span style="color: gray;">(empty)</span>')
+        items = ''.join(f'<li>{f}</li>' for f in sorted(files))
+        return mark_safe(
+            f'<ul style="margin:0;padding-left:16px">{items}</ul>')
+
+    files_display.short_description = 'Files in folder'
 
     def get_form(self, request, *args, **kwargs):
         """Return form."""

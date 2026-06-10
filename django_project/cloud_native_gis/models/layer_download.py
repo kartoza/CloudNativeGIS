@@ -131,6 +131,11 @@ class LayerDownload(AbstractResource):
                     self.status = DownloadStatus.SUCCESS
                     self.save()
                     return
+                else:
+                    self.status = DownloadStatus.FAILED
+                    self.note = "Original file does not found."
+                    self.save()
+                    return
             else:
                 self.status = DownloadStatus.FAILED
                 self.note = "Original file does not found."
