@@ -191,6 +191,7 @@ class LayerUpload(AbstractResource):
                         layer.update_default_style(style)
                     layer.save()
                     layer.add_id()
+                    layer.assign_extent()
 
                     # stop when found first file
                     break

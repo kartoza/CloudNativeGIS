@@ -22,8 +22,8 @@ from cloud_native_gis.models.general import (
 )
 from cloud_native_gis.models.style import Style
 from cloud_native_gis.utils.connection import delete_table, fields
-from cloud_native_gis.utils.geopandas import create_id_field
 from cloud_native_gis.utils.fiona import list_layers
+from cloud_native_gis.utils.geopandas import create_id_field
 from cloud_native_gis.utils.type import FileType
 
 FOLDER_FILES = 'cloud_native_gis_files'
@@ -99,6 +99,12 @@ class Layer(AbstractTerm, AbstractResource):
         upload_to=f'{PMTILES_FOLDER}/',
         null=True, blank=True,
         help_text='Optional PMTile file associated with the layer.'
+    )
+    extent = models.JSONField(
+        null=True, blank=True,
+        help_text=(
+            'Bounding box [xmin, ymin, xmax, ymax] in EPSG:4326.'
+        )
     )
 
     def __str__(self):
@@ -446,6 +452,22 @@ class Layer(AbstractTerm, AbstractResource):
                 attribute_name='id',
                 attribute_type='integer',
             )
+
+    def assign_extent(self):
+        """Query PostGIS for the layer extent and save it to the extent."""
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    f"SELECT ST_XMin(e), ST_YMin(e), ST_XMax(e), ST_YMax(e) "
+                    f"FROM (SELECT ST_Extent(geometry) AS e "
+                    f"FROM {self.query_table_name}) sub"
+                )
+                row = cursor.fetchone()
+            if row and row[0] is not None:
+                self.extent = [row[0], row[1], row[2], row[3]]
+                self.save(update_fields=['extent'])
+        except Exception:
+            pass
 
     def reset_attributes(self):
         """Reset attributes."""
