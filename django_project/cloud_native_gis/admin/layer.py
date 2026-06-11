@@ -262,6 +262,7 @@ class LayerAdmin(admin.ModelAdmin):
     )
     form = LayerForm
     inlines = [LayerAttributeInline]
+    list_filter = ['is_ready']
     filter_horizontal = ['styles']
     actions = [
         add_id,
