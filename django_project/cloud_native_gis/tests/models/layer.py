@@ -143,3 +143,34 @@ class TestLayerModel(TestCase):
         # capital_cities has no id in source; add_id() was called by import_data
         self._assert_id_sequence(layer)
         layer.delete()
+
+    def test_assign_extent_populates_field(self):
+        """assign_extent should store [xmin, ymin, xmax, ymax] in EPSG:4326."""
+        layer, _ = self._create_imported_layer()
+
+        layer.extent = None
+        layer.save(update_fields=['extent'])
+        layer.assign_extent()
+        layer.refresh_from_db()
+
+        self.assertIsNotNone(layer.extent)
+        self.assertEqual(len(layer.extent), 4)
+        xmin, ymin, xmax, ymax = layer.extent
+        self.assertLess(xmin, xmax)
+        self.assertLess(ymin, ymax)
+        # capital_cities is world data — bounds must be within WGS84 range
+        self.assertGreaterEqual(xmin, -180)
+        self.assertLessEqual(xmax, 180)
+        self.assertGreaterEqual(ymin, -90)
+        self.assertLessEqual(ymax, 90)
+
+        layer.delete()
+
+    def test_import_data_sets_extent(self):
+        """import_data should automatically populate the extent field."""
+        layer, _ = self._create_imported_layer()
+
+        self.assertIsNotNone(layer.extent)
+        self.assertEqual(len(layer.extent), 4)
+
+        layer.delete()

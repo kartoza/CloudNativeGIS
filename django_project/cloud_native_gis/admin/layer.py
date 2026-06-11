@@ -50,6 +50,18 @@ def add_id(modeladmin, request, queryset):
     )
 
 
+@admin.action(description='Assign extent')
+def assign_extent(modeladmin, request, queryset):
+    """Assign extent for selected layers."""
+    for layer in queryset:
+        layer.assign_extent()
+    modeladmin.message_user(
+        request,
+        f'Extent assigned for {queryset.count()} layer(s).',
+        level='success'
+    )
+
+
 @admin.action(description='Generate pmtiles')
 def generate_pmtiles(modeladmin, request, queryset):
     """Generate pmtiles for layer."""
@@ -246,13 +258,14 @@ class LayerAdmin(admin.ModelAdmin):
 
     list_display = (
         'unique_id', 'name', 'created_by', 'created_at',
-        'is_ready', 'tile_url', 'editor'
+        'is_ready', 'tile_url', 'editor', 'extent'
     )
     form = LayerForm
     inlines = [LayerAttributeInline]
     filter_horizontal = ['styles']
     actions = [
         add_id,
+        assign_extent,
         generate_pmtiles,
         download_geojson,
         download_shapefile,
