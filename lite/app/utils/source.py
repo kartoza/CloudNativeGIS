@@ -15,8 +15,9 @@ from app.utils.s3 import (
 
 
 def _bundle_s3_shapefile_parts(bucket: str, key: str, workdir: str) -> str:
-    """Download loose shapefile part objects sharing key's base name
-    and bundle them into a local zip.
+    """Bundle loose shapefile part objects into a local zip.
+
+    Downloads all S3 objects sharing key's base name.
     """
     sibling_keys = list_sibling_keys(bucket, key)
     if not sibling_keys:
@@ -36,8 +37,7 @@ def _bundle_s3_shapefile_parts(bucket: str, key: str, workdir: str) -> str:
 
 
 def resolve_source(source: str, workdir: str) -> str:
-    """Resolve source (s3:// URI, http(s) URL, or local path) to a
-    local zip path.
+    """Resolve source (s3:// URI, http(s) URL, or local path) to a local zip path.
 
     Returns the local filesystem path to the (now local) source file.
     """

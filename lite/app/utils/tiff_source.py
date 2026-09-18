@@ -1,5 +1,4 @@
-"""Resolve a request 'source' (s3:// URI, URL, or local path) to a
-local TIFF file."""
+"""Resolve a request 'source' (s3:// URI, URL, or local path) to a local TIFF file."""
 
 import os
 import shutil

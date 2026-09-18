@@ -66,9 +66,10 @@ def presign_get_url(bucket: str, key: str) -> str:
 
 
 def list_sibling_keys(bucket: str, key: str) -> list:
-    """List object keys in the same S3 "directory" as key that share
-    its base name (e.g. for 'dir/name.shp', finds 'dir/name.shx',
-    'dir/name.dbf', ...).
+    """List sibling object keys sharing key's base name.
+
+    Looks in the same S3 "directory" as key (e.g. for 'dir/name.shp',
+    finds 'dir/name.shx', 'dir/name.dbf', ...).
     """
     prefix = key.rsplit('/', 1)[0] + '/' if '/' in key else ''
     base_name = os.path.splitext(key.rsplit('/', 1)[-1])[0].lower()
