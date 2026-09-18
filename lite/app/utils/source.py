@@ -37,8 +37,9 @@ def _bundle_s3_shapefile_parts(bucket: str, key: str, workdir: str) -> str:
 
 
 def resolve_source(source: str, workdir: str) -> str:
-    """Resolve source (s3:// URI, http(s) URL, or local path) to a local zip path.
+    """Resolve source to a local zip path.
 
+    source may be an s3:// URI, an http(s) URL, or a local path.
     Returns the local filesystem path to the (now local) source file.
     """
     if source.startswith('s3://'):
