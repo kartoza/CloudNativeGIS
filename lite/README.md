@@ -1,9 +1,14 @@
 # CloudNativeGIS Lite
 
-A standalone, database-free service that converts a shapefile (zipped
-`.shp`/`.shx`/`.dbf`/...) into a [PMTiles](https://github.com/protomaps/PMTiles)
-file, using `ogr2ogr` and `tippecanoe`. No Django, no PostGIS — just an
-HTTP API wrapped in a single Docker container.
+A standalone, database-free service that converts:
+
+- a shapefile (zipped `.shp`/`.shx`/`.dbf`/...) into a
+  [PMTiles](https://github.com/protomaps/PMTiles) file, using `ogr2ogr`
+  and `tippecanoe`.
+- a TIFF into a Cloud Optimized GeoTIFF (COG), using `gdal_translate`.
+
+No Django, no PostGIS — just an HTTP API wrapped in a single Docker
+container.
 
 ## Build
 
@@ -93,6 +98,35 @@ A non-S3 `source` must point to a `.zip` archive containing a complete
 with HTTP 400 for invalid/unreachable input, or 502 if `ogr2ogr`/
 `tippecanoe` fail during conversion.
 
+### TIFF -> COG
+
+Same request shape as `/api/v1/pmtiles`, on `/api/v1/cog`. `source` may
+be a local path, an http(s) URL, or an `s3://bucket/key` reference to a
+single TIFF object:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/cog \
+    -H "Content-Type: application/json" \
+    -d '{"source": "s3://my-bucket/path/to/raster.tif"}' \
+    -o output_cog.tif
+```
+
+Pass `destination` (an `s3://bucket/key` URI) to have cng-lite upload
+the COG to S3 instead of streaming it back:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/cog \
+    -H "Content-Type: application/json" \
+    -d '{
+          "source": "s3://my-bucket/path/to/raster.tif",
+          "destination": "s3://my-bucket/path/to/raster_cog.tif"
+        }'
+# => {"stored": "s3://my-bucket/path/to/raster_cog.tif"}
+```
+
+Errors follow the same convention: HTTP 400 for invalid/unreachable
+input, 502 if `gdal_translate` fails during conversion.
+
 ## S3 / MinIO configuration
 
 `s3://bucket/key` sources require these environment variables (unset by
@@ -117,8 +151,3 @@ docker run --rm -p 8000:8000 \
     --network minio-net \
     cng-lite
 ```
-
-## Roadmap
-
-TIFF → Cloud Optimized GeoTIFF (COG) conversion is planned as a follow-up
-endpoint.

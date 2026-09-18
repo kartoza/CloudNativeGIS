@@ -4,43 +4,14 @@ import os
 import shutil
 import zipfile
 
-import httpx
-
-from app.config import DOWNLOAD_TIMEOUT, MAX_DOWNLOAD_SIZE
 from app.errors import ConversionError
+from app.utils.http import download_url
 from app.utils.s3 import (
     download_object,
     list_sibling_keys,
     parse_s3_uri,
     presign_get_url,
 )
-
-
-def _download(url: str, dest_path: str) -> None:
-    """Stream-download url to dest_path, enforcing a max size."""
-    try:
-        with httpx.stream(
-            'GET', url, timeout=DOWNLOAD_TIMEOUT, follow_redirects=True
-        ) as response:
-            if response.status_code >= 400:
-                raise ConversionError(
-                    400,
-                    f'Failed to download source: '
-                    f'HTTP {response.status_code}'
-                )
-            written = 0
-            with open(dest_path, 'wb') as f:
-                for chunk in response.iter_bytes():
-                    written += len(chunk)
-                    if written > MAX_DOWNLOAD_SIZE:
-                        raise ConversionError(
-                            400,
-                            'Source file exceeds max allowed size of '
-                            f'{MAX_DOWNLOAD_SIZE} bytes'
-                        )
-                    f.write(chunk)
-    except httpx.HTTPError as e:
-        raise ConversionError(400, f'Failed to download source: {e}')
 
 
 def _bundle_s3_shapefile_parts(bucket: str, key: str, workdir: str) -> str:
@@ -76,7 +47,7 @@ def resolve_source(source: str, workdir: str) -> str:
         if key.lower().endswith('.zip'):
             presigned_url = presign_get_url(bucket, key)
             dest_path = os.path.join(workdir, 'input.zip')
-            _download(presigned_url, dest_path)
+            download_url(presigned_url, dest_path)
             return dest_path
 
         # Not a .zip: treat as loose shapefile parts (.shp/.shx/.dbf/...)
@@ -85,7 +56,7 @@ def resolve_source(source: str, workdir: str) -> str:
 
     if source.startswith('http://') or source.startswith('https://'):
         dest_path = os.path.join(workdir, 'input.zip')
-        _download(source, dest_path)
+        download_url(source, dest_path)
         return dest_path
 
     if not os.path.isabs(source):
