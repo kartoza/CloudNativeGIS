@@ -37,34 +37,56 @@ Health check:
 curl http://localhost:8000/health
 ```
 
-Convert a shapefile zip by URL:
+Conversions run as background jobs, since shapefile/TIFF processing
+can take a while: `POST /api/v1/pmtiles` or `/api/v1/cog` returns
+immediately with a `job_id`, which you poll until it's done, then
+collect the result. There's no Celery/broker involved — jobs run in a
+thread pool inside the same process, so job state doesn't survive a
+container restart and isn't shared across multiple replicas.
 
-```bash
-curl -X POST http://localhost:8000/api/v1/pmtiles \
-    -H "Content-Type: application/json" \
-    -d '{"source": "https://example.com/data.zip"}' \
-    -o output.pmtiles
-```
+1. Submit the job:
 
-Convert a shapefile zip by local (in-container) path:
+    ```bash
+    curl -X POST http://localhost:8000/api/v1/pmtiles \
+        -H "Content-Type: application/json" \
+        -d '{"source": "/data/my-shapefile.zip"}'
+    # => {"job_id": "...", "status": "processing"}  (HTTP 202)
+    ```
 
-```bash
-curl -X POST http://localhost:8000/api/v1/pmtiles \
-    -H "Content-Type: application/json" \
-    -d '{"source": "/data/my-shapefile.zip"}' \
-    -o output.pmtiles
-```
+2. Poll its status:
 
-Convert a shapefile stored in S3 (or an S3-compatible store, e.g.
-MinIO) by object reference — the server uses its own configured
+    ```bash
+    curl http://localhost:8000/api/v1/jobs/<job_id>
+    ```
+
+    - Still running: `{"job_id": "...", "status": "processing"}`
+    - Failed: `{"job_id": "...", "status": "failed", "detail": "..."}`,
+      with the same HTTP status the conversion would have returned
+      (400 for bad/invalid input, 502 if `ogr2ogr`/`tippecanoe`/
+      `gdal_translate` fail).
+    - Done (streamed result): `{"job_id": "...", "status": "done", "result_url": "/api/v1/jobs/<job_id>/result"}`
+    - Done (uploaded to S3, see `destination` below): `{"job_id": "...", "status": "done", "stored": "s3://..."}`
+
+3. If `result_url` was given, fetch the file — this also discards the
+   job and its temp files:
+
+    ```bash
+    curl http://localhost:8000/api/v1/jobs/<job_id>/result -o output.pmtiles
+    ```
+
+A finished job whose result is never collected is discarded
+automatically after `LITE_JOB_RESULT_TTL` seconds (default 1 hour), so
+temp files don't accumulate if a caller never polls.
+
+`source` may be an `http(s)://` URL, an in-container local path, or an
+`s3://bucket/key` reference — the server uses its own configured S3
 credentials, so no bucket credentials need to be shared with the
-caller. `source` can point to a `.zip`:
+caller:
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/pmtiles \
     -H "Content-Type: application/json" \
-    -d '{"source": "s3://my-bucket/path/to/shapefile.zip"}' \
-    -o output.pmtiles
+    -d '{"source": "s3://my-bucket/path/to/shapefile.zip"}'
 ```
 
 ...or directly to a loose `.shp` object — cng-lite lists and bundles
@@ -74,14 +96,17 @@ same S3 "directory":
 ```bash
 curl -X POST http://localhost:8000/api/v1/pmtiles \
     -H "Content-Type: application/json" \
-    -d '{"source": "s3://my-bucket/path/to/shapefile.shp"}' \
-    -o output.pmtiles
+    -d '{"source": "s3://my-bucket/path/to/shapefile.shp"}'
 ```
 
-By default the result is streamed back in the response. To have
-cng-lite upload the result to S3 instead (e.g. writing back into the
-same bucket), pass `destination` as an `s3://bucket/key` URI — the
-response is then a small JSON confirmation instead of the file itself:
+A non-S3 `source` must point to a `.zip` archive containing a complete
+`.shp`/`.shx`/`.dbf` set.
+
+By default the finished result is left for you to collect via
+`result_url`. To have cng-lite upload it to S3 instead (e.g. writing
+back into the same bucket), pass `destination` as an `s3://bucket/key`
+URI — the job's `done` status then reports `stored` instead of a
+`result_url`:
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/pmtiles \
@@ -90,42 +115,25 @@ curl -X POST http://localhost:8000/api/v1/pmtiles \
           "source": "s3://my-bucket/path/to/shapefile.shp",
           "destination": "s3://my-bucket/path/to/shapefile.pmtiles"
         }'
-# => {"stored": "s3://my-bucket/path/to/shapefile.pmtiles"}
 ```
-
-A non-S3 `source` must point to a `.zip` archive containing a complete
-`.shp`/`.shx`/`.dbf` set. Errors return a JSON body `{"detail": "..."}`
-with HTTP 400 for invalid/unreachable input, or 502 if `ogr2ogr`/
-`tippecanoe` fail during conversion.
 
 ### TIFF -> COG
 
-Same request shape as `/api/v1/pmtiles`, on `/api/v1/cog`. `source` may
-be a local path, an http(s) URL, or an `s3://bucket/key` reference to a
-single TIFF object:
+Same request/job shape as `/api/v1/pmtiles`, on `/api/v1/cog`. `source`
+may be a local path, an http(s) URL, or an `s3://bucket/key` reference
+to a single TIFF object; `destination` works the same way:
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/cog \
     -H "Content-Type: application/json" \
-    -d '{"source": "s3://my-bucket/path/to/raster.tif"}' \
-    -o output_cog.tif
+    -d '{"source": "s3://my-bucket/path/to/raster.tif"}'
+# => {"job_id": "...", "status": "processing"}
+
+curl http://localhost:8000/api/v1/jobs/<job_id>
+# => {"job_id": "...", "status": "done", "result_url": "/api/v1/jobs/<job_id>/result"}
+
+curl http://localhost:8000/api/v1/jobs/<job_id>/result -o output_cog.tif
 ```
-
-Pass `destination` (an `s3://bucket/key` URI) to have cng-lite upload
-the COG to S3 instead of streaming it back:
-
-```bash
-curl -X POST http://localhost:8000/api/v1/cog \
-    -H "Content-Type: application/json" \
-    -d '{
-          "source": "s3://my-bucket/path/to/raster.tif",
-          "destination": "s3://my-bucket/path/to/raster_cog.tif"
-        }'
-# => {"stored": "s3://my-bucket/path/to/raster_cog.tif"}
-```
-
-Errors follow the same convention: HTTP 400 for invalid/unreachable
-input, 502 if `gdal_translate` fails during conversion.
 
 ## S3 / MinIO configuration
 
@@ -140,6 +148,13 @@ default, so `s3://` sources are rejected until configured):
 | `S3_REGION`              | no       | `us-east-1`   |                                                       |
 | `S3_ADDRESSING_STYLE`    | no       | `path`        | `path` works for MinIO and AWS alike                 |
 | `S3_PRESIGN_EXPIRY`      | no       | `300`         | Seconds the presigned URL stays valid                |
+
+## Job configuration
+
+| Variable                | Default | Notes                                                        |
+|--------------------------|---------|---------------------------------------------------------------|
+| `LITE_JOB_MAX_WORKERS`   | `4`     | Max conversions running concurrently in background threads    |
+| `LITE_JOB_RESULT_TTL`    | `3600`  | Seconds a finished, uncollected job's result is kept before being discarded |
 
 Example run against a local MinIO instance:
 

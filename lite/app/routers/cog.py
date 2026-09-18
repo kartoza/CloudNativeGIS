@@ -3,10 +3,10 @@
 import shutil
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app import jobs
 from app.services.tiff_to_cog import convert
 from app.utils.s3 import parse_s3_uri, upload_object
 
@@ -18,31 +18,34 @@ class COGRequest(BaseModel):
 
     source: str
     # Optional s3://bucket/key to upload the result to, instead of
-    # streaming it back in the response.
+    # streaming it back once the job is done.
     destination: Optional[str] = None
 
 
-@router.post('/api/v1/cog')
-def create_cog(body: COGRequest, background_tasks: BackgroundTasks):
-    """Convert a TIFF (by URL, local path, or S3 URI) to a COG.
+@router.post('/api/v1/cog', status_code=202)
+def create_cog(body: COGRequest):
+    """Start converting a TIFF (by URL, local path, or S3 URI) to a COG.
 
-    If `destination` is given, the result is uploaded to that S3
-    location and a JSON confirmation is returned instead of the file.
+    Returns a job id right away; poll GET /api/v1/jobs/{job_id} for
+    status. If `destination` is given, the job uploads the result to
+    that S3 location instead of leaving it to be downloaded.
     """
-    cog_path, workdir = convert(body.source)
-    background_tasks.add_task(shutil.rmtree, workdir, ignore_errors=True)
 
-    if body.destination:
-        bucket, key = parse_s3_uri(body.destination)
-        upload_object(bucket, key, cog_path)
-        return JSONResponse(
-            content={'stored': body.destination},
-            background=background_tasks,
-        )
+    def work() -> dict:
+        cog_path, workdir = convert(body.source)
 
-    return FileResponse(
-        cog_path,
-        media_type='image/tiff',
-        filename='output_cog.tif',
-        background=background_tasks,
-    )
+        if body.destination:
+            bucket, key = parse_s3_uri(body.destination)
+            upload_object(bucket, key, cog_path)
+            shutil.rmtree(workdir, ignore_errors=True)
+            return {'stored': body.destination}
+
+        return {
+            'file': cog_path,
+            'workdir': workdir,
+            'media_type': 'image/tiff',
+            'filename': 'output_cog.tif',
+        }
+
+    job_id = jobs.submit(work)
+    return {'job_id': job_id, 'status': 'processing'}

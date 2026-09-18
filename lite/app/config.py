@@ -23,3 +23,11 @@ S3_REGION = os.environ.get('S3_REGION', 'us-east-1')
 S3_ADDRESSING_STYLE = os.environ.get('S3_ADDRESSING_STYLE', 'path')
 # How long (seconds) a generated presigned URL stays valid.
 S3_PRESIGN_EXPIRY = int(os.environ.get('S3_PRESIGN_EXPIRY', '300'))
+
+# Max number of conversions that may run concurrently in background
+# job threads.
+JOB_MAX_WORKERS = int(os.environ.get('LITE_JOB_MAX_WORKERS', '4'))
+
+# How long (seconds) a finished job's result is kept for collection
+# via GET /api/v1/jobs/{job_id} before being discarded. Default 1 hour.
+JOB_RESULT_TTL = int(os.environ.get('LITE_JOB_RESULT_TTL', str(60 * 60)))
