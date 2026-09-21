@@ -24,5 +24,5 @@ async def conversion_error_handler(
     """Convert a ConversionError into a JSON error response."""
     return JSONResponse(
         status_code=exc.status_code,
-        content={'detail': exc.message},
+        content={"detail": exc.message},
     )

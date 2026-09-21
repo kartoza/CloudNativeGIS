@@ -1,6 +1,7 @@
-"""Resolve a request source to a local TIFF file.
+"""Resolve a request source to a local raster file.
 
-source may be an s3:// URI, an http(s) URL, or a local path.
+source may be an s3:// URI, an http(s) URL, or a local path, pointing at
+either a TIFF or a (raster) GeoPackage.
 """
 
 import os
@@ -12,29 +13,26 @@ from app.utils.s3 import download_object, parse_s3_uri
 
 
 def resolve_tiff_source(source: str, workdir: str) -> str:
-    """Resolve source to a local .tif path.
+    """Resolve source to a local .tif or .gpkg path.
 
     Returns the local filesystem path to the (now local) source file.
     """
-    dest_path = os.path.join(workdir, 'input.tif')
+    is_gpkg = source.split("?", 1)[0].lower().endswith(".gpkg")
+    dest_path = os.path.join(workdir, "input.gpkg" if is_gpkg else "input.tif")
 
-    if source.startswith('s3://'):
+    if source.startswith("s3://"):
         bucket, key = parse_s3_uri(source)
         download_object(bucket, key, dest_path)
         return dest_path
 
-    if source.startswith('http://') or source.startswith('https://'):
+    if source.startswith("http://") or source.startswith("https://"):
         download_url(source, dest_path)
         return dest_path
 
     if not os.path.isabs(source):
-        raise ConversionError(
-            400, 'Local source path must be absolute'
-        )
+        raise ConversionError(400, "Local source path must be absolute")
     if not os.path.isfile(source):
-        raise ConversionError(
-            400, f'Source file does not exist: {source}'
-        )
+        raise ConversionError(400, f"Source file does not exist: {source}")
 
     shutil.copyfile(source, dest_path)
     return dest_path
