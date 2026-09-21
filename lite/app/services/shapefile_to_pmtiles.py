@@ -72,10 +72,12 @@ def _convert_geopackage(
     layers: Optional[List[str]],
     job_id: Optional[str],
 ) -> tuple:
-    """Converts each requested layer to its own PMTiles file (one file per
-    vector layer, not merged), since each is independently useful as a map
-    layer. A layer that fails (e.g. an unsupported geometry type) is
-    skipped rather than aborting the rest of the GeoPackage.
+    """Convert each requested layer to its own PMTiles file.
+
+    Each vector layer becomes its own file (not merged), since each is
+    independently useful as a map layer. A layer that fails (e.g. an
+    unsupported geometry type) is skipped rather than aborting the rest
+    of the GeoPackage.
     """
     layer_names = layers or [
         layer["name"] for layer in list_gpkg_layers(gpkg_path)

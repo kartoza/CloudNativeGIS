@@ -43,10 +43,11 @@ def _convert_geopackage(
     tables: Optional[List[str]],
     job_id: Optional[str],
 ) -> tuple:
-    """Converts each requested raster table to its own COG file (one file
-    per raster), since a GeoPackage may hold several independent rasters.
-    A table that fails to convert is skipped rather than aborting the
-    rest of the GeoPackage.
+    """Convert each requested raster table to its own COG file.
+
+    Each raster table becomes its own file, since a GeoPackage may hold
+    several independent rasters. A table that fails to convert is
+    skipped rather than aborting the rest of the GeoPackage.
     """
     table_names = tables or [
         table["name"] for table in list_raster_tables(gpkg_path)

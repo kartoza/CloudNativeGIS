@@ -10,8 +10,9 @@ from app.utils.source import resolve_source
 
 
 def inspect(source: str) -> list:
-    """Download source (an s3:// URI, http(s) URL, or local path) and
-    list its layers.
+    """Download source and list its layers.
+
+    source may be an s3:// URI, an http(s) URL, or a local path.
     """
     os.makedirs(TMP_DIR, exist_ok=True)
     workdir = tempfile.mkdtemp(dir=TMP_DIR)

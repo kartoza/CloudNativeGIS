@@ -1,6 +1,9 @@
-"""GeoPackage layer introspection, via ogrinfo (this image's GDAL predates
-`ogrinfo -json` and has no `osgeo` Python bindings, so its stable plain-text
-summary format is parsed instead)."""
+"""GeoPackage layer introspection.
+
+Uses ogrinfo: this image's GDAL predates `ogrinfo -json` and has no
+`osgeo` Python bindings, so its stable plain-text summary format is
+parsed instead.
+"""
 
 import re
 import sqlite3
@@ -70,5 +73,5 @@ def list_raster_tables(gpkg_path: str) -> list:
 
 
 def sanitize_layer_filename(name: str) -> str:
-    """A filesystem-safe stem for a layer name (used for its GeoJSON file)."""
+    """Return a filesystem-safe stem for a layer name (its GeoJSON file)."""
     return re.sub(r"[^A-Za-z0-9_-]+", "_", name) or "layer"
