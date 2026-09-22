@@ -16,5 +16,5 @@ class GpkgLayersRequest(BaseModel):
 
 @router.post("/api/v1/gpkg/layers")
 def get_gpkg_layers(body: GpkgLayersRequest):
-    """Report a GeoPackage's layers (name, geometry, feature count)."""
-    return {"layers": inspect(body.source)}
+    """Report a GeoPackage's vector layers and raster tables."""
+    return inspect(body.source)

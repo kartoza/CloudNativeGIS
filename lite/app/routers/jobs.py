@@ -42,6 +42,7 @@ def get_job(job_id: str):
             {
                 "name": file["name"],
                 "result_url": f'/api/v1/jobs/{job_id}/result/{file["name"]}',
+                "info": file.get("info") or {},
             }
             for file in job.result.get("files", [])
         ],
