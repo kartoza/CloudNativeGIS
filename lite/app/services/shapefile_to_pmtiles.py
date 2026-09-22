@@ -13,6 +13,7 @@ from app.utils.gpkg import (
     list_layers as list_gpkg_layers,
     sanitize_layer_filename,
 )
+from app.utils.pmtiles_info import read_pmtiles_info
 from app.utils.shapefile_zip import validate_shapefile_zip
 from app.utils.source import resolve_source
 
@@ -145,6 +146,7 @@ def _convert_geopackage(
                 "name": f"{stem}.pmtiles",
                 "path": pmtiles_path,
                 "media_type": "application/vnd.pmtiles",
+                "info": read_pmtiles_info(pmtiles_path),
             }
         )
 
@@ -212,6 +214,7 @@ def convert(
                 "name": "output.pmtiles",
                 "path": pmtiles_path,
                 "media_type": "application/vnd.pmtiles",
+                "info": read_pmtiles_info(pmtiles_path),
             }
         ],
         [],

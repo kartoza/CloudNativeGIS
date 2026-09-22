@@ -9,6 +9,7 @@ from typing import List, Optional
 from app import jobs
 from app.config import TMP_DIR
 from app.errors import ConversionError
+from app.utils.cog_info import read_cog_info
 from app.utils.gpkg import list_raster_tables, sanitize_layer_filename
 from app.utils.tiff_source import resolve_tiff_source
 
@@ -127,14 +128,21 @@ def _convert_geopackage(
             filename,
             filename_3857,
         )
+        info = read_cog_info(cog_path)
         files.append(
-            {"name": filename, "path": cog_path, "media_type": "image/tiff"}
+            {
+                "name": filename,
+                "path": cog_path,
+                "media_type": "image/tiff",
+                "info": info,
+            }
         )
         files.append(
             {
                 "name": filename_3857,
                 "path": cog_path_3857,
                 "media_type": "image/tiff",
+                "info": info,
             }
         )
 
@@ -188,17 +196,20 @@ def convert(
     cog_path_3857 = os.path.join(workdir, "output_cog_3857.tif")
     _translate_cog(input_path, cog_path)
     _translate_cog_3857(input_path, cog_path_3857)
+    info = read_cog_info(cog_path)
     return (
         [
             {
                 "name": "output_cog.tif",
                 "path": cog_path,
                 "media_type": "image/tiff",
+                "info": info,
             },
             {
                 "name": "output_cog_3857.tif",
                 "path": cog_path_3857,
                 "media_type": "image/tiff",
+                "info": info,
             },
         ],
         [],
