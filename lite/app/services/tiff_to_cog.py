@@ -37,6 +37,28 @@ def _translate_cog(input_path: str, output_path: str) -> None:
     )
 
 
+def _translate_cog_3857(input_path: str, output_path: str) -> None:
+    """Reproject to EPSG:3857 while producing a COG.
+
+    maplibre-cog-protocol (used by CloudBench's Map Explorer) only renders
+    Web Mercator COGs, so every COG conversion also produces this variant
+    alongside the original-CRS one.
+    """
+    _run(
+        [
+            "gdalwarp",
+            "-t_srs",
+            "EPSG:3857",
+            "-of",
+            "COG",
+            "-co",
+            "COMPRESS=DEFLATE",
+            input_path,
+            output_path,
+        ]
+    )
+
+
 def _convert_geopackage(
     gpkg_path: str,
     workdir: str,
@@ -80,10 +102,15 @@ def _convert_geopackage(
                 f"Converting raster {i + 1}/{total}: {table_name}",
                 progress=i / total,
             )
-        filename = f"{sanitize_layer_filename(table_name)}_cog.tif"
+        source = f"GPKG:{gpkg_path}:{table_name}"
+        stem = sanitize_layer_filename(table_name)
+        filename = f"{stem}_cog.tif"
+        filename_3857 = f"{stem}_cog_3857.tif"
         cog_path = os.path.join(workdir, filename)
+        cog_path_3857 = os.path.join(workdir, filename_3857)
         try:
-            _translate_cog(f"GPKG:{gpkg_path}:{table_name}", cog_path)
+            _translate_cog(source, cog_path)
+            _translate_cog_3857(source, cog_path_3857)
         except ConversionError as e:
             logger.warning(
                 "Skipping GeoPackage raster table %r (job %s): %s",
@@ -94,10 +121,21 @@ def _convert_geopackage(
             errors.append({"name": table_name, "error": e.message})
             continue
         logger.info(
-            "Job %s: raster %s converted -> %s", job_id, table_name, filename
+            "Job %s: raster %s converted -> %s, %s",
+            job_id,
+            table_name,
+            filename,
+            filename_3857,
         )
         files.append(
             {"name": filename, "path": cog_path, "media_type": "image/tiff"}
+        )
+        files.append(
+            {
+                "name": filename_3857,
+                "path": cog_path_3857,
+                "media_type": "image/tiff",
+            }
         )
 
     logger.info("Job %s: %d/%d rasters converted", job_id, len(files), total)
@@ -125,6 +163,11 @@ def convert(
     omit to include all of them — each becomes its own COG file, and one
     failing table is skipped rather than failing the whole conversion.
 
+    Every raster (the plain TIFF, or each selected GeoPackage table)
+    produces two COG files: the original-CRS one and an "_3857" suffixed
+    EPSG:3857 reprojection, since maplibre-cog-protocol can only render
+    Web Mercator COGs.
+
     Returns a tuple of ([{'name', 'path', 'media_type'}, ...],
     [{'name', 'error'}, ...], workdir) — the second list is any raster
     tables that were skipped (always empty for a plain TIFF). The caller
@@ -142,14 +185,21 @@ def convert(
         return files, errors, workdir
 
     cog_path = os.path.join(workdir, "output_cog.tif")
+    cog_path_3857 = os.path.join(workdir, "output_cog_3857.tif")
     _translate_cog(input_path, cog_path)
+    _translate_cog_3857(input_path, cog_path_3857)
     return (
         [
             {
                 "name": "output_cog.tif",
                 "path": cog_path,
                 "media_type": "image/tiff",
-            }
+            },
+            {
+                "name": "output_cog_3857.tif",
+                "path": cog_path_3857,
+                "media_type": "image/tiff",
+            },
         ],
         [],
         workdir,
