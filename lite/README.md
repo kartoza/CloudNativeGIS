@@ -155,9 +155,7 @@ Every endpoint except `/health` requires `Authorization: Bearer <token>` if
 `LITE_API_TOKEN` is set — left unset (the default), no auth is enforced, so
 only run without it in local dev. This is a single static shared secret for
 now (it never expires); CloudBench's Django backend sends it as
-`CLOUDNATIVEGIS_API_TOKEN` (see `apps/s3/cng_lite.py`). Swap `app/auth.py`
-for a signed/expiring token later if that's ever needed — no other endpoint
-code has to change.
+`CLOUDNATIVEGIS_API_TOKEN`.
 
 | Variable         | Default | Notes                                            |
 |------------------|---------|---------------------------------------------------|
