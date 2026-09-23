@@ -24,6 +24,10 @@ S3_ADDRESSING_STYLE = os.environ.get("S3_ADDRESSING_STYLE", "path")
 # How long (seconds) a generated presigned URL stays valid.
 S3_PRESIGN_EXPIRY = int(os.environ.get("S3_PRESIGN_EXPIRY", "300"))
 
+# Shared secret required as `Authorization: Bearer <token>` on every request
+# (except /health).
+API_TOKEN = os.environ.get("LITE_API_TOKEN") or None
+
 # Max number of conversions that may run concurrently in background
 # job threads.
 JOB_MAX_WORKERS = int(os.environ.get("LITE_JOB_MAX_WORKERS", "4"))

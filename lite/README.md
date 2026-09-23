@@ -149,6 +149,20 @@ default, so `s3://` sources are rejected until configured):
 | `S3_ADDRESSING_STYLE`    | no       | `path`        | `path` works for MinIO and AWS alike                 |
 | `S3_PRESIGN_EXPIRY`      | no       | `300`         | Seconds the presigned URL stays valid                |
 
+## Authentication
+
+Every endpoint except `/health` requires `Authorization: Bearer <token>` if
+`LITE_API_TOKEN` is set — left unset (the default), no auth is enforced, so
+only run without it in local dev. This is a single static shared secret for
+now (it never expires); CloudBench's Django backend sends it as
+`CLOUDNATIVEGIS_API_TOKEN` (see `apps/s3/cng_lite.py`). Swap `app/auth.py`
+for a signed/expiring token later if that's ever needed — no other endpoint
+code has to change.
+
+| Variable         | Default | Notes                                            |
+|------------------|---------|---------------------------------------------------|
+| `LITE_API_TOKEN` | unset   | Required bearer token; unset disables auth entirely |
+
 ## Job configuration
 
 | Variable                | Default | Notes                                                        |

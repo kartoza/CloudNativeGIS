@@ -2,8 +2,9 @@
 
 import logging
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
+from app.auth import require_api_token
 from app.errors import ConversionError, conversion_error_handler
 from app.routers import cog, gpkg, jobs, pmtiles
 
@@ -18,10 +19,13 @@ logging.basicConfig(
 app = FastAPI(title="CloudNativeGIS Lite")
 
 app.add_exception_handler(ConversionError, conversion_error_handler)
-app.include_router(pmtiles.router)
-app.include_router(cog.router)
-app.include_router(gpkg.router)
-app.include_router(jobs.router)
+# /health is intentionally excluded — docker's healthcheck calls it with no
+# token (see deployment/docker-compose.cng-lite.yml).
+_auth = [Depends(require_api_token)]
+app.include_router(pmtiles.router, dependencies=_auth)
+app.include_router(cog.router, dependencies=_auth)
+app.include_router(gpkg.router, dependencies=_auth)
+app.include_router(jobs.router, dependencies=_auth)
 
 
 @app.get("/health")
