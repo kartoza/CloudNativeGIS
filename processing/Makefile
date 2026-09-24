@@ -41,7 +41,7 @@ shell:
 	@docker compose exec lite /bin/bash
 
 # Starts the image in the background and waits for /health. Uses plain
-# `docker run` so it also works in CI without a .env (release-lite workflow).
+# `docker run` so it also works in CI without a .env (release-processing workflow).
 smoke-test:
 	@echo
 	@echo "------------------------------------------------------------------"

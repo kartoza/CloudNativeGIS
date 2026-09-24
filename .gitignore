@@ -22,8 +22,8 @@ django_project/frontend/package-lock.json
 django_project/frontend/webpack-stats.dev.json
 django_project/frontend/webpack-stats.prod.json
 
-lite/.env
-lite/data/
+processing/.env
+processing/data/
 
 docs/site/*
 docks/mkdocs.yml

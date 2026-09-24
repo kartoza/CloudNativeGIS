@@ -13,16 +13,16 @@ container.
 ## Build
 
 ```bash
-docker build -t cloudnativegis-processing lite/
+docker build -t cloudnativegis-processing processing/
 ```
 
 Or with docker compose via the Makefile in this folder. Settings live in
-`lite/.env` (created from `.env.template` on first `make up`/`make run`;
+`processing/.env` (created from `.env.template` on first `make up`/`make run`;
 all variables are documented there). Variables on the command line win,
 e.g. `make build TAG=dev`.
 
 ```bash
-cd lite
+cd processing
 make build        # docker compose build -> $IMAGE:$TAG (cloudnativegis-processing:latest)
 make up           # start in background on $PORT, $DATA_DIR mounted at /data
 make run          # same, in the foreground

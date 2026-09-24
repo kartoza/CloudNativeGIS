@@ -7,8 +7,8 @@ on:
   push:
     tags:
       - 'v*'
-      # vX.Y.Z-lite tags are handled by release-lite.yaml
-      - '!v*-lite'
+      # vX.Y.Z-processing tags are handled by release-processing.yaml
+      - '!v*-processing'
   workflow_dispatch:
     inputs:
       version:
@@ -212,7 +212,7 @@ jobs:
           VERSION: ${{ needs.build.outputs.version }}
         run: |
           # Get the previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 --match 'v*' --exclude 'v*-lite' HEAD^ 2>/dev/null || echo "")
+          PREV_TAG=$(git describe --tags --abbrev=0 --match 'v*' --exclude 'v*-processing' HEAD^ 2>/dev/null || echo "")
 
           if [ -n "$PREV_TAG" ]; then
             echo "Generating changelog from $PREV_TAG to HEAD"
