@@ -7,6 +7,8 @@ on:
   push:
     tags:
       - 'v*'
+      # vX.Y.Z-processing tags are handled by release-processing.yaml
+      - '!v*-processing'
   workflow_dispatch:
     inputs:
       version:
@@ -63,6 +65,16 @@ jobs:
             VERSION=${GITHUB_REF#refs/tags/v}
             echo "version=$VERSION" >> $GITHUB_OUTPUT
           fi
+
+      - name: Set package version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Stamp the release version so the built package matches the tag/input
+          # (first `version =` line is the [project] table).
+          sed -i "0,/^version = .*/s//version = \"$VERSION\"/" pyproject.toml
+          printf '%s\n' "$VERSION" > django_project/version.txt
+          grep -m1 '^version = ' pyproject.toml
 
       - name: Build package
         run: python -m build
@@ -145,9 +157,14 @@ jobs:
     name: Publish to PyPI
     needs: [build, test-package, publish-testpypi]
     runs-on: ubuntu-latest
+    # always() so a skipped TestPyPI job doesn't also skip this one.
     if: |
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_pypi == 'true') ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      always() &&
+      needs.build.result == 'success' &&
+      needs.test-package.result == 'success' &&
+      contains(fromJSON('["success", "skipped"]'), needs.publish-testpypi.result) &&
+      ((github.event_name == 'workflow_dispatch' && github.event.inputs.publish_pypi == 'true') ||
+       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     environment:
       name: pypi
       url: https://pypi.org/project/cloud-native-gis/
@@ -189,11 +206,13 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Generate changelog
+      - name: Generate release notes
         id: changelog
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
         run: |
           # Get the previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          PREV_TAG=$(git describe --tags --abbrev=0 --match 'v*' --exclude 'v*-processing' HEAD^ 2>/dev/null || echo "")
 
           if [ -n "$PREV_TAG" ]; then
             echo "Generating changelog from $PREV_TAG to HEAD"
@@ -203,35 +222,38 @@ jobs:
             CHANGELOG=$(git log --pretty=format:"- %s (%h)" -20)
           fi
 
-          # Write changelog to file for multiline handling
-          echo "$CHANGELOG" > /tmp/changelog.txt
-          echo "changelog_file=/tmp/changelog.txt" >> $GITHUB_OUTPUT
+          # Build the release body in a file; action inputs aren't run
+          # through a shell, so the changelog can't be inlined via $(...).
+          NOTES_FILE="$RUNNER_TEMP/release-notes.md"
+          cat > "$NOTES_FILE" <<EOF
+          ## Cloud Native GIS v${VERSION}
+
+          ### Installation
+
+          \`\`\`bash
+          pip install cloud-native-gis==${VERSION}
+          \`\`\`
+
+          ### Changes
+
+          ${CHANGELOG}
+
+          ### Documentation
+
+          - [Full Documentation](https://kartoza.github.io/CloudNativeGIS/)
+          - [PyPI Package](https://pypi.org/project/cloud-native-gis/${VERSION}/)
+
+          ---
+
+          Made with 💗 by [Kartoza](https://kartoza.com)
+          EOF
+          echo "notes_file=$NOTES_FILE" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ needs.build.outputs.version }}
-          body: |
-            ## Cloud Native GIS v${{ needs.build.outputs.version }}
-
-            ### Installation
-
-            ```bash
-            pip install cloud-native-gis==${{ needs.build.outputs.version }}
-            ```
-
-            ### Changes
-
-            $(cat /tmp/changelog.txt)
-
-            ### Documentation
-
-            - [Full Documentation](https://kartoza.github.io/CloudNativeGIS/)
-            - [PyPI Package](https://pypi.org/project/cloud-native-gis/${{ needs.build.outputs.version }}/)
-
-            ---
-
-            Made with 💗 by [Kartoza](https://kartoza.com)
+          body_path: ${{ steps.changelog.outputs.notes_file }}
           files: |
             dist/*.whl
             dist/*.tar.gz

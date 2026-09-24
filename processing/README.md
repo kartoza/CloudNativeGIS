@@ -13,20 +13,37 @@ container.
 ## Build
 
 ```bash
-docker build -t cng-lite lite/
+docker build -t cloudnativegis-processing processing/
+```
+
+Or with docker compose via the Makefile in this folder. Settings live in
+`processing/.env` (created from `.env.template` on first `make up`/`make run`;
+all variables are documented there). Variables on the command line win,
+e.g. `make build TAG=dev`.
+
+```bash
+cd processing
+make build        # docker compose build -> $IMAGE:$TAG (cloudnativegis-processing:latest)
+make up           # start in background on $PORT, $DATA_DIR mounted at /data
+make run          # same, in the foreground
+make logs         # follow logs
+make shell        # bash inside the running container
+make down         # stop
+make smoke-test   # run $IMAGE:$TAG and wait for /health (used by CI)
+make clean        # stop and remove the image
 ```
 
 ## Run
 
 ```bash
-docker run --rm -p 8000:8000 cng-lite
+docker run --rm -p 8000:8000 cloudnativegis-processing
 ```
 
 To convert a shapefile from a local path instead of a URL, mount it into
 the container and pass the in-container absolute path as `source`:
 
 ```bash
-docker run --rm -p 8000:8000 -v /host/data:/data cng-lite
+docker run --rm -p 8000:8000 -v /host/data:/data cloudnativegis-processing
 ```
 
 ## Usage
@@ -176,5 +193,5 @@ docker run --rm -p 8000:8000 \
     -e S3_ACCESS_KEY_ID=minioadmin \
     -e S3_SECRET_ACCESS_KEY=minioadmin \
     --network minio-net \
-    cng-lite
+    cloudnativegis-processing
 ```
