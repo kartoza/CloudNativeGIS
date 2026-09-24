@@ -3,7 +3,7 @@ SHELL := /bin/bash
 # Settings come from .env when present; command-line vars still win.
 -include .env
 
-IMAGE ?= cng-lite
+IMAGE ?= cloudnativegis-processing
 TAG ?= latest
 PORT ?= 8000
 export IMAGE TAG PORT
@@ -47,18 +47,18 @@ smoke-test:
 	@echo "------------------------------------------------------------------"
 	@echo "Smoke testing $(IMAGE):$(TAG)"
 	@echo "------------------------------------------------------------------"
-	@docker run -d --rm --name cng-lite-smoke -p $(PORT):8000 $(IMAGE):$(TAG) > /dev/null
+	@docker run -d --rm --name cloudnativegis-processing-smoke -p $(PORT):8000 $(IMAGE):$(TAG) > /dev/null
 	@for i in $$(seq 1 30); do \
 		if curl -fsS http://localhost:$(PORT)/health; then \
 			echo; echo "Lite service is healthy"; \
-			docker stop cng-lite-smoke > /dev/null; \
+			docker stop cloudnativegis-processing-smoke > /dev/null; \
 			exit 0; \
 		fi; \
 		sleep 2; \
 	done; \
 	echo "Lite service did not become healthy" >&2; \
-	docker logs cng-lite-smoke; \
-	docker stop cng-lite-smoke > /dev/null; \
+	docker logs cloudnativegis-processing-smoke; \
+	docker stop cloudnativegis-processing-smoke > /dev/null; \
 	exit 1
 
 clean:

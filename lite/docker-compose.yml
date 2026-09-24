@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${IMAGE:-cng-lite}:${TAG:-latest}
+    image: ${IMAGE:-cloudnativegis-processing}:${TAG:-latest}
     env_file:
       - path: .env
         required: false

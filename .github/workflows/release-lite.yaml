@@ -39,7 +39,7 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           # GHCR image names must be lowercase
-          echo "image=ghcr.io/${GITHUB_REPOSITORY,,}-lite" >> $GITHUB_OUTPUT
+          echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/cloudnativegis-processing" >> $GITHUB_OUTPUT
 
       - name: Compute image tags
         id: tags
@@ -69,12 +69,12 @@ jobs:
           context: lite
           file: lite/Dockerfile
           load: true
-          tags: cng-lite:test
+          tags: cloudnativegis-processing:test
           cache-from: type=gha,scope=lite
           cache-to: type=gha,scope=lite,mode=max
 
       - name: Smoke test
-        run: make -C lite smoke-test IMAGE=cng-lite TAG=test
+        run: make -C lite smoke-test IMAGE=cloudnativegis-processing TAG=test
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
