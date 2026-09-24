@@ -1,0 +1,14 @@
+services:
+  lite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${IMAGE:-cng-lite}:${TAG:-latest}
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - ${DATA_DIR:-./data}:/data
+    restart: unless-stopped

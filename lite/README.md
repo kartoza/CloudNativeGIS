@@ -16,6 +16,23 @@ container.
 docker build -t cng-lite lite/
 ```
 
+Or with docker compose via the Makefile in this folder. Settings live in
+`lite/.env` (created from `.env.template` on first `make up`/`make run`;
+all variables are documented there). Variables on the command line win,
+e.g. `make build TAG=dev`.
+
+```bash
+cd lite
+make build        # docker compose build -> $IMAGE:$TAG (cng-lite:latest)
+make up           # start in background on $PORT, $DATA_DIR mounted at /data
+make run          # same, in the foreground
+make logs         # follow logs
+make shell        # bash inside the running container
+make down         # stop
+make smoke-test   # run $IMAGE:$TAG and wait for /health (used by CI)
+make clean        # stop and remove the image
+```
+
 ## Run
 
 ```bash
