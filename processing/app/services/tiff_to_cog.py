@@ -1,5 +1,6 @@
 """Convert a TIFF or raster GeoPackage to Cloud Optimized GeoTIFF(s) via gdal_translate."""  # noqa: E501
 
+import json
 import logging
 import os
 import subprocess
@@ -15,6 +16,23 @@ from app.utils.tiff_source import resolve_tiff_source
 
 logger = logging.getLogger(__name__)
 
+COG_OPTIONS = [
+    "-of",
+    "COG",
+    "-co",
+    "COMPRESS=DEFLATE",
+    "-co",
+    "BLOCKSIZE=512",
+    "-co",
+    "STATISTICS=YES",
+]
+STATISTICS_KEYS = (
+    "STATISTICS_MINIMUM",
+    "STATISTICS_MAXIMUM",
+    "STATISTICS_MEAN",
+    "STATISTICS_STDDEV",
+)
+
 
 def _run(cmd: list) -> None:
     logger.info("Running: %s", " ".join(cmd))
@@ -24,18 +42,39 @@ def _run(cmd: list) -> None:
         raise ConversionError(502, f"{cmd[0]} failed: {e.stderr.strip() or e}")
 
 
+def _check_embedded_statistics(path: str) -> None:
+    """Fail unless every band carries its statistics inside the file."""
+    try:
+        output = subprocess.run(
+            ["gdalinfo", "-json", path],
+            check=True,
+            capture_output=True,
+            text=True,
+            env={**os.environ, "GDAL_PAM_ENABLED": "NO"},
+        ).stdout
+        bands = json.loads(output).get("bands", [])
+    except (subprocess.CalledProcessError, ValueError) as e:
+        raise ConversionError(502, f"Could not inspect COG {path}: {e}")
+    missing = [
+        band.get("band")
+        for band in bands
+        if not all(
+            key in band.get("metadata", {}).get("", {})
+            for key in STATISTICS_KEYS
+        )
+    ]
+    if not bands or missing:
+        raise ConversionError(
+            502,
+            "COG was written without embedded band statistics "
+            f"(bands {missing or 'none'}); this GDAL build may not "
+            "support the COG driver's STATISTICS option (GDAL >= 3.8).",
+        )
+
+
 def _translate_cog(input_path: str, output_path: str) -> None:
-    _run(
-        [
-            "gdal_translate",
-            "-of",
-            "COG",
-            "-co",
-            "COMPRESS=DEFLATE",
-            input_path,
-            output_path,
-        ]
-    )
+    _run(["gdal_translate", *COG_OPTIONS, input_path, output_path])
+    _check_embedded_statistics(output_path)
 
 
 def _translate_cog_3857(input_path: str, output_path: str) -> None:
@@ -50,14 +89,12 @@ def _translate_cog_3857(input_path: str, output_path: str) -> None:
             "gdalwarp",
             "-t_srs",
             "EPSG:3857",
-            "-of",
-            "COG",
-            "-co",
-            "COMPRESS=DEFLATE",
+            *COG_OPTIONS,
             input_path,
             output_path,
         ]
     )
+    _check_embedded_statistics(output_path)
 
 
 def _convert_geopackage(
