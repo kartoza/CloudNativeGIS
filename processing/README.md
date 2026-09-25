@@ -2,13 +2,19 @@
 
 A standalone, database-free service that converts:
 
-- a shapefile (zipped `.shp`/`.shx`/`.dbf`/...) into a
-  [PMTiles](https://github.com/protomaps/PMTiles) file, using `ogr2ogr`
-  and `tippecanoe`.
+- a shapefile (zipped `.shp`/`.shx`/`.dbf`/...) or GeoPackage into a
+  [PMTiles](https://github.com/protomaps/PMTiles) file (web-map tiles, via
+  `ogr2ogr` and `tippecanoe`) plus a
+  [GeoParquet](https://geoparquet.org) 1.1 file (the full data, in the
+  source's own CRS) per vector layer. The GeoParquet is zstd-compressed,
+  bbox-sorted, and carries a bbox covering column, as the
+  [Portolan spec](https://github.com/portolan-sdi/portolan-spec) requires.
 - a TIFF into a Cloud Optimized GeoTIFF (COG), using `gdal_translate`.
 
 No Django, no PostGIS — just an HTTP API wrapped in a single Docker
-container.
+container. It's built on the official `ghcr.io/osgeo/gdal` "full" image,
+since GDAL's (Geo)Parquet driver needs Arrow, which Debian's `gdal-bin`
+lacks.
 
 ## Build
 
