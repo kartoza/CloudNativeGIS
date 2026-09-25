@@ -1,4 +1,9 @@
-"""Convert a shapefile (zip) or GeoPackage to PMTiles via ogr2ogr + tippecanoe."""  # noqa: E501
+"""Convert a shapefile (zip) or GeoPackage to PMTiles + GeoParquet.
+
+Each vector layer yields a pair: a GeoParquet file (the analysis-ready
+data, in the source's own CRS) and a PMTiles file (the web-map rendering,
+via ogr2ogr + tippecanoe) — the vector pairing the Portolan spec asks for.
+"""
 
 import logging
 import os
@@ -13,6 +18,7 @@ from app.utils.gpkg import (
     list_layers as list_gpkg_layers,
     sanitize_layer_filename,
 )
+from app.utils.parquet_info import read_parquet_info
 from app.utils.pmtiles_info import read_pmtiles_info
 from app.utils.shapefile_zip import validate_shapefile_zip
 from app.utils.source import resolve_source
@@ -22,6 +28,23 @@ logger = logging.getLogger(__name__)
 # Guards against pathological geometry (e.g. a near-global polygon forced to
 # a high zoom) turning one layer into a runaway process that never returns.
 TIPPECANOE_TIMEOUT = 180
+
+PMTILES_MEDIA_TYPE = "application/vnd.pmtiles"
+PARQUET_MEDIA_TYPE = "application/vnd.apache.parquet"
+
+# Portolan's GeoParquet requirements: GeoParquet 1.1 with a bbox covering
+# column (per-row-group spatial stats), spatially ordered rows, row groups
+# of at most 150k rows, zstd recommended.
+GEOPARQUET_OPTIONS = [
+    "-lco",
+    "COMPRESSION=ZSTD",
+    "-lco",
+    "WRITE_COVERING_BBOX=YES",
+    "-lco",
+    "SORT_BY_BBOX=YES",
+    "-lco",
+    "ROW_GROUP_SIZE=100000",
+]
 
 
 def _run(cmd: list, timeout: Optional[int] = None) -> None:
@@ -67,15 +90,46 @@ def _tile(pmtiles_path: str, layer_name: str, geojson_path: str) -> None:
         _run(base_cmd[:1] + ["-z0"] + base_cmd[1:], timeout=TIPPECANOE_TIMEOUT)
 
 
+def _write_geoparquet(
+    parquet_path: str, source: str, layer_name: Optional[str] = None
+) -> None:
+    """Write one source layer as GeoParquet, keeping its original CRS.
+
+    `layer_name` picks the layer out of a multi-layer source (GeoPackage);
+    omit it for a single-layer source (shapefile).
+    """
+    cmd = ["ogr2ogr", "-f", "Parquet", *GEOPARQUET_OPTIONS, parquet_path, source]
+    if layer_name:
+        cmd.append(layer_name)
+    _run(cmd)
+
+
+def _layer_outputs(stem: str, pmtiles_path: str, parquet_path: str) -> list:
+    return [
+        {
+            "name": f"{stem}.parquet",
+            "path": parquet_path,
+            "media_type": PARQUET_MEDIA_TYPE,
+            "info": read_parquet_info(parquet_path),
+        },
+        {
+            "name": f"{stem}.pmtiles",
+            "path": pmtiles_path,
+            "media_type": PMTILES_MEDIA_TYPE,
+            "info": read_pmtiles_info(pmtiles_path),
+        },
+    ]
+
+
 def _convert_geopackage(
     gpkg_path: str,
     workdir: str,
     layers: Optional[List[str]],
     job_id: Optional[str],
 ) -> tuple:
-    """Convert each requested layer to its own PMTiles file.
+    """Convert each requested layer to its own PMTiles + GeoParquet pair.
 
-    Each vector layer becomes its own file (not merged), since each is
+    Each vector layer becomes its own files (not merged), since each is
     independently useful as a map layer. A layer that fails (e.g. an
     unsupported geometry type) is skipped rather than aborting the rest
     of the GeoPackage.
@@ -111,6 +165,8 @@ def _convert_geopackage(
             )
         try:
             stem = sanitize_layer_filename(layer_name)
+            parquet_path = os.path.join(workdir, f"{stem}.parquet")
+            _write_geoparquet(parquet_path, gpkg_path, layer_name)
             geojson_path = os.path.join(workdir, f"{stem}.geojson")
             _run(
                 [
@@ -139,21 +195,15 @@ def _convert_geopackage(
             "Job %s: layer %s converted -> %s",
             job_id,
             layer_name,
-            f"{stem}.pmtiles",
+            f"{stem}.pmtiles + {stem}.parquet",
         )
-        files.append(
-            {
-                "name": f"{stem}.pmtiles",
-                "path": pmtiles_path,
-                "media_type": "application/vnd.pmtiles",
-                "info": read_pmtiles_info(pmtiles_path),
-            }
-        )
+        files.extend(_layer_outputs(stem, pmtiles_path, parquet_path))
 
-    logger.info("Job %s: %d/%d layers converted", job_id, len(files), total)
+    converted = total - len(errors)
+    logger.info("Job %s: %d/%d layers converted", job_id, converted, total)
     if job_id:
         jobs.update_detail(
-            job_id, f"Converted {len(files)}/{total} layers", progress=1.0
+            job_id, f"Converted {converted}/{total} layers", progress=1.0
         )
     if not files:
         raise ConversionError(
@@ -172,12 +222,12 @@ def convert(
     """Convert source (shapefile zip or GeoPackage; URL or local path).
 
     `layers` (GeoPackage only) selects which layers to include; omit to
-    include all of them — each becomes its own PMTiles file, and one
+    include all of them — each becomes its own PMTiles + GeoParquet pair, and one
     failing layer is skipped rather than failing the whole conversion.
     `job_id`, if given, receives live per-layer progress via
     app.jobs.update_detail.
 
-    Returns a tuple of ([{'name', 'path', 'media_type'}, ...],
+    Returns a tuple of ([{'name', 'path', 'media_type', 'info'}, ...],
     [{'name', 'error'}, ...], workdir) — the second list is any GeoPackage
     layers that were skipped (always empty for a shapefile). The caller is
     responsible for removing workdir once the response has been sent.
@@ -194,6 +244,8 @@ def convert(
         return files, errors, workdir
 
     validate_shapefile_zip(input_path)
+    parquet_path = os.path.join(workdir, "output.parquet")
+    _write_geoparquet(parquet_path, f"/vsizip/{input_path}")
     geojson_path = os.path.join(workdir, "output.geojson")
     _run(
         [
@@ -208,15 +260,4 @@ def convert(
     pmtiles_path = os.path.join(workdir, "output.pmtiles")
     _tile(pmtiles_path, "default", geojson_path)
 
-    return (
-        [
-            {
-                "name": "output.pmtiles",
-                "path": pmtiles_path,
-                "media_type": "application/vnd.pmtiles",
-                "info": read_pmtiles_info(pmtiles_path),
-            }
-        ],
-        [],
-        workdir,
-    )
+    return _layer_outputs("output", pmtiles_path, parquet_path), [], workdir

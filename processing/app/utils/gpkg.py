@@ -1,22 +1,11 @@
-"""GeoPackage layer introspection.
+"""GeoPackage layer introspection, via `ogrinfo -json`."""
 
-Uses ogrinfo: this image's GDAL predates `ogrinfo -json` and has no
-`osgeo` Python bindings, so its stable plain-text summary format is
-parsed instead.
-"""
-
+import json
 import re
 import sqlite3
 import subprocess
 
 from app.errors import ConversionError
-
-_LAYER_BLOCK = re.compile(
-    r"^Layer name:\s*(?P<name>.+)$\n"
-    r"Geometry:\s*(?P<geometry>.+)$\n"
-    r"Feature Count:\s*(?P<count>\d+)$",
-    re.MULTILINE,
-)
 
 
 def list_layers(gpkg_path: str) -> list:
@@ -28,7 +17,7 @@ def list_layers(gpkg_path: str) -> list:
     """
     try:
         output = subprocess.run(
-            ["ogrinfo", "-al", "-so", gpkg_path],
+            ["ogrinfo", "-json", "-so", gpkg_path],
             check=True,
             capture_output=True,
             text=True,
@@ -40,12 +29,12 @@ def list_layers(gpkg_path: str) -> list:
 
     return [
         {
-            "name": match.group("name").strip(),
-            "geometryType": match.group("geometry").strip(),
-            "featureCount": int(match.group("count")),
+            "name": layer["name"],
+            "geometryType": layer["geometryFields"][0]["type"],
+            "featureCount": layer.get("featureCount", 0),
         }
-        for match in _LAYER_BLOCK.finditer(output)
-        if match.group("geometry").strip().lower() != "none"
+        for layer in json.loads(output).get("layers", [])
+        if layer.get("geometryFields")
     ]
 
 
