@@ -43,8 +43,7 @@ def _run(cmd: list) -> None:
 
 
 def _check_embedded_statistics(path: str) -> None:
-    """Fail unless every band carries its statistics inside the file.
-    """
+    """Fail unless every band carries its statistics inside the file."""
     try:
         output = subprocess.run(
             ["gdalinfo", "-json", path],
