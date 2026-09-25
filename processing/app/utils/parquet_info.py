@@ -42,7 +42,10 @@ def read_parquet_info(path: str) -> dict:
         ).stdout
         layer = json.loads(output)["layers"][0]
         columns = [
-            {"name": field["name"], "type": _TYPES.get(field["type"], "string")}
+            {
+                "name": field["name"],
+                "type": _TYPES.get(field["type"], "string"),
+            }
             for field in layer.get("fields", [])
         ]
         geometry = (layer.get("geometryFields") or [{}])[0]
@@ -54,5 +57,7 @@ def read_parquet_info(path: str) -> dict:
             "bbox": geometry.get("extent"),
         }
     except Exception:
-        logger.warning("Could not read GeoParquet info for %s", path, exc_info=True)
+        logger.warning(
+            "Could not read GeoParquet info for %s", path, exc_info=True
+        )
         return {}

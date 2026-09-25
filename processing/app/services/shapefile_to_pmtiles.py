@@ -98,7 +98,14 @@ def _write_geoparquet(
     `layer_name` picks the layer out of a multi-layer source (GeoPackage);
     omit it for a single-layer source (shapefile).
     """
-    cmd = ["ogr2ogr", "-f", "Parquet", *GEOPARQUET_OPTIONS, parquet_path, source]
+    cmd = [
+        "ogr2ogr",
+        "-f",
+        "Parquet",
+        *GEOPARQUET_OPTIONS,
+        parquet_path,
+        source,
+    ]
     if layer_name:
         cmd.append(layer_name)
     _run(cmd)
@@ -222,8 +229,9 @@ def convert(
     """Convert source (shapefile zip or GeoPackage; URL or local path).
 
     `layers` (GeoPackage only) selects which layers to include; omit to
-    include all of them — each becomes its own PMTiles + GeoParquet pair, and one
-    failing layer is skipped rather than failing the whole conversion.
+    include all of them — each becomes its own PMTiles + GeoParquet pair,
+    and one failing layer is skipped rather than failing the whole
+    conversion.
     `job_id`, if given, receives live per-layer progress via
     app.jobs.update_detail.
 
