@@ -18,6 +18,7 @@ class COGRequest(BaseModel):
     # GeoPackage only: which raster tables to include (omit/None to
     # include all). Each table is converted to its own COG file.
     tables: Optional[List[str]] = None
+    thumbnail: bool = False
 
 
 @router.post("/api/v1/cog", status_code=202)
@@ -30,7 +31,10 @@ def create_cog(body: COGRequest):
 
     def work(job_id: str) -> dict:
         files, errors, workdir = convert(
-            body.source, tables=body.tables, job_id=job_id
+            body.source,
+            tables=body.tables,
+            job_id=job_id,
+            with_thumbnails=body.thumbnail,
         )
         return {"files": files, "errors": errors, "workdir": workdir}
 
