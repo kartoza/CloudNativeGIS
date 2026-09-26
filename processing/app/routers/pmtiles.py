@@ -18,6 +18,7 @@ class PMTilesRequest(BaseModel):
     # GeoPackage only: which layers to include (omit/None to include all).
     # Each layer is converted to its own PMTiles file.
     layers: Optional[List[str]] = None
+    thumbnail: bool = False
 
 
 @router.post("/api/v1/pmtiles", status_code=202)
@@ -30,7 +31,10 @@ def create_pmtiles(body: PMTilesRequest):
 
     def work(job_id: str) -> dict:
         files, errors, workdir = convert(
-            body.source, layers=body.layers, job_id=job_id
+            body.source,
+            layers=body.layers,
+            job_id=job_id,
+            with_thumbnails=body.thumbnail,
         )
         return {"files": files, "errors": errors, "workdir": workdir}
 
