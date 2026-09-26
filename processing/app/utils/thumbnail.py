@@ -1,5 +1,4 @@
-"""Render a layer's thumbnail.png from its default style.
-"""
+"""Render a layer's thumbnail.png from its default style."""
 
 import json
 import logging
