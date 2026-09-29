@@ -19,6 +19,7 @@ from app.utils.gpkg import (
     sanitize_layer_filename,
 )
 from app.utils.parquet_info import read_parquet_info
+from app.utils import thumbnail
 from app.utils.pmtiles_info import read_pmtiles_info
 from app.utils.shapefile_zip import validate_shapefile_zip
 from app.utils.source import resolve_source
@@ -111,8 +112,39 @@ def _write_geoparquet(
     _run(cmd)
 
 
-def _layer_outputs(stem: str, pmtiles_path: str, parquet_path: str) -> list:
+def _thumbnail_output(name: str, path: str) -> list:
+    """Return the thumbnail as a result file, or nothing if not rendered."""
+    if not os.path.exists(path):
+        return []
     return [
+        {
+            "name": name,
+            "path": path,
+            "media_type": thumbnail.MEDIA_TYPE,
+            "info": {},
+        }
+    ]
+
+
+def _layer_outputs(
+    stem: str,
+    pmtiles_path: str,
+    parquet_path: str,
+    thumbnail_source: Optional[tuple] = None,
+) -> list:
+    """Return a converted layer's result files.
+
+    `thumbnail_source` — (OGR source, layer name or None) — also renders
+    "{stem}_thumbnail.png" from it, if it renders (best-effort).
+    """
+    thumbnail_files = []
+    if thumbnail_source:
+        path = pmtiles_path.removesuffix(".pmtiles") + "_thumbnail.png"
+        thumbnail.render_vector_thumbnail(
+            thumbnail_source[0], path, layer=thumbnail_source[1]
+        )
+        thumbnail_files = _thumbnail_output(f"{stem}_thumbnail.png", path)
+    return thumbnail_files + [
         {
             "name": f"{stem}.parquet",
             "path": parquet_path,
@@ -133,6 +165,7 @@ def _convert_geopackage(
     workdir: str,
     layers: Optional[List[str]],
     job_id: Optional[str],
+    with_thumbnails: bool = False,
 ) -> tuple:
     """Convert each requested layer to its own PMTiles + GeoParquet pair.
 
@@ -204,7 +237,14 @@ def _convert_geopackage(
             layer_name,
             f"{stem}.pmtiles + {stem}.parquet",
         )
-        files.extend(_layer_outputs(stem, pmtiles_path, parquet_path))
+        files.extend(
+            _layer_outputs(
+                stem,
+                pmtiles_path,
+                parquet_path,
+                (gpkg_path, layer_name) if with_thumbnails else None,
+            )
+        )
 
     converted = total - len(errors)
     logger.info("Job %s: %d/%d layers converted", job_id, converted, total)
@@ -225,6 +265,7 @@ def convert(
     source: str,
     layers: Optional[List[str]] = None,
     job_id: Optional[str] = None,
+    with_thumbnails: bool = False,
 ) -> tuple:
     """Convert source (shapefile zip or GeoPackage; URL or local path).
 
@@ -233,7 +274,8 @@ def convert(
     and one failing layer is skipped rather than failing the whole
     conversion.
     `job_id`, if given, receives live per-layer progress via
-    app.jobs.update_detail.
+    app.jobs.update_detail. `with_thumbnails` also renders each layer's
+    "{stem}_thumbnail.png" from its default style.
 
     Returns a tuple of ([{'name', 'path', 'media_type', 'info'}, ...],
     [{'name', 'error'}, ...], workdir) — the second list is any GeoPackage
@@ -247,7 +289,7 @@ def convert(
     input_path = resolve_source(source, workdir)
     if input_path.lower().endswith(".gpkg"):
         files, errors = _convert_geopackage(
-            input_path, workdir, layers, job_id
+            input_path, workdir, layers, job_id, with_thumbnails
         )
         return files, errors, workdir
 
@@ -268,4 +310,10 @@ def convert(
     pmtiles_path = os.path.join(workdir, "output.pmtiles")
     _tile(pmtiles_path, "default", geojson_path)
 
-    return _layer_outputs("output", pmtiles_path, parquet_path), [], workdir
+    files = _layer_outputs(
+        "output",
+        pmtiles_path,
+        parquet_path,
+        (f"/vsizip/{input_path}", None) if with_thumbnails else None,
+    )
+    return files, [], workdir

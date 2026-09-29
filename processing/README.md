@@ -13,8 +13,7 @@ A standalone, database-free service that converts:
 
 No Django, no PostGIS — just an HTTP API wrapped in a single Docker
 container. It's built on the official `ghcr.io/osgeo/gdal` "full" image,
-since GDAL's (Geo)Parquet driver needs Arrow, which Debian's `gdal-bin`
-lacks.
+since GDAL's (Geo)Parquet driver needs Arrow.
 
 ## Build
 

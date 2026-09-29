@@ -10,6 +10,7 @@ from typing import List, Optional
 from app import jobs
 from app.config import TMP_DIR
 from app.errors import ConversionError
+from app.utils import thumbnail
 from app.utils.cog_info import read_cog_info
 from app.utils.gpkg import list_raster_tables, sanitize_layer_filename
 from app.utils.tiff_source import resolve_tiff_source
@@ -97,11 +98,27 @@ def _translate_cog_3857(input_path: str, output_path: str) -> None:
     _check_embedded_statistics(output_path)
 
 
+def _raster_thumbnail(cog_path_3857: str, name: str) -> list:
+    """Render a raster's thumbnail as a result file (nothing on failure)."""
+    path = os.path.join(os.path.dirname(cog_path_3857), name)
+    if not thumbnail.render_raster_thumbnail(cog_path_3857, path):
+        return []
+    return [
+        {
+            "name": name,
+            "path": path,
+            "media_type": thumbnail.MEDIA_TYPE,
+            "info": {},
+        }
+    ]
+
+
 def _convert_geopackage(
     gpkg_path: str,
     workdir: str,
     tables: Optional[List[str]],
     job_id: Optional[str],
+    with_thumbnails: bool = False,
 ) -> tuple:
     """Convert each requested raster table to its own COG file.
 
@@ -182,11 +199,16 @@ def _convert_geopackage(
                 "info": info,
             }
         )
+        if with_thumbnails:
+            files.extend(
+                _raster_thumbnail(cog_path_3857, f"{stem}_cog_thumbnail.png")
+            )
 
-    logger.info("Job %s: %d/%d rasters converted", job_id, len(files), total)
+    converted = total - len(errors)
+    logger.info("Job %s: %d/%d rasters converted", job_id, converted, total)
     if job_id:
         jobs.update_detail(
-            job_id, f"Converted {len(files)}/{total} rasters", progress=1.0
+            job_id, f"Converted {converted}/{total} rasters", progress=1.0
         )
     if not files:
         raise ConversionError(
@@ -201,6 +223,7 @@ def convert(
     source: str,
     tables: Optional[List[str]] = None,
     job_id: Optional[str] = None,
+    with_thumbnails: bool = False,
 ) -> tuple:
     """Convert source TIFF or raster GeoPackage (s3:// URI, URL, or path).
 
@@ -211,7 +234,8 @@ def convert(
     Every raster (the plain TIFF, or each selected GeoPackage table)
     produces two COG files: the original-CRS one and an "_3857" suffixed
     EPSG:3857 reprojection, since maplibre-cog-protocol can only render
-    Web Mercator COGs.
+    Web Mercator COGs. `with_thumbnails` also renders each raster's
+    "_thumbnail.png".
 
     Returns a tuple of ([{'name', 'path', 'media_type'}, ...],
     [{'name', 'error'}, ...], workdir) — the second list is any raster
@@ -225,7 +249,7 @@ def convert(
     input_path = resolve_tiff_source(source, workdir)
     if input_path.lower().endswith(".gpkg"):
         files, errors = _convert_geopackage(
-            input_path, workdir, tables, job_id
+            input_path, workdir, tables, job_id, with_thumbnails
         )
         return files, errors, workdir
 
@@ -248,7 +272,12 @@ def convert(
                 "media_type": "image/tiff",
                 "info": info,
             },
-        ],
+        ]
+        + (
+            _raster_thumbnail(cog_path_3857, "output_cog_thumbnail.png")
+            if with_thumbnails
+            else []
+        ),
         [],
         workdir,
     )
