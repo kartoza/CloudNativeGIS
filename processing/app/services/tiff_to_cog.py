@@ -35,10 +35,12 @@ STATISTICS_KEYS = (
 )
 
 
-def _run(cmd: list) -> None:
+def _run(cmd: list, cwd: Optional[str] = None) -> None:
     logger.info("Running: %s", " ".join(cmd))
     try:
-        subprocess.run(cmd, check=True, capture_output=True, text=True)
+        subprocess.run(
+            cmd, check=True, capture_output=True, text=True, cwd=cwd
+        )
     except subprocess.CalledProcessError as e:
         raise ConversionError(502, f"{cmd[0]} failed: {e.stderr.strip() or e}")
 

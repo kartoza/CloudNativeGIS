@@ -48,6 +48,12 @@ def get_job(job_id: str):
         ],
         # Layers/tables skipped rather than failing the whole job.
         "errors": job.result.get("errors", []),
+        # A job that uploads its files (a mosaic) reports them here.
+        **(
+            {"outputs": job.result["outputs"]}
+            if "outputs" in job.result
+            else {}
+        ),
     }
 
 

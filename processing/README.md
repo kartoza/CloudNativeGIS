@@ -157,6 +157,45 @@ curl http://localhost:8000/api/v1/jobs/<job_id>
 curl http://localhost:8000/api/v1/jobs/<job_id>/result -o output_cog.tif
 ```
 
+### GeoTIFF tiles -> mosaic
+
+`/api/v1/mosaic` turns several GeoTIFF tiles into one mosaic in a single
+job: every tile becomes a COG, then the tiles together get a GDAL VRT
+(tile paths relative to it: `<tile id>/<tile id>.tif`), a web rendering
+(one merged EPSG:3857 COG with embedded statistics, or each tile's own
+EPSG:3857 COG when `merged` is omitted) and a PNG thumbnail. Tiles convert
+in parallel (`LITE_MOSAIC_TILE_WORKERS`).
+
+Unlike the other endpoints, nothing is kept for download: every output is
+uploaded to the presigned PUT URL given for it, so the files go straight
+to the caller's bucket (without this service holding its credentials).
+The finished job reports each file's `size` and `sha256`, and each tile's
+WGS84 `bbox`, under `outputs`:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/mosaic \
+    -H "Content-Type: application/json" \
+    -d '{
+      "tiles": [
+        {"id": "tile-1", "source": "<presigned GET>", "data_upload": "<presigned PUT>"},
+        {"id": "tile-2", "source": "<presigned GET>", "data_upload": "<presigned PUT>"}
+      ],
+      "vrt": {"name": "dem.vrt", "upload": "<presigned PUT>"},
+      "merged": {"name": "dem_3857.tif", "upload": "<presigned PUT>"},
+      "thumbnail": {"upload": "<presigned PUT>"}
+    }'
+# => {"job_id": "...", "status": "processing"}
+
+curl http://localhost:8000/api/v1/jobs/<job_id>
+# => {"status": "done", "results": [], "errors": [], "outputs": {
+#      "tiles": [{"id": "tile-1", "bbox": [...], "data": {"size": ..., "sha256": "..."}}, ...],
+#      "vrt": {...}, "merged": {...}, "thumbnail": {...}}}
+```
+
+Without `merged`, every tile also needs a `web_upload` for its EPSG:3857
+COG (reported as its `web`). The tiles must share CRS, bands, data type
+and nodata; the caller is expected to check that before submitting.
+
 ## S3 / MinIO configuration
 
 `s3://bucket/key` sources require these environment variables (unset by
@@ -189,6 +228,8 @@ now (it never expires); CloudBench's Django backend sends it as
 |--------------------------|---------|---------------------------------------------------------------|
 | `LITE_JOB_MAX_WORKERS`   | `4`     | Max conversions running concurrently in background threads    |
 | `LITE_JOB_RESULT_TTL`    | `3600`  | Seconds a finished, uncollected job's result is kept before being discarded |
+| `LITE_MOSAIC_TILE_WORKERS` | `2`   | Tiles of one mosaic converting at once, within its job        |
+| `LITE_UPLOAD_TIMEOUT`    | `1800`  | Seconds allowed for uploading one output to its presigned URL |
 
 Example run against a local MinIO instance:
 
