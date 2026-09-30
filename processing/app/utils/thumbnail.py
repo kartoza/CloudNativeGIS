@@ -17,6 +17,13 @@ FEATURE_COLOR = "#2d7d9b"
 FILL_OPACITY = 0.5
 VECTOR_TIMEOUT = 120
 RASTER_TIMEOUT = 60
+# Above this many features, drawing each one is too slow (millions of
+# buildings take minutes): the layer is rasterized with GDAL instead.
+LARGE_LAYER_FEATURES = 200_000
+# Pixels along the longer side the large layer is burnt at, before being
+# reprojected and scaled down to SIZE (so its edges come out smooth).
+RASTERIZE_SIZE = 2048
+MARGIN = 0.04
 
 
 def render_vector_thumbnail(
@@ -44,8 +51,80 @@ def render_vector_thumbnail(
     return os.path.exists(output_path)
 
 
+def _hex_rgb(color: str) -> tuple:
+    return tuple(int(color[i:i + 2], 16) for i in (1, 3, 5))
+
+
+def _rasterize_vector(
+    source: str, output_path: str, layer: Optional[str], info: dict
+) -> None:
+    """Draw a large vector layer by rasterizing it with GDAL.
+
+    The features are burnt into a RASTERIZE_SIZE image in the layer's own
+    CRS, reprojected to Web Mercator averaging each pixel's coverage, then
+    coloured as the default style fills them over its background - the
+    same look as a drawn thumbnail, at a glance. Seconds, where
+    drawing millions of features one by one takes minutes.
+    """
+    import numpy
+    from PIL import Image
+
+    workdir = os.path.dirname(os.path.abspath(output_path))
+    burnt = os.path.join(workdir, "thumbnail-burnt.tif")
+    web = os.path.join(workdir, "thumbnail-3857.tif")
+    minx, miny, maxx, maxy = info["total_bounds"]
+    resolution = max(maxx - minx, maxy - miny, 1e-9) / RASTERIZE_SIZE
+    # -at: every pixel a feature touches, as a drawn outline would mark it.
+    rasterize = ["gdal_rasterize", "-q", "-at", "-burn", "255", "-ot", "Byte"]
+    rasterize += ["-init", "0", "-tr", str(resolution), str(resolution)]
+    if not info.get("crs"):
+        rasterize += ["-a_srs", "EPSG:4326"]
+    if layer:
+        rasterize += ["-l", layer]
+    try:
+        subprocess.run(
+            [*rasterize, source, burnt], check=True, capture_output=True
+        )
+        subprocess.run(
+            ["gdalwarp", "-q", "-overwrite", "-t_srs", "EPSG:3857"]
+            + ["-r", "average", burnt, web],
+            check=True,
+            capture_output=True,
+        )
+        coverage = Image.open(web)
+        coverage.load()
+    finally:
+        for path in (burnt, web, f"{web}.aux.xml"):
+            if os.path.exists(path):
+                os.remove(path)
+
+    # Fit into the same box as a drawn thumbnail, margins included.
+    inner = int(SIZE * (1 - 2 * MARGIN))
+    coverage.thumbnail((inner, inner), Image.Resampling.BOX)
+    # The share of each pixel's area features touch: busy areas come out
+    # solid, sparse ones light, like a drawn thumbnail's overlapping fills.
+    alpha = numpy.asarray(coverage, dtype=numpy.float32)[..., None] / 255
+    background = numpy.array(_hex_rgb(BACKGROUND), dtype=numpy.float32)
+    feature = numpy.array(_hex_rgb(FEATURE_COLOR), dtype=numpy.float32)
+    drawn = (background * (1 - alpha) + feature * alpha).astype(numpy.uint8)
+    width, height = coverage.size
+    margin = max(int(max(width, height) * MARGIN / (1 - 2 * MARGIN)), 1)
+    canvas = Image.new(
+        "RGB", (width + 2 * margin, height + 2 * margin), BACKGROUND
+    )
+    canvas.paste(Image.fromarray(drawn, "RGB"), (margin, margin))
+    canvas.save(output_path)
+
+
 def _draw_vector(source: str, output_path: str, layer: Optional[str]):
     """Draw a vector layer (runs in the subprocess)."""
+    import pyogrio
+
+    info = pyogrio.read_info(source, layer=layer)
+    if (info.get("features") or 0) > LARGE_LAYER_FEATURES:
+        _rasterize_vector(source, output_path, layer, info)
+        return
+
     import geopandas
     import matplotlib
 
