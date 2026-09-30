@@ -8,11 +8,6 @@ TMP_DIR = os.environ.get("LITE_TMP_DIR", "/tmp/cng-lite")
 # Timeout (seconds) for downloading a remote source file.
 DOWNLOAD_TIMEOUT = float(os.environ.get("LITE_DOWNLOAD_TIMEOUT", "60"))
 
-# Max allowed size (bytes) for a downloaded source file. Default 500MB.
-MAX_DOWNLOAD_SIZE = int(
-    os.environ.get("LITE_MAX_DOWNLOAD_SIZE", str(500 * 1024 * 1024))
-)
-
 # S3 (or S3-compatible, e.g. MinIO) credentials used to presign GET URLs
 # for `s3://bucket/key` sources. Left unset, s3:// sources are rejected.
 S3_ENDPOINT_URL = os.environ.get("S3_ENDPOINT_URL") or None
@@ -35,3 +30,10 @@ JOB_MAX_WORKERS = int(os.environ.get("LITE_JOB_MAX_WORKERS", "4"))
 # How long (seconds) a finished job's result is kept for collection
 # via GET /api/v1/jobs/{job_id} before being discarded. Default 1 hour.
 JOB_RESULT_TTL = int(os.environ.get("LITE_JOB_RESULT_TTL", str(60 * 60)))
+
+# Timeout (seconds) for uploading one result file to a presigned PUT URL
+# (a mosaic's outputs). Generous: a merged mosaic can be gigabytes.
+UPLOAD_TIMEOUT = float(os.environ.get("LITE_UPLOAD_TIMEOUT", "1800"))
+
+# How many of a mosaic's tiles convert at once, within its one job.
+MOSAIC_TILE_WORKERS = int(os.environ.get("LITE_MOSAIC_TILE_WORKERS", "2"))
