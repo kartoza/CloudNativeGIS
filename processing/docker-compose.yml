@@ -11,4 +11,9 @@ services:
       - "${PORT:-8000}:8000"
     volumes:
       - ${DATA_DIR:-./data}:/data
+      # Downloads and conversions are worked on here
+      - work:/tmp/cng-lite
     restart: unless-stopped
+
+volumes:
+  work:

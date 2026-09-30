@@ -8,11 +8,6 @@ TMP_DIR = os.environ.get("LITE_TMP_DIR", "/tmp/cng-lite")
 # Timeout (seconds) for downloading a remote source file.
 DOWNLOAD_TIMEOUT = float(os.environ.get("LITE_DOWNLOAD_TIMEOUT", "60"))
 
-# Max allowed size (bytes) for a downloaded source file. Default 500MB.
-MAX_DOWNLOAD_SIZE = int(
-    os.environ.get("LITE_MAX_DOWNLOAD_SIZE", str(500 * 1024 * 1024))
-)
-
 # S3 (or S3-compatible, e.g. MinIO) credentials used to presign GET URLs
 # for `s3://bucket/key` sources. Left unset, s3:// sources are rejected.
 S3_ENDPOINT_URL = os.environ.get("S3_ENDPOINT_URL") or None

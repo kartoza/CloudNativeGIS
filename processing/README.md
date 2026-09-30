@@ -231,6 +231,13 @@ now (it never expires); CloudBench's Django backend sends it as
 | `LITE_MOSAIC_TILE_WORKERS` | `2`   | Tiles of one mosaic converting at once, within its job        |
 | `LITE_UPLOAD_TIMEOUT`    | `1800`  | Seconds allowed for uploading one output to its presigned URL |
 
+Source files have no size limit: the disk `LITE_TMP_DIR` (default
+`/tmp/cng-lite`) is on is the limit. A download is refused, or stopped,
+before it would leave less than 10% of that disk (or 1 GB, if less) free
+for the conversion's outputs and other jobs. Mount a volume there sized for
+your largest files - about three times a file's size while it converts -
+rather than leaving it on the container's own filesystem.
+
 Example run against a local MinIO instance:
 
 ```bash
