@@ -26,6 +26,7 @@ from app.utils import thumbnail
 from app.utils.pmtiles_info import read_pmtiles_info
 from app.utils.shapefile_zip import validate_shapefile_zip
 from app.utils.source import resolve_source
+from app.utils.spatial_order import sort_spatially
 
 logger = logging.getLogger(__name__)
 
@@ -46,16 +47,17 @@ PARQUET_MEDIA_TYPE = "application/vnd.apache.parquet"
 
 # Portolan's GeoParquet requirements: GeoParquet 1.1 with a bbox covering
 # column (per-row-group spatial stats), spatially ordered rows, row groups
-# of at most 150k rows, zstd recommended.
+# of at most 150k rows, zstd recommended. The rows are ordered afterwards
+# (see sort_spatially): GDAL's SORT_BY_BBOX doesn't order them closely
+# enough for Portolan.
+GEOPARQUET_ROW_GROUP_SIZE = 100000
 GEOPARQUET_OPTIONS = [
     "-lco",
     "COMPRESSION=ZSTD",
     "-lco",
     "WRITE_COVERING_BBOX=YES",
     "-lco",
-    "SORT_BY_BBOX=YES",
-    "-lco",
-    "ROW_GROUP_SIZE=100000",
+    f"ROW_GROUP_SIZE={GEOPARQUET_ROW_GROUP_SIZE}",
 ]
 
 
@@ -198,7 +200,8 @@ def _write_geoparquet(
     """Write one source layer as GeoParquet, keeping its original CRS.
 
     `layer_name` picks the layer out of a multi-layer source (GeoPackage);
-    omit it for a single-layer source (shapefile).
+    omit it for a single-layer source (shapefile). Its rows are then put in
+    spatial order (see sort_spatially).
     """
     cmd = [
         "ogr2ogr",
@@ -213,6 +216,7 @@ def _write_geoparquet(
     if layer_name:
         cmd.append(layer_name)
     _run(cmd)
+    sort_spatially(parquet_path, GEOPARQUET_ROW_GROUP_SIZE)
 
 
 def _export_for_tiling(
