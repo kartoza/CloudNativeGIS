@@ -100,7 +100,9 @@ def _translate_cog_3857(input_path: str, output_path: str) -> None:
     _check_embedded_statistics(output_path)
 
 
-def _raster_thumbnail(cog_path_3857: str, name: str) -> list:
+def _raster_thumbnail(
+    cog_path_3857: str, name: str, layer: Optional[str] = None
+) -> list:
     """Render a raster's thumbnail as a result file (nothing on failure)."""
     path = os.path.join(os.path.dirname(cog_path_3857), name)
     if not thumbnail.render_raster_thumbnail(cog_path_3857, path):
@@ -111,6 +113,8 @@ def _raster_thumbnail(cog_path_3857: str, name: str) -> list:
             "path": path,
             "media_type": thumbnail.MEDIA_TYPE,
             "info": {},
+            "layer": layer,
+            "role": "thumbnail",
         }
     ]
 
@@ -191,6 +195,8 @@ def _convert_geopackage(
                 "path": cog_path,
                 "media_type": "image/tiff",
                 "info": info,
+                "layer": table_name,
+                "role": "data",
             }
         )
         files.append(
@@ -199,11 +205,15 @@ def _convert_geopackage(
                 "path": cog_path_3857,
                 "media_type": "image/tiff",
                 "info": info,
+                "layer": table_name,
+                "role": "visual",
             }
         )
         if with_thumbnails:
             files.extend(
-                _raster_thumbnail(cog_path_3857, f"{stem}_cog_thumbnail.png")
+                _raster_thumbnail(
+                    cog_path_3857, f"{stem}_cog_thumbnail.png", table_name
+                )
             )
 
     converted = total - len(errors)
@@ -267,12 +277,16 @@ def convert(
                 "path": cog_path,
                 "media_type": "image/tiff",
                 "info": info,
+                "layer": None,
+                "role": "data",
             },
             {
                 "name": "output_cog_3857.tif",
                 "path": cog_path_3857,
                 "media_type": "image/tiff",
                 "info": info,
+                "layer": None,
+                "role": "visual",
             },
         ]
         + (
