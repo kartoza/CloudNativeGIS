@@ -303,7 +303,9 @@ def _convert_layer(
     )
 
 
-def _thumbnail_output(name: str, path: str) -> list:
+def _thumbnail_output(
+    name: str, path: str, layer: Optional[str] = None
+) -> list:
     """Return the thumbnail as a result file, or nothing if not rendered."""
     if not os.path.exists(path):
         return []
@@ -313,6 +315,8 @@ def _thumbnail_output(name: str, path: str) -> list:
             "path": path,
             "media_type": thumbnail.MEDIA_TYPE,
             "info": {},
+            "layer": layer,
+            "role": "thumbnail",
         }
     ]
 
@@ -322,10 +326,16 @@ def _layer_outputs(
     pmtiles_path: str,
     parquet_path: str,
     thumbnail_path: Optional[str] = None,
+    layer: Optional[str] = None,
 ) -> list:
-    """Return a converted layer's result files (the thumbnail, if drawn)."""
+    """Return a converted layer's result files (the thumbnail, if drawn).
+
+    Each is tagged with its layer (None for a single-layer source) and
+    role - data (GeoParquet), visual (PMTiles), thumbnail - by which a
+    caller's upload URLs are matched to it (see app.utils.upload).
+    """
     thumbnail_files = (
-        _thumbnail_output(f"{stem}_thumbnail.png", thumbnail_path)
+        _thumbnail_output(f"{stem}_thumbnail.png", thumbnail_path, layer)
         if thumbnail_path
         else []
     )
@@ -335,12 +345,16 @@ def _layer_outputs(
             "path": parquet_path,
             "media_type": PARQUET_MEDIA_TYPE,
             "info": read_parquet_info(parquet_path),
+            "layer": layer,
+            "role": "data",
         },
         {
             "name": f"{stem}.pmtiles",
             "path": pmtiles_path,
             "media_type": PMTILES_MEDIA_TYPE,
             "info": read_pmtiles_info(pmtiles_path),
+            "layer": layer,
+            "role": "visual",
         },
     ]
 
@@ -430,7 +444,9 @@ def _convert_geopackage(
             f"{stem}.pmtiles + {stem}.parquet",
         )
         files.extend(
-            _layer_outputs(stem, pmtiles_path, parquet_path, thumbnail_path)
+            _layer_outputs(
+                stem, pmtiles_path, parquet_path, thumbnail_path, layer_name
+            )
         )
 
     converted = total - len(errors)

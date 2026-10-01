@@ -157,6 +157,38 @@ curl http://localhost:8000/api/v1/jobs/<job_id>
 curl http://localhost:8000/api/v1/jobs/<job_id>/result -o output_cog.tif
 ```
 
+### Uploading results straight to a bucket
+
+`/api/v1/pmtiles` and `/api/v1/cog` can upload their results themselves
+instead of keeping them for `/api/v1/jobs/{job_id}/result/...`: give
+`uploads`, a presigned PUT URL per layer and role, and each file goes
+straight to the caller's bucket (without this service holding its
+credentials). `layer` names a GeoPackage layer or raster table as
+requested; omit it for a shapefile or a TIFF. Roles are `data`
+(GeoParquet / COG), `visual` (PMTiles / EPSG:3857 COG) and `thumbnail`;
+`content_type` is the one each URL was signed for, sent as is.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/pmtiles \
+    -H "Content-Type: application/json" \
+    -d '{
+      "source": "<presigned GET>",
+      "thumbnail": true,
+      "uploads": [{"files": {
+        "data": {"url": "<presigned PUT>", "content_type": "application/vnd.apache.parquet"},
+        "visual": {"url": "<presigned PUT>", "content_type": "application/vnd.pmtiles"},
+        "thumbnail": {"url": "<presigned PUT>", "content_type": "image/png"}
+      }}]
+    }'
+
+curl http://localhost:8000/api/v1/jobs/<job_id>
+# => {"status": "done", "results": [], "errors": [], "outputs": {"layers": [
+#      {"files": {"data": {"size": ..., "sha256": "...", "info": {...}}, ...}}]}}
+```
+
+Nothing is kept to collect: the job's workdir goes once its uploads are
+done. A converted layer the caller gave no URLs for is listed in `errors`.
+
 ### GeoTIFF tiles -> mosaic
 
 `/api/v1/mosaic` turns several GeoTIFF tiles into one mosaic in a single
