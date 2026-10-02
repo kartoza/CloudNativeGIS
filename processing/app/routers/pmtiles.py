@@ -1,4 +1,7 @@
-"""Shapefile/GeoPackage -> PMTiles conversion endpoint."""
+"""Vector -> PMTiles conversion endpoint.
+
+Sources: a shapefile (zip), GeoPackage, GeoJSON, FlatGeobuf or KML/KMZ.
+"""
 
 from typing import List, Optional
 
@@ -26,7 +29,10 @@ class PMTilesRequest(BaseModel):
 
 @router.post("/api/v1/pmtiles", status_code=202)
 def create_pmtiles(body: PMTilesRequest):
-    """Start converting a shapefile (zip) or GeoPackage to PMTiles.
+    """Start converting a vector source to PMTiles + GeoParquet.
+
+    The source is a shapefile (zip), GeoPackage, GeoJSON, FlatGeobuf or
+    KML/KMZ.
 
     Accepts a URL or local path. Returns a job id right away; poll
     GET /api/v1/jobs/{job_id} for status. With `uploads`, each layer's

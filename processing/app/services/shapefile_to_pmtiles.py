@@ -1,4 +1,7 @@
-"""Convert a shapefile (zip) or GeoPackage to PMTiles + GeoParquet.
+"""Convert a vector source to PMTiles + GeoParquet.
+
+Sources: a shapefile (zip), a GeoPackage, or a single GeoJSON, FlatGeobuf
+or KML/KMZ file.
 
 Each vector layer yields a pair: a GeoParquet file (the analysis-ready
 data, in the source's own CRS) and a PMTiles file (the web-map rendering,
@@ -25,7 +28,7 @@ from app.utils.parquet_info import read_parquet_info
 from app.utils import thumbnail
 from app.utils.pmtiles_info import read_pmtiles_info
 from app.utils.shapefile_zip import validate_shapefile_zip
-from app.utils.source import resolve_source
+from app.utils.source import VECTOR_FILE_SUFFIXES, resolve_source
 from app.utils.spatial_order import sort_spatially
 
 logger = logging.getLogger(__name__)
@@ -189,6 +192,50 @@ def _source_srs(source: str, layer_name: Optional[str]) -> list:
         return []
     logger.info("%s has no coordinate system: assuming WGS84", source)
     return ["-s_srs", "EPSG:4326"]
+
+
+def _single_layer(path: str, workdir: str) -> str:
+    """Read path as one layer, merging a KML/KMZ's folders if several.
+
+    LIBKML reads each <Folder> as its own layer, and GeoParquet holds one,
+    so a multi-folder KML is merged into a GeoPackage layer first - each
+    feature's folder kept in a "folder" column. Other sources (GeoJSON,
+    FlatGeobuf, a single-folder KML) are read as they are.
+    """
+    import pyogrio
+
+    try:
+        layers = pyogrio.list_layers(path)
+    except Exception as e:
+        raise ConversionError(400, f"Could not read the file: {e}")
+    if len(layers) == 0:
+        raise ConversionError(
+            400, "The file has no vector layers to convert."
+        )
+    if len(layers) == 1:
+        return path
+    merged_path = os.path.join(workdir, "merged.gpkg")
+    _run(
+        [
+            "ogrmerge.py",
+            "-single",
+            "-f",
+            "GPKG",
+            "-o",
+            merged_path,
+            "-nln",
+            "merged",
+            # As every other source's GeoParquet names it (not "geom").
+            "-lco",
+            "GEOMETRY_NAME=geometry",
+            "-src_layer_field_name",
+            "folder",
+            "-src_layer_field_content",
+            "{LAYER_NAME}",
+            path,
+        ]
+    )
+    return merged_path
 
 
 def _write_geoparquet(
@@ -474,7 +521,10 @@ def convert(
     job_id: Optional[str] = None,
     with_thumbnails: bool = False,
 ) -> tuple:
-    """Convert source (shapefile zip or GeoPackage; URL or local path).
+    """Convert source: a URL or local path.
+
+    The source is a shapefile zip, GeoPackage, GeoJSON, FlatGeobuf or
+    KML/KMZ.
 
     `layers` (GeoPackage only) selects which layers to include; omit to
     include all of them — each becomes its own PMTiles + GeoParquet pair,
@@ -486,8 +536,9 @@ def convert(
 
     Returns a tuple of ([{'name', 'path', 'media_type', 'info'}, ...],
     [{'name', 'error'}, ...], workdir) — the second list is any GeoPackage
-    layers that were skipped (always empty for a shapefile). The caller is
-    responsible for removing workdir once the response has been sent.
+    layers that were skipped (always empty for a single-layer source). The
+    caller is responsible for removing workdir once the response has been
+    sent.
     """
     logger.info("Job %s: starting PMTiles conversion of %s", job_id, source)
     os.makedirs(TMP_DIR, exist_ok=True)
@@ -502,10 +553,14 @@ def convert(
         )
         return files, errors, workdir
 
-    validate_shapefile_zip(input_path)
+    if input_path.lower().endswith(VECTOR_FILE_SUFFIXES):
+        layer_source = _single_layer(input_path, workdir)
+    else:
+        validate_shapefile_zip(input_path)
+        layer_source = f"/vsizip/{input_path}"
     report = _reporter(job_id, "", 0, 1)
     pmtiles_path, parquet_path, thumbnail_path = _convert_layer(
-        f"/vsizip/{input_path}",
+        layer_source,
         None,
         "default",
         "output",
