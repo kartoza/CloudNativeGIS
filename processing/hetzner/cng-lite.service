@@ -1,0 +1,22 @@
+[Unit]
+Description=CloudNativeGIS Processing (Lite)
+After=docker.service
+Requires=docker.service
+# Written by cloud-init from the server's user_data. Deliberately not enabled
+# at boot: cloud-init starts it once the token is in place.
+ConditionPathExists=/etc/cng-lite/env
+
+[Service]
+# An empty LITE_API_TOKEN disables auth entirely - never start without one.
+ExecStartPre=/bin/sh -c 'grep -qE "^LITE_API_TOKEN=.+" /etc/cng-lite/env'
+ExecStartPre=-/usr/bin/docker rm -f cng-lite
+ExecStart=/usr/bin/docker run --rm --name cng-lite \
+  --env-file /etc/cng-lite/env \
+  -p 8000:8000 \
+  __IMAGE__
+ExecStop=/usr/bin/docker stop cng-lite
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

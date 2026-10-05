@@ -32,3 +32,9 @@ docs/mkdocs.yml
 .claude/
 Kartoza-Compliance-Plan.md
 PROMPT.log
+
+# Hetzner snapshot settings (holds HCLOUD_TOKEN)
+processing/hetzner/.env
+
+# Servers started by processing/hetzner/hetzner.py (hold API tokens)
+processing/hetzner/.servers/
