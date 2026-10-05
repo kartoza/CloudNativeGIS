@@ -6,15 +6,16 @@ cng-lite.pkr.hcl, gives it its own freshly generated LITE_API_TOKEN (through
 cloud-init, see cng-lite.service) and waits until the API answers with that
 token:
 
-    1. find the snapshot            GET  /v1/images?type=snapshot&label_selector=...
-    2. create the server            POST /v1/servers   (token injected via cloud-init)
-    3. wait for it to be running    GET  /v1/actions/{id}
-    4. wait for cng-lite            GET  http://<ip>:8000/health, then check the token
+    1. find the snapshot      GET  /v1/images?type=snapshot&label_selector=...
+    2. create the server      POST /v1/servers (token injected via cloud-init)
+    3. wait until running     GET  /v1/actions/{id}
+    4. wait for cng-lite      GET  http://<ip>:8000/health, then check token
 
 `HetznerClient.delete()` deletes such a server again - it is billed per
 started hour until it is deleted. Standard library only.
 
-    client = HetznerClient(hcloud_token="...", version="0.0.3", location="hel1")
+    client = HetznerClient(hcloud_token="...", version="0.0.3",
+                           location="hel1")
     server = client.spin_up("cng-lite-test")    # {"url", "token", "id", ...}
     client.delete("cng-lite-test")
 
@@ -29,7 +30,7 @@ from environment variables, filled in by the Makefile from .env:
     SERVER_TYPE      default: cx23
     LOCATION         default: fsn1
     SSH_KEYS         comma-separated Hetzner SSH key names/IDs, for debugging
-    FIREWALL_ID      Hetzner firewall to attach (restrict port 8000 to the caller)
+    FIREWALL_ID      Hetzner firewall to attach (restrict port 8000 to caller)
     BOOT_TIMEOUT     seconds to wait for the API (default: 300)
     KEEP_ON_FAILURE  1 to keep the server if spin-up fails (default: delete it)
 
@@ -50,10 +51,12 @@ from pathlib import Path
 
 
 class HetznerError(Exception):
-    pass
+    """A Hetzner Cloud API call or a spin-up step failed."""
 
 
 class HetznerClient:
+    """Starts and deletes cng-lite servers from a Hetzner Cloud snapshot."""
+
     API = "https://api.hetzner.cloud/v1"
     SERVERS_DIR = Path(__file__).resolve().parent / ".servers"
     # Only servers carrying these labels are ever deleted.
@@ -81,8 +84,11 @@ runcmd:
         boot_timeout=300,
         keep_on_failure=False,
     ):
+        """Configure the client; only `hcloud_token` is required."""
         if not hcloud_token:
-            raise HetznerError("A Hetzner Cloud API token (Read & Write) is required.")
+            raise HetznerError(
+                "A Hetzner Cloud API token (Read & Write) is required."
+            )
         self.hcloud_token = hcloud_token
         self.version = version
         self.server_type = server_type
@@ -92,7 +98,7 @@ runcmd:
         self.boot_timeout = boot_timeout
         self.keep_on_failure = keep_on_failure
 
-    # -- Public ------------------------------------------------------------------
+    # -- Public --------------------------------------------------------------
 
     def spin_up(self, server_name=""):
         """Start a server from the snapshot and wait for cng-lite.
@@ -101,7 +107,8 @@ runcmd:
         env_file). Raises HetznerError on failure; a server that was created
         but never became ready is deleted (unless `keep_on_failure`).
         """
-        server_name = server_name or f"cng-lite-{datetime.now(timezone.utc):%Y%m%d-%H%M%S}"
+        now = datetime.now(timezone.utc)
+        server_name = server_name or f"cng-lite-{now:%Y%m%d-%H%M%S}"
         token = secrets.token_hex(32)
 
         snapshot_id = self._find_snapshot()
@@ -112,8 +119,8 @@ runcmd:
 
         try:
             self.log(
-                f"Server {server['id']} created at {server['created']}, IP {ip} "
-                "- waiting for it to start"
+                f"Server {server['id']} created at {server['created']}, "
+                f"IP {ip} - waiting for it to start"
             )
             self._wait_for_action(created["action"]["id"])
             self._wait_for_cng_lite(base_url, token)
@@ -128,7 +135,8 @@ runcmd:
                     self._delete_server(server)
                 except HetznerError:
                     self.log(
-                        f"Could not delete server {server['id']} - delete it in the Hetzner Console!"
+                        f"Could not delete server {server['id']} - "
+                        "delete it in the Hetzner Console!"
                     )
             if isinstance(exc, KeyboardInterrupt):
                 raise HetznerError("Interrupted.") from exc
@@ -159,28 +167,37 @@ runcmd:
         if not servers:
             raise HetznerError(f"No server named {server_name}.")
         server = servers[0]
-        if any(server["labels"].get(key) != value for key, value in self.LABELS.items()):
+        labels = server["labels"]
+        if any(labels.get(key) != value for key, value in self.LABELS.items()):
             raise HetznerError(
                 f"Server {server_name} wasn't started by spin_up() "
                 f"(labels {server['labels']}); not deleting it."
             )
         self._delete_server(server)
 
-    # -- Steps -------------------------------------------------------------------
+    # -- Steps ---------------------------------------------------------------
 
     def _find_snapshot(self):
-        selector = "app=cng-lite" + (f",version={self.version}" if self.version else "")
+        selector = "app=cng-lite"
+        if self.version:
+            selector += f",version={self.version}"
         self.log(f"Looking up newest snapshot with labels: {selector}")
         query = urllib.parse.urlencode(
-            {"type": "snapshot", "sort": "created:desc", "label_selector": selector}
+            {
+                "type": "snapshot",
+                "sort": "created:desc",
+                "label_selector": selector,
+            }
         )
         images = self.api("GET", f"/images?{query}")["images"]
         if not images:
             raise HetznerError(
-                f"No snapshot found with labels {selector}. Run 'make generate-snapshot' first."
+                f"No snapshot found with labels {selector}. "
+                "Run 'make generate-snapshot' first."
             )
-        self.log(f"Using snapshot {images[0]['id']} ({images[0]['description']})")
-        return images[0]["id"]
+        image = images[0]
+        self.log(f"Using snapshot {image['id']} ({image['description']})")
+        return image["id"]
 
     def _create_server(self, server_name, snapshot_id, token):
         payload = {
@@ -197,7 +214,10 @@ runcmd:
         if self.firewall_id:
             payload["firewalls"] = [{"firewall": int(self.firewall_id)}]
 
-        self.log(f"Creating server {server_name} ({self.server_type}, {self.location})")
+        self.log(
+            f"Creating server {server_name} "
+            f"({self.server_type}, {self.location})"
+        )
         return self.api("POST", "/servers", payload)
 
     def _wait_for_action(self, action_id):
@@ -206,8 +226,11 @@ runcmd:
             if action["status"] == "success":
                 return
             if action["status"] == "error":
-                message = (action.get("error") or {}).get("message", "unknown error")
-                raise HetznerError(f"Hetzner action {action['command']} failed: {message}")
+                error = action.get("error") or {}
+                message = error.get("message", "unknown error")
+                raise HetznerError(
+                    f"Hetzner action {action['command']} failed: {message}"
+                )
             time.sleep(2)
 
     def _wait_for_cng_lite(self, base_url, token):
@@ -216,12 +239,14 @@ runcmd:
         while self.http_status(f"{base_url}/health") != 200:
             if time.monotonic() >= deadline:
                 raise HetznerError(
-                    f"cng-lite did not become healthy within {self.boot_timeout}s."
+                    "cng-lite did not become healthy within "
+                    f"{self.boot_timeout}s."
                 )
             time.sleep(3)
 
         # /health needs no token; a job lookup does. With the right token an
-        # unknown job is a 404, without one it must be a 401 (else auth is off).
+        # unknown job is a 404, without one it must be a 401 (else auth is
+        # off).
         check_url = f"{base_url}/api/v1/jobs/token-check"
         with_token = self.http_status(check_url, token)
         without_token = self.http_status(check_url)
@@ -256,7 +281,8 @@ runcmd:
     @staticmethod
     def _print_summary(result):
         # Billed per started hour from `created`; keep a few minutes of margin.
-        delete_before = datetime.fromisoformat(result["created"]) + timedelta(minutes=55)
+        created = datetime.fromisoformat(result["created"])
+        delete_before = created + timedelta(minutes=55)
         print(
             f"""
 Server ready
@@ -268,11 +294,12 @@ Server ready
   saved to  {result['env_file']}
 
 Billed per started hour until the server is DELETED (powering off doesn't
-stop billing). Delete before {delete_before:%Y-%m-%d %H:%M:%S %Z} to stay within the first hour:
+stop billing). Delete before {delete_before:%Y-%m-%d %H:%M:%S %Z} to stay
+within the first hour:
   make delete SERVER_NAME={result['name']}"""
         )
 
-    # -- HTTP helpers ------------------------------------------------------------
+    # -- HTTP helpers --------------------------------------------------------
 
     def api(self, method, path, body=None):
         """Call the Hetzner Cloud API; returns the decoded JSON body."""
@@ -294,18 +321,22 @@ stop billing). Delete before {delete_before:%Y-%m-%d %H:%M:%S %Z} to stay within
             except (ValueError, KeyError):
                 message = exc.reason
             raise HetznerError(
-                f"Hetzner API {method} {path} failed (HTTP {exc.code}): {message}"
+                f"Hetzner API {method} {path} failed "
+                f"(HTTP {exc.code}): {message}"
             ) from exc
         except urllib.error.URLError as exc:
-            raise HetznerError(f"Could not reach the Hetzner API: {exc.reason}") from exc
+            raise HetznerError(
+                f"Could not reach the Hetzner API: {exc.reason}"
+            ) from exc
         return json.loads(content) if content else {}
 
     @staticmethod
     def http_status(url, token=None):
-        """HTTP status of a GET to cng-lite, or None if it isn't reachable yet."""
+        """HTTP status of a GET to cng-lite, or None if not reachable yet."""
         headers = {"Authorization": f"Bearer {token}"} if token else {}
+        request = urllib.request.Request(url, headers=headers)
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=5):
+            with urllib.request.urlopen(request, timeout=5):
                 return 200
         except urllib.error.HTTPError as exc:
             return exc.code
@@ -314,15 +345,21 @@ stop billing). Delete before {delete_before:%Y-%m-%d %H:%M:%S %Z} to stay within
 
     @staticmethod
     def log(message):
+        """Print a progress message to stderr."""
         print(f"==> {message}", file=sys.stderr, flush=True)
 
 
 def main():
+    """Command line entry point: spin-up or delete."""
     parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     commands = parser.add_subparsers(dest="command", required=True)
-    spin_up = commands.add_parser("spin-up", help="start a server from the snapshot")
+    spin_up = commands.add_parser(
+        "spin-up", help="start a server from the snapshot"
+    )
     spin_up.add_argument("server_name", nargs="?", default="")
-    delete = commands.add_parser("delete", help="delete a server started by spin-up")
+    delete = commands.add_parser(
+        "delete", help="delete a server started by spin-up"
+    )
     delete.add_argument("server_name")
     args = parser.parse_args()
 
@@ -333,7 +370,11 @@ def main():
             version=env.get("VERSION", ""),
             server_type=env.get("SERVER_TYPE") or "cx23",
             location=env.get("LOCATION") or "fsn1",
-            ssh_keys=[key.strip() for key in env.get("SSH_KEYS", "").split(",") if key.strip()],
+            ssh_keys=[
+                key.strip()
+                for key in env.get("SSH_KEYS", "").split(",")
+                if key.strip()
+            ],
             firewall_id=env.get("FIREWALL_ID") or None,
             boot_timeout=int(env.get("BOOT_TIMEOUT") or 300),
             keep_on_failure=env.get("KEEP_ON_FAILURE") == "1",
