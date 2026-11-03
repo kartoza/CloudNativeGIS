@@ -51,7 +51,8 @@ TIPPECANOE_MAX_TIMEOUT = 3 * 60 * 60
 # side blow-up of that same z5 tile: coarse and blocky exactly at the zoom
 # (e.g. "the whole country at once") someone actually wants to look at. Each
 # zoom level floored up roughly doubles that layer's tippecanoe output, so
-# this is deliberately modest; a request can ask for more (min_meaningful_zoom).
+# this is deliberately modest; a request can ask for more
+# (min_meaningful_zoom).
 # A floor forced well above a genuinely low natural guess (a single huge,
 # simple polygon) costs real tiling time - the per-GB tippecanoe_timeout below
 # is what bounds that, same as it already bounds -zg's own worst case.
@@ -157,16 +158,17 @@ def _tile(
     report: Report = lambda *_: None,
     min_meaningful_zoom: Optional[int] = None,
 ) -> None:
-    """Tiles geojson_path with an adaptively-guessed max zoom, floored at
-    `min_meaningful_zoom` (default DEFAULT_MIN_MEANINGFUL_ZOOM; see there).
+    """Tile geojson_path at an adaptively-guessed max zoom.
 
-    geojson_path is line-delimited GeoJSON (GeoJSONSeq), which tippecanoe
-    reads in parallel (-P). --smallest-maximum-zoom-guess is -zg's own
-    density-based guess with a floor: unlike plain -zg it never refuses to
-    guess (even a single feature just gets the floor), so there is no
-    separate fallback to handle here. A blanket *fixed* zoom is still
-    avoided: a feature denser than the floor keeps whatever higher zoom its
-    own guess calls for.
+    Floored at `min_meaningful_zoom` (default
+    DEFAULT_MIN_MEANINGFUL_ZOOM; see there). geojson_path is
+    line-delimited GeoJSON (GeoJSONSeq), which tippecanoe reads in
+    parallel (-P). --smallest-maximum-zoom-guess is -zg's own
+    density-based guess with a floor: unlike plain -zg it never
+    refuses to guess (even a single feature just gets the floor), so
+    there is no separate fallback to handle here. A blanket *fixed*
+    zoom is still avoided: a feature denser than the floor keeps
+    whatever higher zoom its own guess calls for.
     """
     timeout = tippecanoe_timeout(geojson_path)
     floor = (
@@ -564,7 +566,8 @@ def convert(
     `job_id`, if given, receives live per-layer progress via
     app.jobs.update_detail. `with_thumbnails` also renders each layer's
     "{stem}_thumbnail.png" from its default style. `min_meaningful_zoom`
-    floors the maxzoom tiling guesses - see _tile / DEFAULT_MIN_MEANINGFUL_ZOOM.
+    floors the maxzoom tiling guesses - see
+    _tile / DEFAULT_MIN_MEANINGFUL_ZOOM.
 
     Returns a tuple of ([{'name', 'path', 'media_type', 'info'}, ...],
     [{'name', 'error'}, ...], workdir) — the second list is any GeoPackage
