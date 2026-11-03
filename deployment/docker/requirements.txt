@@ -40,6 +40,13 @@ redis==4.3.4
 
 # Library to handle geospatial functions
 GeoAlchemy2==0.15.1
+# GeoAlchemy2 0.15.1 only declares "SQLAlchemy>=1.4", so an unpinned install
+# drifts to whatever is newest - SQLAlchemy 2.1 made ColumnCollection an
+# abstract base class GeoAlchemy2 0.15.1 still instantiates directly
+# (TypeError on every geopanda_to_postgis/create_id_field call), and its
+# default driver for a bare "postgresql://" URL became psycopg (v3), not
+# installed here (only psycopg2-binary is). Capped at the last 2.0.x release.
+SQLAlchemy==2.0.55
 geopandas==0.14.4
 drf-yasg==1.21.7
 
