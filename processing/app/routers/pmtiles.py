@@ -23,6 +23,13 @@ class PMTilesRequest(BaseModel):
     # Each layer is converted to its own PMTiles file.
     layers: Optional[List[str]] = None
     thumbnail: bool = False
+    # The zoom tippecanoe's maxzoom guess (-zg) is floored to, so a layer of
+    # many small, densely-packed features (e.g. neighbourhood polygons) isn't
+    # left looking coarse at the zoom it's actually viewed at - see
+    # shapefile_to_pmtiles.DEFAULT_MIN_MEANINGFUL_ZOOM for the default and the
+    # trade-off (a higher floor means bigger files and longer tiling, floored
+    # only when the data's own guess is lower).
+    min_meaningful_zoom: Optional[int] = None
     # Upload each layer's results here rather than keeping them to collect.
     uploads: Optional[List[LayerUploads]] = None
 
@@ -38,6 +45,10 @@ def create_pmtiles(body: PMTilesRequest):
     GET /api/v1/jobs/{job_id} for status. With `uploads`, each layer's
     results go straight to those presigned URLs and the finished job
     reports them as `outputs`.
+
+    `min_meaningful_zoom` (optional): see PMTilesRequest - raise it if a
+    layer of small, densely-packed polygons (e.g. admin boundaries) still
+    looks too simplified at the zoom it's actually viewed at.
     """
 
     def work(job_id: str) -> dict:
@@ -46,6 +57,7 @@ def create_pmtiles(body: PMTilesRequest):
             layers=body.layers,
             job_id=job_id,
             with_thumbnails=body.thumbnail,
+            min_meaningful_zoom=body.min_meaningful_zoom,
         )
         return deliver(files, errors, workdir, body.uploads, job_id)
 

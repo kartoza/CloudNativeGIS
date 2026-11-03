@@ -42,6 +42,21 @@ TIPPECANOE_BASE_TIMEOUT = 300
 TIPPECANOE_TIMEOUT_PER_GB = 20 * 60
 TIPPECANOE_MAX_TIMEOUT = 3 * 60 * 60
 
+# -zg's own maxzoom guess, floored to this zoom (--smallest-maximum-zoom-guess)
+# rather than used as-is. -zg guesses from the *typical* spacing between
+# features, which a layer with both dense and sparse areas (a country's
+# neighbourhood polygons: small and packed in cities, large and sparse
+# elsewhere) can get dragged down by - e.g. the whole dataset guessing z5 only
+# because of its sparser areas, which then makes every zoom above z5 a client-
+# side blow-up of that same z5 tile: coarse and blocky exactly at the zoom
+# (e.g. "the whole country at once") someone actually wants to look at. Each
+# zoom level floored up roughly doubles that layer's tippecanoe output, so
+# this is deliberately modest; a request can ask for more (min_meaningful_zoom).
+# A floor forced well above a genuinely low natural guess (a single huge,
+# simple polygon) costs real tiling time - the per-GB tippecanoe_timeout below
+# is what bounds that, same as it already bounds -zg's own worst case.
+DEFAULT_MIN_MEANINGFUL_ZOOM = 9
+
 # A step's report of its progress: (what it's doing, fraction of it done).
 Report = Callable[[str, float], None]
 
@@ -140,39 +155,45 @@ def _tile(
     layer_name: str,
     geojson_path: str,
     report: Report = lambda *_: None,
+    min_meaningful_zoom: Optional[int] = None,
 ) -> None:
-    """Tiles geojson_path with an adaptively-guessed max zoom (-zg).
+    """Tiles geojson_path with an adaptively-guessed max zoom, floored at
+    `min_meaningful_zoom` (default DEFAULT_MIN_MEANINGFUL_ZOOM; see there).
 
     geojson_path is line-delimited GeoJSON (GeoJSONSeq), which tippecanoe
-    reads in parallel (-P). Falls back to a low fixed zoom only for the
-    one case -zg can't handle at all — too few distinct feature locations
-    to guess from (e.g. a single point). A blanket fixed zoom is
-    deliberately avoided otherwise: forcing a high zoom on a huge, simple
-    feature (e.g. a near-world-sized polygon) makes tippecanoe try to tile
-    it down to street level, which can run for hours — -zg picks a zoom
-    that actually matches the data.
+    reads in parallel (-P). --smallest-maximum-zoom-guess is -zg's own
+    density-based guess with a floor: unlike plain -zg it never refuses to
+    guess (even a single feature just gets the floor), so there is no
+    separate fallback to handle here. A blanket *fixed* zoom is still
+    avoided: a feature denser than the floor keeps whatever higher zoom its
+    own guess calls for.
     """
-    # --force: -zg can fail partway through after already creating
-    # pmtiles_path, so a same-path retry (the -z0 fallback below) would
-    # otherwise hit "tileset already exists" instead of actually retrying.
-    base_cmd = [
-        "tippecanoe",
-        "--force",
-        "-P",
-        "--projection=EPSG:4326",
-        "-o",
-        pmtiles_path,
-        "-l",
-        layer_name,
-        geojson_path,
-    ]
     timeout = tippecanoe_timeout(geojson_path)
-    try:
-        _run_tippecanoe(base_cmd[:1] + ["-zg"] + base_cmd[1:], timeout, report)
-    except ConversionError as e:
-        if "Can't guess maxzoom" not in e.message:
-            raise
-        _run_tippecanoe(base_cmd[:1] + ["-z0"] + base_cmd[1:], timeout, report)
+    floor = (
+        DEFAULT_MIN_MEANINGFUL_ZOOM
+        if min_meaningful_zoom is None
+        else min_meaningful_zoom
+    )
+    _run_tippecanoe(
+        [
+            "tippecanoe",
+            "--force",
+            "-P",
+            "--projection=EPSG:4326",
+            f"--smallest-maximum-zoom-guess={floor}",
+            # Simplify a shared edge between adjacent polygons (e.g.
+            # neighbouring admin boundaries) the same way on both sides,
+            # so low zoom doesn't show a gap or sliver along it.
+            "--no-simplification-of-shared-nodes",
+            "-o",
+            pmtiles_path,
+            "-l",
+            layer_name,
+            geojson_path,
+        ],
+        timeout,
+        report,
+    )
 
 
 def _source_srs(source: str, layer_name: Optional[str]) -> list:
@@ -288,6 +309,7 @@ def _convert_layer(
     workdir: str,
     report: Report,
     with_thumbnail: bool = False,
+    min_meaningful_zoom: Optional[int] = None,
 ) -> tuple:
     """Convert one layer: (pmtiles path, parquet path, thumbnail or None).
 
@@ -339,7 +361,13 @@ def _convert_layer(
                 f"{step} (PMTiles): {percent}% · {note()}", best["fraction"]
             )
 
-        _tile(pmtiles_path, tile_layer, geojson_path, tiling)
+        _tile(
+            pmtiles_path,
+            tile_layer,
+            geojson_path,
+            tiling,
+            min_meaningful_zoom,
+        )
         os.remove(geojson_path)
         waiting = [name for name, task in side.items() if not task.done()]
         if waiting:
@@ -434,6 +462,7 @@ def _convert_geopackage(
     layers: Optional[List[str]],
     job_id: Optional[str],
     with_thumbnails: bool = False,
+    min_meaningful_zoom: Optional[int] = None,
 ) -> tuple:
     """Convert each requested layer to its own PMTiles + GeoParquet pair.
 
@@ -478,6 +507,7 @@ def _convert_geopackage(
                 workdir,
                 report,
                 with_thumbnails,
+                min_meaningful_zoom,
             )
         except ConversionError as e:
             logger.warning(
@@ -520,6 +550,7 @@ def convert(
     layers: Optional[List[str]] = None,
     job_id: Optional[str] = None,
     with_thumbnails: bool = False,
+    min_meaningful_zoom: Optional[int] = None,
 ) -> tuple:
     """Convert source: a URL or local path.
 
@@ -532,7 +563,8 @@ def convert(
     conversion.
     `job_id`, if given, receives live per-layer progress via
     app.jobs.update_detail. `with_thumbnails` also renders each layer's
-    "{stem}_thumbnail.png" from its default style.
+    "{stem}_thumbnail.png" from its default style. `min_meaningful_zoom`
+    floors the maxzoom tiling guesses - see _tile / DEFAULT_MIN_MEANINGFUL_ZOOM.
 
     Returns a tuple of ([{'name', 'path', 'media_type', 'info'}, ...],
     [{'name', 'error'}, ...], workdir) — the second list is any GeoPackage
@@ -549,7 +581,12 @@ def convert(
     input_path = resolve_source(source, workdir)
     if input_path.lower().endswith(".gpkg"):
         files, errors = _convert_geopackage(
-            input_path, workdir, layers, job_id, with_thumbnails
+            input_path,
+            workdir,
+            layers,
+            job_id,
+            with_thumbnails,
+            min_meaningful_zoom,
         )
         return files, errors, workdir
 
@@ -567,6 +604,7 @@ def convert(
         workdir,
         report,
         with_thumbnails,
+        min_meaningful_zoom,
     )
     files = _layer_outputs(
         "output", pmtiles_path, parquet_path, thumbnail_path
