@@ -177,22 +177,22 @@ def _mosaic(tiles, vrt, merged, thumbnail_output, job_id, workdir) -> dict:
             "id": tile["id"],
             "bbox": tile["bbox"],
             "data": upload_file(
-                tile["data"], spec["data_upload"], COG_MEDIA_TYPE
+                tile["data"], spec["data_upload"], COG_MEDIA_TYPE, job_id
             ),
         }
         if not merged:
             entry["web"] = upload_file(
-                tile["web"], spec["web_upload"], COG_MEDIA_TYPE
+                tile["web"], spec["web_upload"], COG_MEDIA_TYPE, job_id
             )
         result["tiles"].append(entry)
-    result["vrt"] = upload_file(vrt_path, vrt["upload"], VRT_MEDIA_TYPE)
+    result["vrt"] = upload_file(vrt_path, vrt["upload"], VRT_MEDIA_TYPE, job_id)
     if merged:
         result["merged"] = upload_file(
-            merged_path, merged["upload"], COG_MEDIA_TYPE
+            merged_path, merged["upload"], COG_MEDIA_TYPE, job_id
         )
     if has_thumbnail:
         result["thumbnail"] = upload_file(
-            thumbnail_path, thumbnail_output["upload"], thumbnail.MEDIA_TYPE
+            thumbnail_path, thumbnail_output["upload"], thumbnail.MEDIA_TYPE, job_id
         )
     _progress(job_id, f"Mosaic of {total} tiles uploaded", 1.0)
     return result

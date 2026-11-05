@@ -2,10 +2,11 @@
 
 import os
 import shutil
+import time
 
 import httpx
 
-from app.config import DOWNLOAD_TIMEOUT
+from app.config import DOWNLOAD_RETRIES, DOWNLOAD_RETRY_DELAY, DOWNLOAD_TIMEOUT
 from app.errors import ConversionError
 
 GB = 1024**3
@@ -50,36 +51,44 @@ def download_url(url: str, dest_path: str) -> None:
     There's no fixed size limit: the disk is. A source that says how big
     it is (Content-Length) is refused up front if it won't fit; any source
     is stopped if, while it streams in, free space falls to the reserve
-    (see disk_reserve). A partial download is removed.
+    (see disk_reserve). A partial download is removed. A connection that
+    drops before it's done (refused, reset, or otherwise never finishing -
+    not a real HTTP error response) is retried from scratch up to
+    DOWNLOAD_RETRIES times, DOWNLOAD_RETRY_DELAY apart: the URL is a plain
+    GET, safe to redo whole.
     """
     directory = os.path.dirname(dest_path) or "."
-    try:
-        with httpx.stream(
-            "GET", url, timeout=DOWNLOAD_TIMEOUT, follow_redirects=True
-        ) as response:
-            if response.status_code >= 400:
-                raise ConversionError(
-                    400,
-                    f"Failed to download source: "
-                    f"HTTP {response.status_code}",
-                )
-            declared = response.headers.get("Content-Length")
-            if declared and declared.isdigit():
-                _check_space(directory, int(declared))
-            unchecked = 0
-            with open(dest_path, "wb") as f:
-                for chunk in response.iter_bytes():
-                    f.write(chunk)
-                    unchecked += len(chunk)
-                    if unchecked >= CHECK_EVERY:
-                        unchecked = 0
-                        _check_space(directory)
-    except httpx.HTTPError as e:
-        _remove(dest_path)
-        raise ConversionError(400, f"Failed to download source: {e}")
-    except ConversionError:
-        _remove(dest_path)
-        raise
+    for attempt in range(1, DOWNLOAD_RETRIES + 1):
+        try:
+            with httpx.stream(
+                "GET", url, timeout=DOWNLOAD_TIMEOUT, follow_redirects=True
+            ) as response:
+                if response.status_code >= 400:
+                    raise ConversionError(
+                        400,
+                        f"Failed to download source: "
+                        f"HTTP {response.status_code}",
+                    )
+                declared = response.headers.get("Content-Length")
+                if declared and declared.isdigit():
+                    _check_space(directory, int(declared))
+                unchecked = 0
+                with open(dest_path, "wb") as f:
+                    for chunk in response.iter_bytes():
+                        f.write(chunk)
+                        unchecked += len(chunk)
+                        if unchecked >= CHECK_EVERY:
+                            unchecked = 0
+                            _check_space(directory)
+            return
+        except httpx.HTTPError as e:
+            _remove(dest_path)
+            if attempt == DOWNLOAD_RETRIES:
+                raise ConversionError(400, f"Failed to download source: {e}")
+            time.sleep(DOWNLOAD_RETRY_DELAY)
+        except ConversionError:
+            _remove(dest_path)
+            raise
 
 
 def _remove(path: str) -> None:
