@@ -8,6 +8,12 @@ TMP_DIR = os.environ.get("LITE_TMP_DIR", "/tmp/cng-lite")
 # Timeout (seconds) for downloading a remote source file.
 DOWNLOAD_TIMEOUT = float(os.environ.get("LITE_DOWNLOAD_TIMEOUT", "60"))
 
+# How many times to try downloading a source from scratch - the first,
+# plus this many retries - if the connection drops before it's done (e.g.
+# "peer closed connection"), and how long to wait between tries.
+DOWNLOAD_RETRIES = int(os.environ.get("LITE_DOWNLOAD_RETRIES", "3"))
+DOWNLOAD_RETRY_DELAY = float(os.environ.get("LITE_DOWNLOAD_RETRY_DELAY", "2"))
+
 # S3 (or S3-compatible, e.g. MinIO) credentials used to presign GET URLs
 # for `s3://bucket/key` sources. Left unset, s3:// sources are rejected.
 S3_ENDPOINT_URL = os.environ.get("S3_ENDPOINT_URL") or None
@@ -34,6 +40,14 @@ JOB_RESULT_TTL = int(os.environ.get("LITE_JOB_RESULT_TTL", str(60 * 60)))
 # Timeout (seconds) for uploading one result file to a presigned PUT URL
 # (a mosaic's outputs). Generous: a merged mosaic can be gigabytes.
 UPLOAD_TIMEOUT = float(os.environ.get("LITE_UPLOAD_TIMEOUT", "1800"))
+
+# How many times to try uploading a result file from scratch - the first,
+# plus this many retries - if the connection drops, or the bucket answers
+# with a server error (e.g. a transient 504), before it's done, and how
+# long to wait between tries. Not retried for a client error (4xx, e.g. an
+# expired presigned URL): trying again won't fix that.
+UPLOAD_RETRIES = int(os.environ.get("LITE_UPLOAD_RETRIES", "3"))
+UPLOAD_RETRY_DELAY = float(os.environ.get("LITE_UPLOAD_RETRY_DELAY", "2"))
 
 # How many of a mosaic's tiles convert at once, within its one job.
 MOSAIC_TILE_WORKERS = int(os.environ.get("LITE_MOSAIC_TILE_WORKERS", "2"))
