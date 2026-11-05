@@ -46,7 +46,9 @@ def upload_file(
             response = httpx.put(
                 url,
                 content=_hashed_chunks(path, digest),
-                headers={"Content-Type": media_type, "Content-Length": str(size)},
+                headers={
+                    "Content-Type": media_type, "Content-Length": str(size)
+                },
                 timeout=UPLOAD_TIMEOUT,
             )
         except httpx.HTTPError as e:
@@ -102,7 +104,8 @@ def upload_outputs(
                 progress=1.0,
             )
         target = targets[(file["layer"], file["role"])]
-        sent = upload_file(file["path"], target["url"], target["content_type"], job_id)
+        sent = upload_file(
+            file["path"], target["url"], target["content_type"], job_id)
         layers.setdefault(file["layer"], {})[file["role"]] = {
             **sent,
             "info": file.get("info") or {},
