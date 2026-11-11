@@ -50,5 +50,7 @@ nav:
       - administrator/deployment.md
       - administrator/configuration.md
       - administrator/maintenance.md
+      - administrator/consuming-converted-layers.md
   - Developer:
       - developer/index.md
+      - developer/cloudbench-s3-conversions.md
