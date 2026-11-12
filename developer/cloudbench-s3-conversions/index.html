@@ -1,0 +1,1633 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Project technical and user documentation.">
+      
+      
+        <meta name="author" content="Kartoza">
+      
+      
+      
+        <link rel="prev" href="../">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>CloudBench S3 conversion process - Cloud Native GIS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../css/print.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="grey">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#cloudbench-s3-conversion-process" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Cloud Native GIS" class="md-header__button md-logo" aria-label="Cloud Native GIS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 22a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-6v7L9.5 7.5 7 9V2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Cloud Native GIS
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              CloudBench S3 conversion process
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="grey"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="grey"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18V6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-2.69L23.31 12 20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kartoza/CloudNativeGIS.git" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CloudNativeGIS
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  Home
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../administrator/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Administrator
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Developer
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Cloud Native GIS" class="md-nav__button md-logo" aria-label="Cloud Native GIS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 22a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-6v7L9.5 7.5 7 9V2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2z"/></svg>
+
+    </a>
+    Cloud Native GIS
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kartoza/CloudNativeGIS.git" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CloudNativeGIS
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Home
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quick_installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../user/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/layers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Working with Layers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user/styles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Styling Your Maps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../administrator/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Administrator
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Administrator
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../administrator/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../administrator/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../administrator/maintenance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Maintenance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../administrator/consuming-converted-layers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consuming a converted layer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CloudBench S3 conversion process
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CloudBench S3 conversion process
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tool-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool versions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vector-layers-pmtiles-geoparquet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vector layers → PMTiles + GeoParquet
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Vector layers → PMTiles + GeoParquet">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-normalise-to-one-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Normalise to one layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-export-features-for-tiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Export features for tiling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-tile-with-tippecanoe-to-create-the-pmtiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Tile with tippecanoe to create the PMTiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-write-the-geoparquet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Write the GeoParquet
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raster-tiff-or-a-geopackages-raster-tables-cog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raster (TIFF, or a GeoPackage's raster tables) → COG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-a-vrt-bulk-upload-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building a VRT (bulk upload only)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Building a VRT (bulk upload only)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-read-each-cogs-header-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Read each COG's header only
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-group-rasters-that-can-share-one-vrt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Group rasters that can share one VRT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-build-the-vrt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Build the VRT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tool-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tool versions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vector-layers-pmtiles-geoparquet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vector layers → PMTiles + GeoParquet
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Vector layers → PMTiles + GeoParquet">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-normalise-to-one-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Normalise to one layer
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-export-features-for-tiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Export features for tiling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-tile-with-tippecanoe-to-create-the-pmtiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Tile with tippecanoe to create the PMTiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-write-the-geoparquet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Write the GeoParquet
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raster-tiff-or-a-geopackages-raster-tables-cog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raster (TIFF, or a GeoPackage's raster tables) → COG
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-a-vrt-bulk-upload-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building a VRT (bulk upload only)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Building a VRT (bulk upload only)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-read-each-cogs-header-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Read each COG's header only
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-group-rasters-that-can-share-one-vrt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Group rasters that can share one VRT
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-build-the-vrt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Build the VRT
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<div><h1 id="cloudbench-s3-conversion-process">CloudBench S3 conversion process<a class="headerlink" href="#cloudbench-s3-conversion-process" title="Permanent link">¶</a></h1>
+<p>CloudBench (<code>kartoza-cloudbench</code>) converts files already sitting in an S3-compatible
+bucket into web-ready layers, in the background: a user uploads nothing through their
+browser, and may convert one file at a time or a whole folder at once ("bulk upload").
+This page documents how that background conversion actually runs - the commands and
+arguments involved - split into the two format families CloudBench converts, plus the
+VRT CloudBench can build afterwards over a bulk upload's rasters.</p>
+<p>Two separate codebases are involved:</p>
+<ul>
+<li><strong>CloudNativeGIS Processing</strong> ("cng-node") - a small, database-free FastAPI
+  service that does the actual conversion: it downloads (or reads from the same
+  bucket) the source file, runs the GDAL/tippecanoe commands below, and uploads
+  every result straight to the destination bucket itself, via a presigned URL per
+  file.</li>
+<li><strong>CloudBench</strong> - submits the conversion job to cng-node (one running on a fixed
+  server, or one on-demand, per job, started on Hetzner Cloud), polls it to
+  completion, and writes the Portolan catalog metadata once it's done. For a bulk
+  upload, it also optionally builds a VRT of the batch's GeoTIFFs itself, directly
+  with GDAL - no cng-node job for that.</li>
+</ul>
+<pre class="mermaid"><code>flowchart TD
+    CB["CloudBench"]
+    CNG["CloudNativeGIS Processing (cng-node)&lt;br/&gt;runs GDAL / tippecanoe"]
+    S3[("S3-compatible bucket")]
+
+    CB --&gt;|"1. submit job"| CNG
+    CNG --&gt;|"2. read the source"| S3
+    CNG --&gt;|"3. upload each result"| S3
+    CB --&gt;|"4. poll until done"| CNG
+    CB --&gt;|"5. write Portolan&lt;br/&gt;catalog metadata"| S3</code></pre>
+<h3 id="tool-versions">Tool versions<a class="headerlink" href="#tool-versions" title="Permanent link">¶</a></h3>
+<p>cng-node's image (<code>processing/Dockerfile</code>) pins these:</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Version</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GDAL (<code>gdal_translate</code>, <code>gdalwarp</code>, <code>gdalinfo</code>, <code>ogr2ogr</code>, <code>ogrmerge.py</code>)</td>
+<td><strong>3.11.4</strong></td>
+<td><code>ghcr.io/osgeo/gdal:ubuntu-full-3.11.4</code> - the "full" build, needed for Arrow/(Geo)Parquet support</td>
+</tr>
+<tr>
+<td>tippecanoe</td>
+<td><em>unpinned</em> - whatever's on <code>main</code> when the image is built</td>
+<td><a href="https://github.com/felt/tippecanoe"><code>felt/tippecanoe</code></a>, <strong>not</strong> the original <code>mapbox/tippecanoe</code> - built from source, <code>git clone --depth 1</code></td>
+</tr>
+<tr>
+<td>PDAL (LAS/LAZ → COPC; not covered on this page)</td>
+<td>2.10</td>
+<td>conda-forge</td>
+</tr>
+</tbody>
+</table>
+<p>Nothing above a few hundred MB is ever downloaded to CloudBench's own disk: cng-node
+reads the source and writes every result through presigned URLs, and the VRT step
+below only ever reads a COG's <em>header</em>, not its pixels.</p>
+<p>This page is about how the conversion itself runs. For what the files it produces
+actually are and how to use them, see
+<a href="../../administrator/consuming-converted-layers/">Consuming a converted layer</a>.</p>
+<h2 id="vector-layers-pmtiles-geoparquet">Vector layers → PMTiles + GeoParquet<a class="headerlink" href="#vector-layers-pmtiles-geoparquet" title="Permanent link">¶</a></h2>
+<p>A shapefile (as a <code>.zip</code>), GeoPackage, GeoJSON, FlatGeobuf or KML/KMZ becomes a pair
+of files per layer: a <strong>GeoParquet</strong> (the analysis-ready data, in the source's own
+CRS) and a <strong>PMTiles</strong> (the web-map rendering) - the pairing the
+<a href="https://github.com/portolan-sdi/portolan-spec">Portolan</a> spec asks for.</p>
+<pre class="mermaid"><code>flowchart LR
+    A[Source] --&gt; B["1. Normalise&lt;br/&gt;(KML/KMZ only)"]
+    B --&gt; C["2. Export for tiling"]
+    B --&gt; D["4. Write GeoParquet"]
+    C --&gt; E["3. tippecanoe&lt;br/&gt;→ PMTiles"]</code></pre>
+<p>Steps 2+3 and step 4 both only read the (normalised) source, so they run at the same
+time, not one after the other - see step 4 below.</p>
+<h3 id="1-normalise-to-one-layer">1. Normalise to one layer<a class="headerlink" href="#1-normalise-to-one-layer" title="Permanent link">¶</a></h3>
+<p>A KML/KMZ with several <code>&lt;Folder&gt;</code>s is merged into one GeoPackage layer first (LIBKML
+reads each folder as its own OGR layer, but GeoParquet holds exactly one), keeping
+each feature's folder name in a <code>folder</code> column:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>ogrmerge.py<span class="w"> </span>-single<span class="w"> </span>-f<span class="w"> </span>GPKG<span class="w"> </span>-o<span class="w"> </span>merged.gpkg<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>-nln<span class="w"> </span>merged<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>-lco<span class="w"> </span><span class="nv">GEOMETRY_NAME</span><span class="o">=</span>geometry<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span>-src_layer_field_name<span class="w"> </span>folder<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span>-src_layer_field_content<span class="w"> </span><span class="s2">"{LAYER_NAME}"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span>&lt;source&gt;
+</code></pre></div>
+<p>A GeoPackage's own layers, and any other single-layer source, skip this step.</p>
+<h3 id="2-export-features-for-tiling">2. Export features for tiling<a class="headerlink" href="#2-export-features-for-tiling" title="Permanent link">¶</a></h3>
+<p>The layer is exported as line-delimited GeoJSON (<code>GeoJSONSeq</code>), reprojected to
+WGS84 - the CRS tippecanoe tiles in:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ogr2ogr<span class="w"> </span>-f<span class="w"> </span>GeoJSONSeq<span class="w"> </span><span class="o">[</span>-s_srs<span class="w"> </span>EPSG:4326<span class="o">]</span><span class="w"> </span>-t_srs<span class="w"> </span>EPSG:4326<span class="w"> </span>&lt;output&gt;.geojsonl<span class="w"> </span>&lt;source&gt;<span class="w"> </span><span class="o">[</span>&lt;layer&gt;<span class="o">]</span>
+</code></pre></div>
+<p><code>-s_srs EPSG:4326</code> is only added when the source has no coordinate system of its own
+(e.g. a shapefile missing its <code>.prj</code>) - rather than failing the conversion, WGS84 is
+assumed, since that's the common case.</p>
+<h3 id="3-tile-with-tippecanoe-to-create-the-pmtiles">3. Tile with tippecanoe to create the PMTiles<a class="headerlink" href="#3-tile-with-tippecanoe-to-create-the-pmtiles" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>tippecanoe<span class="w"> </span>--force<span class="w"> </span>-P<span class="w"> </span>--projection<span class="o">=</span>EPSG:4326<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--smallest-maximum-zoom-guess<span class="o">=</span>&lt;floor&gt;<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--no-simplification-of-shared-nodes<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>-o<span class="w"> </span>&lt;output&gt;.pmtiles<span class="w"> </span>-l<span class="w"> </span>&lt;layer-name&gt;<span class="w"> </span>&lt;input&gt;.geojsonl
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-P</code></td>
+<td>Reads the GeoJSONSeq input in parallel.</td>
+</tr>
+<tr>
+<td><code>--smallest-maximum-zoom-guess=&lt;floor&gt;</code></td>
+<td>tippecanoe's own <code>-zg</code> guesses a layer's max zoom from the <em>typical</em> spacing between features - a layer with both dense and sparse areas (e.g. a country's neighbourhoods: packed in cities, sparse elsewhere) can get dragged down to a low guess by its sparser areas, blowing up blocky tiles client-side exactly at the zoom someone's actually looking at. <code>--smallest-maximum-zoom-guess</code> is <code>-zg</code>'s own density-based guess with a floor: unlike plain <code>-zg</code> it never refuses to guess, so there's no separate fallback to handle. It never <em>lowers</em> a denser layer's own higher guess. The floor is <code>DEFAULT_MIN_MEANINGFUL_ZOOM</code> (9) unless the API request names a different <code>min_meaningful_zoom</code>.</td>
+</tr>
+<tr>
+<td><code>--no-simplification-of-shared-nodes</code></td>
+<td>Simplifies an edge shared between adjacent polygons (e.g. neighbouring admin boundaries) the same way on both sides, so low zoom doesn't show a gap or sliver along the shared border.</td>
+</tr>
+</tbody>
+</table>
+<p>tippecanoe's own stderr progress (<code>Maxzoom: NN%</code>, then <code>z/x/y NN.N%</code>) is parsed live and
+relayed to CloudBench's polling as the job's progress message.</p>
+<p>A timeout scales with input size - <code>300s</code> base, <code>+20min</code> per GB, capped at <code>3h</code> - so a
+genuinely large layer gets the time it needs (2.8M buildings, 1.1GB, take ~3 minutes on
+16 cores) while a pathological geometry (e.g. a near-global polygon forced to a high
+zoom) can't run away forever.</p>
+<h3 id="4-write-the-geoparquet">4. Write the GeoParquet<a class="headerlink" href="#4-write-the-geoparquet" title="Permanent link">¶</a></h3>
+<p>Run alongside tippecanoe (both only read the source), not after it:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ogr2ogr<span class="w"> </span>-f<span class="w"> </span>Parquet<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>-lco<span class="w"> </span><span class="nv">COMPRESSION</span><span class="o">=</span>ZSTD<span class="w"> </span>-lco<span class="w"> </span><span class="nv">WRITE_COVERING_BBOX</span><span class="o">=</span>YES<span class="w"> </span>-lco<span class="w"> </span><span class="nv">ROW_GROUP_SIZE</span><span class="o">=</span><span class="m">100000</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="o">[</span>-a_srs<span class="w"> </span>EPSG:4326<span class="o">]</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>&lt;output&gt;.parquet<span class="w"> </span>&lt;source&gt;<span class="w"> </span><span class="o">[</span>&lt;layer&gt;<span class="o">]</span>
+</code></pre></div>
+<p>This satisfies Portolan's GeoParquet requirements: GeoParquet 1.1, with a per-row-group
+bbox-covering column, row groups capped at 150k rows (100,000 is used), and <code>zstd</code>
+compression. The rows are then re-ordered along a spatial curve (not GDAL's own
+<code>SORT_BY_BBOX</code>, which doesn't pack them tightly enough for Portolan).</p>
+<h2 id="raster-tiff-or-a-geopackages-raster-tables-cog">Raster (TIFF, or a GeoPackage's raster tables) → COG<a class="headerlink" href="#raster-tiff-or-a-geopackages-raster-tables-cog" title="Permanent link">¶</a></h2>
+<p>A GeoTIFF, or a raster table inside a GeoPackage, becomes <strong>two</strong> Cloud Optimized
+GeoTIFFs: the original-CRS one, and an <code>EPSG:3857</code> (Web Mercator) one.</p>
+<p>The second variant exists purely for rendering. MapLibre's map canvas is Web
+Mercator throughout, and <code>maplibre-cog-protocol</code> (the library Map Explorer uses to
+add a COG as a map source) reads windows of the COG straight into MapLibre's WebGL
+pipeline with no reprojection step - too slow to do per frame in the browser - so the
+COG itself has to already be in <code>EPSG:3857</code>. That reprojection happens once, up
+front, via <code>gdalwarp</code> below, instead of on every pan or zoom. The original-CRS COG is
+kept alongside it for anything that measures the raster (see
+<a href="../../administrator/consuming-converted-layers/">Consuming a converted layer</a>) -
+reprojecting first would distort that.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>gdal_translate<span class="w"> </span>-of<span class="w"> </span>COG<span class="w"> </span>-co<span class="w"> </span><span class="nv">COMPRESS</span><span class="o">=</span>DEFLATE<span class="w"> </span>-co<span class="w"> </span><span class="nv">BLOCKSIZE</span><span class="o">=</span><span class="m">512</span><span class="w"> </span>-co<span class="w"> </span><span class="nv">STATISTICS</span><span class="o">=</span>YES<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>&lt;input&gt;.tif<span class="w"> </span>&lt;output&gt;.tif
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>gdalwarp<span class="w"> </span>-t_srs<span class="w"> </span>EPSG:3857<span class="w"> </span>-of<span class="w"> </span>COG<span class="w"> </span>-co<span class="w"> </span><span class="nv">COMPRESS</span><span class="o">=</span>DEFLATE<span class="w"> </span>-co<span class="w"> </span><span class="nv">BLOCKSIZE</span><span class="o">=</span><span class="m">512</span><span class="w"> </span>-co<span class="w"> </span><span class="nv">STATISTICS</span><span class="o">=</span>YES<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>&lt;input&gt;.tif<span class="w"> </span>&lt;output&gt;_3857.tif
+</code></pre></div>
+<p>Both variants go through the same <code>COG_OPTIONS</code>. After each, <code>gdalinfo -json</code> (with
+<code>GDAL_PAM_ENABLED=NO</code>, so it can't fall back to a sidecar <code>.aux.xml</code>) checks every band
+actually carries its min/max/mean/stddev <em>embedded in the file itself</em> - if any are
+missing, the conversion fails rather than publishing a COG a client would have to
+compute statistics for itself. (Needs a GDAL build with <code>STATISTICS=YES</code> support for
+the COG driver - GDAL ≥ 3.8.)</p>
+<h2 id="building-a-vrt-bulk-upload-only">Building a VRT (bulk upload only)<a class="headerlink" href="#building-a-vrt-bulk-upload-only" title="Permanent link">¶</a></h2>
+<p>A bulk upload may also publish a GDAL VRT ("virtual raster") of its GeoTIFFs, once
+every layer's COG conversion is done - a single mosaic-like overview over the whole
+batch's rasters, without re-encoding any pixel. This step runs <strong>in CloudBench
+itself</strong>, not in cng-node - see <code>apps/s3/bulk_vrt.py</code>.</p>
+<h3 id="1-read-each-cogs-header-only">1. Read each COG's header only<a class="headerlink" href="#1-read-each-cogs-header-only" title="Permanent link">¶</a></h3>
+<p>Rather than downloading every COG in full, only the start of each file is fetched -
+enough for GDAL to read its header (its CRS, band count, data type, extent), not its
+pixel data - via an HTTP range request against the bucket:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>GET &lt;cog-key&gt;  Range: bytes=0-1048575
+</code></pre></div>
+<p>If <code>gdalinfo</code> can't parse that much (a very large raster's tile-offset arrays can run
+long), it's retried with a bigger range - <code>16 MiB</code>, then <code>256 MiB</code> - stopping once a
+read comes back shorter than asked for (the whole file, however small).</p>
+<h3 id="2-group-rasters-that-can-share-one-vrt">2. Group rasters that can share one VRT<a class="headerlink" href="#2-group-rasters-that-can-share-one-vrt" title="Permanent link">¶</a></h3>
+<p>Not every raster in a batch can go in the same VRT: a VRT's members must share a CRS,
+band count and data type (not <code>nodata</code> - each source keeps its own in a VRT, unlike a
+true mosaic's tiles). The <strong>largest</strong> such group is kept; anything that doesn't match
+it is left out of the VRT, each with why (e.g. <em>"in EPSG:3857, not EPSG:32735"</em>,
+<em>"2 band(s), not 1"</em>) - but every layer, in or out, is still published as its own COG
+collection regardless.</p>
+<h3 id="3-build-the-vrt">3. Build the VRT<a class="headerlink" href="#3-build-the-vrt" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>gdalbuildvrt<span class="w"> </span>-resolution<span class="w"> </span>highest<span class="w"> </span>&lt;name&gt;.vrt<span class="w"> </span>&lt;relative-path-to-each-cog&gt;...
+</code></pre></div>
+<p>Run with the batch's common parent folder as its working directory, and each COG
+given as a path <em>relative</em> to that folder - <code>/vsicurl/</code> (reading straight from a URL)
+doesn't resolve a <code>../</code> the way a local path would, so every path in the VRT must run
+<em>down</em> from where the VRT itself sits, never up and back down.</p>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">¶</a></h2>
+<ul>
+<li><a href="../../administrator/consuming-converted-layers/">Consuming a converted layer</a> - what
+  the files these conversions produce actually are, and how to use each one.</li>
+<li><code>apps/s3/cng_lite.py</code> in <code>kartoza-cloudbench</code> - how a job's steps (provision, push,
+  poll, verify, publish) are driven from the CloudBench side.</li>
+</ul></div>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="November 12, 2026 08:39:29 UTC">November 12, 2026</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Kartoza and Contributors
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/kartoza" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.annotate", "content.tabs.link", "header.autohide", "navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.tracking", "search.highlight", "search.share", "search.suggest", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js"></script>
+      
+        <script src="../../js/tablesort.js"></script>
+      
+    
+  </body>
+</html>
