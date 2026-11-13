@@ -187,6 +187,7 @@ def _tile(
             # neighbouring admin boundaries) the same way on both sides,
             # so low zoom doesn't show a gap or sliver along it.
             "--no-simplification-of-shared-nodes",
+            "--drop-densest-as-needed",
             "-o",
             pmtiles_path,
             "-l",
