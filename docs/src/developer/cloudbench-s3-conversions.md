@@ -110,14 +110,16 @@ assumed, since that's the common case.
 tippecanoe --force -P --projection=EPSG:4326 \
   --smallest-maximum-zoom-guess=<floor> \
   --no-simplification-of-shared-nodes \
+  --drop-densest-as-needed \
   -o <output>.pmtiles -l <layer-name> <input>.geojsonl
 ```
 
 | Flag | Why |
 |---|---|
 | `-P` | Reads the GeoJSONSeq input in parallel. |
-| `--smallest-maximum-zoom-guess=<floor>` | tippecanoe's own `-zg` guesses a layer's max zoom from the *typical* spacing between features - a layer with both dense and sparse areas (e.g. a country's neighbourhoods: packed in cities, sparse elsewhere) can get dragged down to a low guess by its sparser areas, blowing up blocky tiles client-side exactly at the zoom someone's actually looking at. `--smallest-maximum-zoom-guess` is `-zg`'s own density-based guess with a floor: unlike plain `-zg` it never refuses to guess, so there's no separate fallback to handle. It never *lowers* a denser layer's own higher guess. The floor is `DEFAULT_MIN_MEANINGFUL_ZOOM` (9) unless the API request names a different `min_meaningful_zoom`. |
+| `--smallest-maximum-zoom-guess=<floor>` | `-zg`'s plain max-zoom guess can get dragged down by a layer's sparser areas (e.g. a country's neighbourhoods: packed in cities, sparse elsewhere), blowing up blocky tiles client-side right where someone's actually looking. This flag is the same guess with a floor - never lowers a denser layer's own higher guess - defaulting to `DEFAULT_MIN_MEANINGFUL_ZOOM` (9) unless the API request names a `min_meaningful_zoom`. |
 | `--no-simplification-of-shared-nodes` | Simplifies an edge shared between adjacent polygons (e.g. neighbouring admin boundaries) the same way on both sides, so low zoom doesn't show a gap or sliver along the shared border. |
+| `--drop-densest-as-needed` | Flooring the maxzoom guess above can push a genuinely dense area (e.g. a packed city centre) past tippecanoe's per-tile feature/size limits at that zoom. Rather than failing the tile, tippecanoe drops features from the densest tiles only, as needed, so the layer still tiles instead of erroring out. |
 
 tippecanoe's own stderr progress (`Maxzoom: NN%`, then `z/x/y NN.N%`) is parsed live and
 relayed to CloudBench's polling as the job's progress message.
@@ -148,15 +150,14 @@ compression. The rows are then re-ordered along a spatial curve (not GDAL's own
 A GeoTIFF, or a raster table inside a GeoPackage, becomes **two** Cloud Optimized
 GeoTIFFs: the original-CRS one, and an `EPSG:3857` (Web Mercator) one.
 
-The second variant exists purely for rendering. MapLibre's map canvas is Web
-Mercator throughout, and `maplibre-cog-protocol` (the library Map Explorer uses to
-add a COG as a map source) reads windows of the COG straight into MapLibre's WebGL
-pipeline with no reprojection step - too slow to do per frame in the browser - so the
-COG itself has to already be in `EPSG:3857`. That reprojection happens once, up
-front, via `gdalwarp` below, instead of on every pan or zoom. The original-CRS COG is
+The second variant exists purely for rendering: `maplibre-cog-protocol` (the
+library Map Explorer uses to add a COG as a map source) reads windows of the COG
+straight into MapLibre's WebGL pipeline with no reprojection step - too slow per
+frame in the browser - so the COG must already be in `EPSG:3857`, reprojected once
+up front via `gdalwarp` rather than on every pan or zoom. The original-CRS COG is
 kept alongside it for anything that measures the raster (see
-[Consuming a converted layer](../administrator/consuming-converted-layers.md)) -
-reprojecting first would distort that.
+[Consuming a converted layer](../administrator/consuming-converted-layers.md)),
+since reprojecting first would distort that.
 
 ```bash
 gdal_translate -of COG -co COMPRESS=DEFLATE -co BLOCKSIZE=512 -co STATISTICS=YES \
