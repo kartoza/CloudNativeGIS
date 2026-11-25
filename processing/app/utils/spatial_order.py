@@ -5,6 +5,13 @@ and so each row group - should cover one compact area, so a reader can
 skip whole row groups by their bbox statistics. GDAL's SORT_BY_BBOX isn't
 ordered closely enough for that. Ordering rows by the Hilbert index of
 their bbox's centre is: the curve keeps nearby points next to each other.
+
+A geometry column big enough to overflow `binary`'s 32-bit offsets while
+being reordered (see _widen_binary_columns) is written back out as
+`large_binary` rather than GDAL's original `binary` - geoparquet readers
+(GDAL/pyogrio, geopandas, DuckDB spatial) accept either for WKB, so this
+only changes the Arrow subtype of an already-exceptional file, not its
+readability.
 """
 
 import json
@@ -12,6 +19,7 @@ import os
 from typing import Optional
 
 import numpy as np
+import pyarrow as pa
 import pyarrow.parquet as pq
 
 # Cells per side of the grid the curve runs through: 2^16, far finer than
@@ -54,6 +62,22 @@ def _covering(schema) -> Optional[dict]:
     return column.get("covering", {}).get("bbox")
 
 
+def _widen_binary_columns(table: pa.Table) -> pa.Table:
+    """Cast any plain `binary` column (e.g. WKB geometry) to `large_binary`.
+
+    Reordering a column this size - combine_chunks() below, or take()
+    further down - can need to produce one array bigger than binary's
+    32-bit offsets can address (~2GB of data): "offset overflow while
+    concatenating arrays". large_binary's 64-bit offsets can't overflow
+    on anything this reads.
+    """
+    fields = [
+        field.with_type(pa.large_binary()) if pa.types.is_binary(field.type)
+        else field for field in table.schema
+    ]
+    return table.cast(pa.schema(fields, metadata=table.schema.metadata))
+
+
 def sort_spatially(path: str, row_group_size: int) -> None:
     """Rewrite the GeoParquet at `path` with its rows in Hilbert order.
 
@@ -62,7 +86,7 @@ def sort_spatially(path: str, row_group_size: int) -> None:
     included - is kept as it is. Rows without a geometry go last. Leaves
     a file without a covering column as it is.
     """
-    table = pq.read_table(path)
+    table = _widen_binary_columns(pq.read_table(path))
     covering = _covering(table.schema)
     if covering is None or table.num_rows < 2:
         return
