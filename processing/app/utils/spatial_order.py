@@ -72,8 +72,8 @@ def _widen_binary_columns(table: pa.Table) -> pa.Table:
     on anything this reads.
     """
     fields = [
-        field.with_type(pa.large_binary()) if pa.types.is_binary(field.type) else field
-        for field in table.schema
+        field.with_type(pa.large_binary()) if pa.types.is_binary(field.type)
+        else field for field in table.schema
     ]
     return table.cast(pa.schema(fields, metadata=table.schema.metadata))
 
